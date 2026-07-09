@@ -7,11 +7,9 @@ import { paginate, getPaginationData } from '../../utils/paginate.js';
 import { notificationService } from '../notifications/notification.service.js';
 
 export const meetingService = {
-  // ✅ GÜNCELLENDİ: Toplantı oluştur + bildirim
   async create(data) {
     const meeting = await Meeting.create(data);
 
-    // ✅ Toplantı oluşturulduğunda atanan kişiye bildirim gönder
     if (meeting.assigned_to) {
       await notificationService.notifyMeetingReminder(
         meeting.assigned_to,
@@ -34,21 +32,10 @@ export const meetingService = {
       ];
     }
 
-    if (status) {
-      where.status = status;
-    }
-
-    if (meeting_type) {
-      where.meeting_type = meeting_type;
-    }
-
-    if (case_id) {
-      where.case_id = case_id;
-    }
-
-    if (client_id) {
-      where.client_id = client_id;
-    }
+    if (status) where.status = status;
+    if (meeting_type) where.meeting_type = meeting_type;
+    if (case_id) where.case_id = case_id;
+    if (client_id) where.client_id = client_id;
 
     const query = paginate({ where, order: [['start_date', 'ASC']] }, page, limit);
     const { count, rows } = await Meeting.findAndCountAll({
@@ -62,7 +49,7 @@ export const meetingService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name', 'company_name'],
+          attributes: ['id', 'name'], // ✅ DEĞİŞTİ
         },
         {
           model: User,
@@ -96,7 +83,7 @@ export const meetingService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name', 'company_name', 'phone', 'email'],
+          attributes: ['id', 'name', 'phone', 'email'], // ✅ DEĞİŞTİ
         },
         {
           model: User,
@@ -155,7 +142,7 @@ export const meetingService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name'],
+          attributes: ['id', 'name'], // ✅ DEĞİŞTİ
         },
       ],
       order: [['start_date', 'ASC']],
@@ -169,7 +156,7 @@ export const meetingService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name'],
+          attributes: ['id', 'name'], // ✅ DEĞİŞTİ
         },
       ],
       order: [['start_date', 'ASC']],
@@ -210,7 +197,7 @@ export const meetingService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name'],
+          attributes: ['id', 'name'], // ✅ DEĞİŞTİ
         },
       ],
       order: [['start_date', 'ASC']],

@@ -4,6 +4,7 @@ import { Document } from '../../models/Document.js';
 import { Task } from '../../models/Task.js';
 import { Event } from '../../models/Event.js';
 import { Payment } from '../../models/Payment.js';
+import { User } from '../../models/User.js'; // ✅ EKLENDI
 import { Op } from 'sequelize';
 
 export const dashboardService = {
@@ -13,12 +14,10 @@ export const dashboardService = {
     const totalDocuments = await Document.count();
     const pendingTasks = await Task.count({ where: { status: 'pending' } });
 
-    // Toplam tahsilat
     const totalReceived = await Payment.sum('amount', {
       where: { status: 'completed', payment_type: 'received' },
     }) || 0;
 
-    // Bekleyen ödemeler
     const totalPendingPayments = await Payment.sum('amount', {
       where: { status: 'pending', payment_type: 'received' },
     }) || 0;
@@ -54,7 +53,7 @@ export const dashboardService = {
             {
               model: Client,
               as: 'client',
-              attributes: ['id', 'first_name', 'last_name'],
+              attributes: ['id', 'name'], // ✅ DEĞİŞTİ
             },
           ],
         },
@@ -88,26 +87,24 @@ export const dashboardService = {
   },
 
   async getRecentActivities(limit = 5) {
-    // Son eklenen belgeler
     const recentDocuments = await Document.findAll({
       include: [
         {
           model: User,
           as: 'uploader',
-          attributes: ['first_name', 'last_name'],
+          attributes: ['id', 'first_name', 'last_name'], // ✅ User'da değişiklik yok
         },
       ],
       order: [['created_at', 'DESC']],
       limit: limit,
     });
 
-    // Son oluşturulan davalar
     const recentCases = await Case.findAll({
       include: [
         {
           model: Client,
           as: 'client',
-          attributes: ['first_name', 'last_name'],
+          attributes: ['id', 'name'], // ✅ DEĞİŞTİ
         },
       ],
       order: [['created_at', 'DESC']],

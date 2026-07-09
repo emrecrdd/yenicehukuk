@@ -10,7 +10,6 @@ export const taskService = {
   async create(data) {
     const task = await Task.create(data);
 
-    // ✅ Görev oluşturulduğunda atanan kişiye bildirim gönder
     if (task.assigned_to) {
       const creator = await User.findByPk(data.created_by);
       const creatorName = creator ? `${creator.first_name} ${creator.last_name}` : 'Sistem';
@@ -36,21 +35,10 @@ export const taskService = {
       ];
     }
 
-    if (status) {
-      where.status = status;
-    }
-
-    if (priority) {
-      where.priority = priority;
-    }
-
-    if (assigned_to) {
-      where.assigned_to = assigned_to;
-    }
-
-    if (case_id) {
-      where.case_id = case_id;
-    }
+    if (status) where.status = status;
+    if (priority) where.priority = priority;
+    if (assigned_to) where.assigned_to = assigned_to;
+    if (case_id) where.case_id = case_id;
 
     const pageNum = parseInt(page) || 1;
     const limitNum = parseInt(limit) || 10;
@@ -77,7 +65,7 @@ export const taskService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name'],
+          attributes: ['id', 'name'], // ✅ DEĞİŞTİ
         },
       ],
       order: [
@@ -118,14 +106,14 @@ export const taskService = {
             {
               model: Client,
               as: 'client',
-              attributes: ['id', 'first_name', 'last_name'],
+              attributes: ['id', 'name'], // ✅ DEĞİŞTİ
             },
           ],
         },
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name'],
+          attributes: ['id', 'name'], // ✅ DEĞİŞTİ
         },
         {
           model: Task,
@@ -187,7 +175,6 @@ export const taskService = {
     return task;
   },
 
-  // ✅ GÜNCELLENDİ: Görev atama + bildirim
   async assignTask(id, assigned_to, assignedBy = null) {
     const task = await Task.findByPk(id);
     if (!task) {
@@ -202,7 +189,6 @@ export const taskService = {
     const oldAssignee = task.assigned_to;
     await task.update({ assigned_to });
 
-    // ✅ Eğer farklı bir kişiye atandıysa bildirim gönder
     if (oldAssignee !== assigned_to) {
       const assignerName = assignedBy || 'Sistem';
       await notificationService.notifyTaskAssigned(
@@ -221,9 +207,7 @@ export const taskService = {
       assigned_to: userId,
     };
 
-    if (status) {
-      where.status = status;
-    }
+    if (status) where.status = status;
 
     const pageNum = parseInt(page) || 1;
     const limitNum = parseInt(limit) || 10;
@@ -240,7 +224,7 @@ export const taskService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name'],
+          attributes: ['id', 'name'], // ✅ DEĞİŞTİ
         },
         {
           model: User,

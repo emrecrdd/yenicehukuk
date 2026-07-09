@@ -27,17 +27,9 @@ export const caseService = {
       ];
     }
 
-    if (status) {
-      where.status = status;
-    }
-
-    if (case_type) {
-      where.case_type = case_type;
-    }
-
-    if (client_id) {
-      where.client_id = client_id;
-    }
+    if (status) where.status = status;
+    if (case_type) where.case_type = case_type;
+    if (client_id) where.client_id = client_id;
 
     const query = paginate({ where }, page, limit);
     const { count, rows } = await Case.findAndCountAll({
@@ -46,7 +38,7 @@ export const caseService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name', 'company_name'],
+          attributes: ['id', 'name'], // ✅ DEĞİŞTİ
         },
         {
           model: User,
