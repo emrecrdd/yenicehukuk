@@ -87,17 +87,9 @@ export const documentService = {
       ];
     }
 
-    if (category) {
-      where.category = category;
-    }
-
-    if (case_id) {
-      where.case_id = case_id;
-    }
-
-    if (client_id) {
-      where.client_id = client_id;
-    }
+    if (category) where.category = category;
+    if (case_id) where.case_id = case_id;
+    if (client_id) where.client_id = client_id;
 
     const query = paginate({ where, order: [['created_at', 'DESC']] }, page, limit);
     const { count, rows } = await Document.findAndCountAll({
@@ -116,7 +108,7 @@ export const documentService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name'],
+          attributes: ['id', 'name'], // ✅ DEĞİŞTİ
         },
       ],
     });
@@ -145,7 +137,7 @@ export const documentService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name'],
+          attributes: ['id', 'name'], // ✅ DEĞİŞTİ
         },
       ],
     });
