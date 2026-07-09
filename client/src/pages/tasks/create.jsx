@@ -256,7 +256,7 @@ const TaskCreate = () => {
                 <option value="">Müvekkil seçin (isteğe bağlı)</option>
                 {clients.map((client) => (
                   <option key={client.id} value={client.id}>
-                    {client.first_name} {client.last_name}
+                    {client.name}  {/* ✅ SADECE BURASI DEĞİŞTİ */}
                     {client.company_name && ` (${client.company_name})`}
                   </option>
                 ))}

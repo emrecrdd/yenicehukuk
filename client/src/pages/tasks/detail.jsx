@@ -108,7 +108,6 @@ const TaskDetail = () => {
             )}
           </div>
         </div>
-        {/* ✅ BUTONLAR AYNI HİZADA - flex items-center gap-2 */}
         <div className="flex items-center gap-2">
           <select
             value={task.status}
@@ -132,7 +131,6 @@ const TaskDetail = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Bilgi Kartı */}
         <Card>
           <Card.Header>
             <h2 className="font-semibold text-gray-900 dark:text-white">📋 Bilgiler</h2>
@@ -176,7 +174,6 @@ const TaskDetail = () => {
           </Card.Body>
         </Card>
 
-        {/* İlişkili Kartı */}
         <Card>
           <Card.Header>
             <h2 className="font-semibold text-gray-900 dark:text-white">🔗 İlişkili</h2>
@@ -200,7 +197,7 @@ const TaskDetail = () => {
                   to={`/clients/${task.client.id}`}
                   className="text-blue-600 hover:underline"
                 >
-                  {task.client.first_name} {task.client.last_name}
+                  {task.client.name}  {/* ✅ SADECE BURASI DEĞİŞTİ */}
                 </Link>
               </div>
             )}
