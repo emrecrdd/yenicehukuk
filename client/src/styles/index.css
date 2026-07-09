@@ -1,0 +1,293 @@
+@import "tailwindcss";
+
+/* ============ DARK MODE ============ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============ LIGHT THEME (Varsayılan) ============ */
+:root {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-sidebar: #1e293b;
+  --bg-header: #ffffff;
+  --bg-input: #f1f5f9;
+  --bg-hover: #f1f5f9;
+  
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  
+  --border-color: #e2e8f0;
+  --shadow-color: rgba(0, 0, 0, 0.05);
+  
+  --accent-blue: #3b82f6;
+  --accent-green: #22c55e;
+  --accent-red: #ef4444;
+  --accent-yellow: #eab308;
+  --accent-purple: #8b5cf6;
+}
+
+/* ============ DARK THEME ============ */
+.dark {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: #1e293b;
+  --bg-sidebar: #0f172a;
+  --bg-header: #1e293b;
+  --bg-input: #334155;
+  --bg-hover: #334155;
+  
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  
+  --border-color: #334155;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  
+  --accent-blue: #60a5fa;
+  --accent-green: #4ade80;
+  --accent-red: #f87171;
+  --accent-yellow: #facc15;
+  --accent-purple: #a78bfa;
+}
+
+/* ============ BASE STYLES ============ */
+* {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ============ SCROLLBAR ============ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* ============ CARDS ============ */
+.bg-white,
+.bg-card {
+  background-color: var(--bg-card) !important;
+}
+
+/* ============ SIDEBAR ============ */
+.bg-gray-800,
+.bg-sidebar {
+  background-color: var(--bg-sidebar) !important;
+}
+
+/* ============ HEADER ============ */
+.bg-white.shadow-sm {
+  background-color: var(--bg-header) !important;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* ============ TEXT COLORS ============ */
+.text-gray-900,
+.text-gray-800 {
+  color: var(--text-primary) !important;
+}
+
+.text-gray-700 {
+  color: var(--text-secondary) !important;
+}
+
+.text-gray-600 {
+  color: var(--text-secondary) !important;
+}
+
+.text-gray-500 {
+  color: var(--text-muted) !important;
+}
+
+.text-gray-400 {
+  color: var(--text-muted) !important;
+}
+
+/* ============ BORDER COLORS ============ */
+.border-gray-200,
+.border-gray-300 {
+  border-color: var(--border-color) !important;
+}
+
+.border-b,
+.border-t {
+  border-color: var(--border-color) !important;
+}
+
+/* ============ SHADOWS ============ */
+.shadow-sm,
+.shadow-md,
+.shadow-lg {
+  box-shadow: 0 1px 3px var(--shadow-color), 0 1px 2px var(--shadow-color) !important;
+}
+
+.shadow-md {
+  box-shadow: 0 4px 6px var(--shadow-color) !important;
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 15px var(--shadow-color) !important;
+}
+
+/* ============ INPUTS & SELECTS ============ */
+input,
+select,
+textarea {
+  background-color: var(--bg-input) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent-blue) !important;
+  ring-color: var(--accent-blue) !important;
+}
+
+/* ============ HOVER EFFECTS ============ */
+.hover\:bg-gray-100:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+.hover\:bg-gray-50:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+/* ============ DROPDOWN ============ */
+.dark .bg-white.rounded-lg.shadow-lg {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color);
+}
+
+/* ============ TABLE ============ */
+table {
+  background-color: var(--bg-card) !important;
+}
+
+thead {
+  background-color: var(--bg-secondary) !important;
+}
+
+tbody tr:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+/* ============ BADGE VARIANTS ============ */
+.dark .bg-blue-100 {
+  background-color: #1e3a5f !important;
+  color: #93c5fd !important;
+}
+
+.dark .bg-green-100 {
+  background-color: #14532d !important;
+  color: #86efac !important;
+}
+
+.dark .bg-red-100 {
+  background-color: #7f1d1d !important;
+  color: #fca5a5 !important;
+}
+
+.dark .bg-yellow-100 {
+  background-color: #713f12 !important;
+  color: #fcd34d !important;
+}
+
+.dark .bg-purple-100 {
+  background-color: #3b1f6e !important;
+  color: #c4b5fd !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: #374151 !important;
+  color: #d1d5db !important;
+}
+
+/* ============ BUTTONS ============ */
+.dark .bg-blue-600 {
+  background-color: #2563eb !important;
+}
+
+.dark .bg-blue-600:hover {
+  background-color: #1d4ed8 !important;
+}
+
+.dark .bg-gray-200 {
+  background-color: #374151 !important;
+  color: #f1f5f9 !important;
+}
+
+.dark .bg-gray-200:hover {
+  background-color: #4b5563 !important;
+}
+
+/* ============ ACCENT COLORS ============ */
+.text-blue-600 {
+  color: var(--accent-blue) !important;
+}
+
+.text-green-600 {
+  color: var(--accent-green) !important;
+}
+
+.text-red-600 {
+  color: var(--accent-red) !important;
+}
+
+.text-yellow-600 {
+  color: var(--accent-yellow) !important;
+}
+
+.text-purple-600 {
+  color: var(--accent-purple) !important;
+}
+
+/* ============ LINKS ============ */
+a {
+  color: var(--accent-blue);
+}
+
+a:hover {
+  color: var(--accent-blue);
+  opacity: 0.8;
+}
+
+/* ============ MODAL ============ */
+.dark .bg-white.rounded-lg {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color);
+}
+
+/* ============ NOTIFICATIONS ============ */
+.dark .bg-red-500 {
+  background-color: #dc2626 !important;
+}
+
+/* ============ SMOOTH TRANSITIONS ============ */
+.smooth-transition {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
