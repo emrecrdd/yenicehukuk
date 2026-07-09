@@ -369,7 +369,7 @@ const DocumentUpload = () => {
                 <option value="">Müvekkil seçin</option>
                 {clients.map((client) => (
                   <option key={client.id} value={client.id}>
-                    {client.first_name} {client.last_name}
+                    {client.name}
                   </option>
                 ))}
               </select>
