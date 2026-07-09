@@ -25,24 +25,14 @@ const Search = () => {
   });
 
   const results = data?.data?.data || data?.data || data;
-console.log('🔍 Final results:', results);  // ← BURASI! data.data.data
-console.log('🔍 Tüm data:', data); // ← BUNU EKLE!
-console.log('🔍 results:', results); // ← BUNU EKLE!
-console.log('🔍 results.clients:', results?.clients); // ← BUNU EKLE!
   const suggestionData = suggestions?.data;
 
-  // DEBUG: Konsola yazdır
-  console.log('🔍 Arama sonuçları:', results);
-
- const hasResults = results && (
-  (results.clients?.length || 0) > 0 ||
-  (results.cases?.length || 0) > 0 ||
-  (results.documents?.length || 0) > 0 ||
-  (results.tasks?.length || 0) > 0
-);
-
-console.log('📊 hasResults:', hasResults); // ← KONSOLA YAZDIR!
-console.log('📊 clients length:', results?.clients?.length); // ← KONSOLA YAZDIR!
+  const hasResults = results && (
+    (results.clients?.length || 0) > 0 ||
+    (results.cases?.length || 0) > 0 ||
+    (results.documents?.length || 0) > 0 ||
+    (results.tasks?.length || 0) > 0
+  );
 
   const getTypeBadge = (type) => {
     const badges = {
@@ -145,10 +135,12 @@ console.log('📊 clients length:', results?.clients?.length); // ← KONSOLA YA
                           >
                             <div>
                               <p className="font-medium text-gray-900 dark:text-white">
-                                {client.first_name} {client.last_name}
+                                {client.name} {/* ✅ DEĞİŞTİ */}
                               </p>
-                              {client.company_name && (
-                                <p className="text-sm text-gray-500">{client.company_name}</p>
+                              {client.client_type && (
+                                <p className="text-sm text-gray-500">
+                                  {client.client_type === 'corporate' ? '🏢 Kurumsal' : '👤 Bireysel'}
+                                </p>
                               )}
                             </div>
                             <Badge variant={client.status === 'active' ? 'success' : 'default'}>

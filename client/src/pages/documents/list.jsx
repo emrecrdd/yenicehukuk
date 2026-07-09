@@ -373,7 +373,7 @@ const DocumentsList = () => {
                     </Table.Cell>
                     <Table.Cell>{formatFileSize(doc.file_size)}</Table.Cell>
                     <Table.Cell>
-                      {doc.uploader?.first_name} {doc.uploader?.last_name}
+                      {doc.uploader?.first_name} {doc.uploader?.last_name}  
                     </Table.Cell>
                     <Table.Cell className="text-sm text-gray-500">
                       {formatDate(doc.created_at)}

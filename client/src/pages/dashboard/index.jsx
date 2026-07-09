@@ -179,7 +179,7 @@ const Dashboard = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Hoş Geldin, {user?.first_name}! 👋
+          Hoş Geldin, {user?.first_name || user?.name || 'Kullanıcı'}! 👋
         </h1>
         <span className="text-sm text-gray-500">{new Date().toLocaleDateString('tr-TR')}</span>
       </div>
@@ -339,7 +339,7 @@ const Dashboard = () => {
                 <div key={hearing.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   <div>
                     <p className="font-medium text-gray-900 dark:text-white">
-                      {dayjs(hearing.start_date).format('HH:mm')} - {hearing.case?.client?.first_name} {hearing.case?.client?.last_name}
+                      {dayjs(hearing.start_date).format('HH:mm')} - {hearing.case?.client?.name || '-'}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       {hearing.location || 'Yer belirtilmemiş'}
@@ -371,7 +371,7 @@ const Dashboard = () => {
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       {dayjs(meeting.start_date).format('HH:mm')}
                       {meeting.case && ` • ${meeting.case.title}`}
-                      {meeting.client && ` • ${meeting.client.first_name} ${meeting.client.last_name}`}
+                      {meeting.client && ` • ${meeting.client.name}`}
                     </p>
                   </div>
                   <Badge 

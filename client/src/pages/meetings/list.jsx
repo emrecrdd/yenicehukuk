@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import meetingApi from '../../features/meetings/meeting.api.js'; // ✅ meetingApi kullan
+import meetingApi from '../../features/meetings/meeting.api.js';
 import Button from '../../components/ui/Button.jsx';
 import Input from '../../components/ui/Input.jsx';
 import Table from '../../components/ui/Table.jsx';
@@ -13,7 +13,6 @@ const MeetingsList = () => {
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
 
-  // ✅ meetingApi kullan - event_type filtrelemesine gerek yok
   const { data, isLoading } = useQuery({
     queryKey: ['meetings', { page, search: debouncedSearch }],
     queryFn: () => meetingApi.getAll({
@@ -113,7 +112,7 @@ const MeetingsList = () => {
               {meetings.length === 0 ? (
                 <Table.Row>
                   <Table.Cell colSpan="7" className="text-center py-8 text-gray-500">
-                    Henüz toplantı bulunmuyor
+                    {search ? 'Aramanıza uygun toplantı bulunamadı' : 'Henüz toplantı bulunmuyor'}
                   </Table.Cell>
                 </Table.Row>
               ) : (
@@ -128,7 +127,7 @@ const MeetingsList = () => {
                       )}
                     </Table.Cell>
                     <Table.Cell>
-                      {meeting.client?.first_name} {meeting.client?.last_name || '-'}
+                      {meeting.client?.name || '-'} {/* ✅ DEĞİŞTİ */}
                     </Table.Cell>
                     <Table.Cell>
                       {meeting.case?.title || '-'}

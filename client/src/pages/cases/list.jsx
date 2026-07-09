@@ -9,11 +9,10 @@ import Badge from '../../components/ui/Badge.jsx';
 
 const CasesList = () => {
   const [search, setSearch] = useState('');
-  const [searchQuery, setSearchQuery] = useState(''); // ✅ Arama için ayrı state
+  const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
 
-  // ✅ searchQuery ile query çalışır (sadece butona tıklayınca veya Enter'a basınca değişir)
   const { data, isLoading, error } = useQuery({
     queryKey: ['cases', { page, search: searchQuery, status: statusFilter }],
     queryFn: () => caseApi.getAll({ page, search: searchQuery, status: statusFilter }),
@@ -24,19 +23,17 @@ const CasesList = () => {
   const cases = data?.data?.data || [];
   const pagination = data?.data?.pagination;
 
-  // ✅ Arama yap
   const handleSearch = () => {
     setSearchQuery(search);
+    setPage(1);
   };
 
-  // ✅ Enter tuşuna basınca arama yap
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
   };
 
-  // ✅ Durum değişince otomatik ara
   const handleStatusChange = (e) => {
     setStatusFilter(e.target.value);
     setPage(1);
@@ -149,7 +146,7 @@ const CasesList = () => {
               {cases.length === 0 ? (
                 <Table.Row>
                   <Table.Cell colSpan="6" className="text-center py-8 text-gray-500">
-                    Henüz dava bulunmuyor
+                    {searchQuery ? 'Aramanıza uygun dava bulunamadı' : 'Henüz dava bulunmuyor'}
                   </Table.Cell>
                 </Table.Row>
               ) : (
@@ -162,7 +159,7 @@ const CasesList = () => {
                     <Table.Cell>{caseItem.case_number || '-'}</Table.Cell>
                     <Table.Cell>{caseItem.court_name || '-'}</Table.Cell>
                     <Table.Cell>
-                      {caseItem.client?.first_name} {caseItem.client?.last_name}
+                      {caseItem.client?.name || '-'} {/* ✅ DEĞİŞTİ */}
                     </Table.Cell>
                     <Table.Cell>
                       <Badge variant={getStatusVariant(caseItem.status)}>
