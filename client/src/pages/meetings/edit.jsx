@@ -35,7 +35,6 @@ const MeetingEdit = () => {
   const [attendeeName, setAttendeeName] = useState('');
   const [attendeeRole, setAttendeeRole] = useState('');
 
-  // ✅ Admin değilse assigned_to'yu otomatik doldur
   useEffect(() => {
     if (user?.role !== 'admin' && user?.id) {
       setFormData(prev => ({
@@ -71,7 +70,6 @@ const MeetingEdit = () => {
   const clients = clientsData?.data?.data || [];
   const users = usersData?.data?.data || [];
 
-  // ✅ Admin ise herkesi göster, değilse sadece kendini
   const assignableUsers = user?.role === 'admin'
     ? users
     : users.filter(u => u.id === user.id);
@@ -147,7 +145,6 @@ const MeetingEdit = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // ✅ Admin değilse user.id'yi kullan
     const assignedTo = user?.role !== 'admin' ? user?.id : formData.assigned_to;
 
     const submitData = {
@@ -307,7 +304,7 @@ const MeetingEdit = () => {
                 <option value="">Müvekkil seçin (isteğe bağlı)</option>
                 {clients.map((client) => (
                   <option key={client.id} value={client.id}>
-                    {client.first_name} {client.last_name}
+                    {client.name}  {/* ✅ SADECE BURASI DEĞİŞTİ */}
                     {client.company_name && ` (${client.company_name})`}
                   </option>
                 ))}
@@ -315,12 +312,11 @@ const MeetingEdit = () => {
             </div>
           </div>
 
-          {/* ✅ Atanan Avukat */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Atanan Avukat
             </label>
-            
+
             {user?.role === 'admin' ? (
               <select
                 name="assigned_to"

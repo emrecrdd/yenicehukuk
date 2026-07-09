@@ -33,7 +33,6 @@ const MeetingCreate = () => {
   const [attendeeName, setAttendeeName] = useState('');
   const [attendeeRole, setAttendeeRole] = useState('');
 
-  // ✅ Admin değilse assigned_to'yu otomatik doldur
   useEffect(() => {
     console.log('🔍 useEffect çalıştı. user:', user);
     if (user?.role !== 'admin' && user?.id) {
@@ -64,7 +63,6 @@ const MeetingCreate = () => {
   const clients = clientsData?.data?.data || [];
   const users = usersData?.data?.data || [];
 
-  // ✅ Admin ise herkesi göster, değilse sadece kendini
   const assignableUsers = user?.role === 'admin'
     ? users
     : users.filter(u => u.id === user.id);
@@ -105,22 +103,21 @@ const MeetingCreate = () => {
   };
 
   const handleSubmit = (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // ✅ DOĞRUDAN user.id'Yİ KULLAN (admin değilse)
-  const assignedTo = user?.role !== 'admin' ? user?.id : formData.assigned_to;
+    const assignedTo = user?.role !== 'admin' ? user?.id : formData.assigned_to;
 
-  const submitData = {
-    ...formData,
-    case_id: formData.case_id || null,
-    client_id: formData.client_id || null,
-    assigned_to: assignedTo || null,
-    attendees: formData.attendees,
+    const submitData = {
+      ...formData,
+      case_id: formData.case_id || null,
+      client_id: formData.client_id || null,
+      assigned_to: assignedTo || null,
+      attendees: formData.attendees,
+    };
+
+    console.log('📤 Gönderilen veri:', submitData);
+    mutation.mutate(submitData);
   };
-
-  console.log('📤 Gönderilen veri:', submitData);
-  mutation.mutate(submitData);
-};
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -242,7 +239,7 @@ const MeetingCreate = () => {
                 <option value="">Müvekkil seçin (isteğe bağlı)</option>
                 {clients.map((client) => (
                   <option key={client.id} value={client.id}>
-                    {client.first_name} {client.last_name}
+                    {client.name}  {/* ✅ SADECE BURASI DEĞİŞTİ */}
                     {client.company_name && ` (${client.company_name})`}
                   </option>
                 ))}
@@ -250,12 +247,11 @@ const MeetingCreate = () => {
             </div>
           </div>
 
-          {/* ✅ Atanan Avukat */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Atanan Avukat
             </label>
-            
+
             {user?.role === 'admin' ? (
               <select
                 name="assigned_to"

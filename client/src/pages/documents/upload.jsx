@@ -150,7 +150,6 @@ const DocumentUpload = () => {
       return;
     }
 
-    // Her dosya için ayrı ayrı yükleme yap
     const uploadPromises = files.map((file) => {
       const formDataToSend = new FormData();
       formDataToSend.append('file', file);
@@ -223,7 +222,6 @@ const DocumentUpload = () => {
 
       <Card>
         <form onSubmit={handleSubmit} className="space-y-6 p-6">
-          {/* File Upload Area */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Dosyalar *
@@ -272,7 +270,6 @@ const DocumentUpload = () => {
               />
             </div>
 
-            {/* File List */}
             {files.length > 0 && (
               <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
                 {files.map((file, index) => (
@@ -369,7 +366,7 @@ const DocumentUpload = () => {
                 <option value="">Müvekkil seçin</option>
                 {clients.map((client) => (
                   <option key={client.id} value={client.id}>
-                    {client.name}
+                    {client.name}  {/* ✅ SADECE BURASI DEĞİŞTİ */}
                   </option>
                 ))}
               </select>

@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import meetingApi from '../../features/meetings/meeting.api.js'; // ✅ meetingApi kullan
+import meetingApi from '../../features/meetings/meeting.api.js';
 import Badge from '../../components/ui/Badge.jsx';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
@@ -13,13 +13,11 @@ dayjs.locale('tr');
 const MeetingDetail = () => {
   const { id } = useParams();
 
-  // ✅ meetingApi ile getir
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['meeting', id],
     queryFn: () => meetingApi.getOne(id),
   });
 
-  // ✅ meetingApi ile güncelle
   const updateStatus = useMutation({
     mutationFn: (status) => meetingApi.updateStatus(id, status),
     onSuccess: () => {
@@ -206,7 +204,7 @@ const MeetingDetail = () => {
                   to={`/clients/${meeting.client.id}`}
                   className="text-blue-600 hover:underline"
                 >
-                  {meeting.client.first_name} {meeting.client.last_name}
+                  {meeting.client.name}  {/* ✅ SADECE BURASI DEĞİŞTİ */}
                   {meeting.client.company_name && ` (${meeting.client.company_name})`}
                 </Link>
               </div>
