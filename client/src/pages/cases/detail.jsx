@@ -19,7 +19,6 @@ const CaseDetail = () => {
 
   const caseItem = data?.data?.data;
 
-  // ✅ İNDİRME FONKSİYONU - token gönderir
   const handleDownload = async (doc) => {
     try {
       const response = await documentApi.download(doc.id);
@@ -151,7 +150,7 @@ const CaseDetail = () => {
                   to={`/clients/${caseItem.client.id}`}
                   className="text-blue-600 hover:underline"
                 >
-                  {caseItem.client.first_name} {caseItem.client.last_name}
+                  {caseItem.client.name} {/* ✅ DEĞİŞTİ */}
                 </Link>
               ) : (
                 <p className="text-gray-900 dark:text-white">-</p>
@@ -182,48 +181,48 @@ const CaseDetail = () => {
           </Card.Body>
         </Card>
 
-       {/* 👥 TARAFLAR */}
-<Card>
-  <Card.Header className="flex items-center justify-between">
-    <h2 className="font-semibold text-gray-900 dark:text-white">👥 Taraflar</h2>
-    <Link to={`/cases/${caseItem.id}/parties/create`}>
-      <Button size="sm">+ Taraf Ekle</Button>
-    </Link>
-  </Card.Header>
-  <Card.Body>
-    {caseItem.parties?.length === 0 ? (
-      <p className="text-gray-500">Henüz taraf eklenmemiş</p>
-    ) : (
-      <div className="space-y-3">
-        {caseItem.parties?.map((party) => (
-          <div
-            key={party.id}
-            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-          >
-            <div>
-              <p className="font-medium text-gray-900 dark:text-white">
-                {party.name}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {party.party_type === 'plaintiff' ? 'Davacı' :
-                 party.party_type === 'defendant' ? 'Davalı' :
-                 party.party_type === 'intervener' ? 'Müdahil' : 'Tanık'}
-              </p>
-            </div>
-            {party.lawyer_name && (
-              <span className="text-sm text-gray-500">
-                Av. {party.lawyer_name}
-              </span>
+        {/* 👥 TARAFLAR */}
+        <Card>
+          <Card.Header className="flex items-center justify-between">
+            <h2 className="font-semibold text-gray-900 dark:text-white">👥 Taraflar</h2>
+            <Link to={`/cases/${caseItem.id}/parties/create`}>
+              <Button size="sm">+ Taraf Ekle</Button>
+            </Link>
+          </Card.Header>
+          <Card.Body>
+            {caseItem.parties?.length === 0 ? (
+              <p className="text-gray-500">Henüz taraf eklenmemiş</p>
+            ) : (
+              <div className="space-y-3">
+                {caseItem.parties?.map((party) => (
+                  <div
+                    key={party.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                  >
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {party.name}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {party.party_type === 'plaintiff' ? 'Davacı' :
+                         party.party_type === 'defendant' ? 'Davalı' :
+                         party.party_type === 'intervener' ? 'Müdahil' : 'Tanık'}
+                      </p>
+                    </div>
+                    {party.lawyer_name && (
+                      <span className="text-sm text-gray-500">
+                        Av. {party.lawyer_name}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
-          </div>
-        ))}
-      </div>
-    )}
-  </Card.Body>
-</Card>
+          </Card.Body>
+        </Card>
       </div>
 
-      {/* ✅ Documents - Görüntüle yok, İndir butonu çalışıyor */}
+      {/* ✅ Documents */}
       <Card>
         <Card.Header className="flex items-center justify-between">
           <h2 className="font-semibold text-gray-900 dark:text-white">📄 Belgeler</h2>
@@ -265,7 +264,7 @@ const CaseDetail = () => {
         </Card.Body>
       </Card>
 
-      {/* ✅ Görevler - Görüntüle linki ve Görev Ekle butonu eklendi */}
+      {/* ✅ Görevler */}
       <Card>
         <Card.Header className="flex items-center justify-between">
           <h2 className="font-semibold text-gray-900 dark:text-white">✅ Görevler</h2>

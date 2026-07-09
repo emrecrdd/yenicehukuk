@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import caseApi from '../../features/cases/case.api.js';
 import clientApi from '../../features/clients/client.api.js';
-import userApi from '../../features/users/user.api.js';  // ← BUNU EKLE!
+import userApi from '../../features/users/user.api.js';
 import Button from '../../components/ui/Button.jsx';
 import Input from '../../components/ui/Input.jsx';
 import Card from '../../components/ui/Card.jsx';
@@ -21,19 +21,17 @@ const CaseCreate = () => {
     description: '',
     status: 'preparation',
     client_id: '',
-    assigned_to: '',  // ← BUNU EKLE!
+    assigned_to: '',
     priority: 'normal',
     estimated_value: '',
   });
   const [errors, setErrors] = useState({});
 
-  // Fetch clients for dropdown
   const { data: clientsData } = useQuery({
     queryKey: ['clients', { limit: 100 }],
     queryFn: () => clientApi.getAll({ limit: 100 }),
   });
 
-  // ✅ Avukat listesini getir
   const { data: lawyersData } = useQuery({
     queryKey: ['users', { role: 'lawyer' }],
     queryFn: () => userApi.getAll({ role: 'lawyer' }),
@@ -75,7 +73,7 @@ const CaseCreate = () => {
     const submitData = {
       ...formData,
       estimated_value: formData.estimated_value ? parseFloat(formData.estimated_value) : null,
-      assigned_to: formData.assigned_to || null,  // ← BURASI ÖNEMLİ!
+      assigned_to: formData.assigned_to || null,
     };
     mutation.mutate(submitData);
   };
@@ -150,7 +148,8 @@ const CaseCreate = () => {
               <option value="">Müvekkil seçin</option>
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
-                  {client.first_name} {client.last_name} {client.company_name ? `(${client.company_name})` : ''}
+                  {client.name} {/* ✅ DEĞİŞTİ */}
+                  {client.client_type === 'corporate' ? ' 🏢' : ''}
                 </option>
               ))}
             </select>
@@ -159,7 +158,6 @@ const CaseCreate = () => {
             )}
           </div>
 
-          {/* ✅ AVUKAT ATAMA DROPDOWN - EKLENDİ! */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Atanan Avukat

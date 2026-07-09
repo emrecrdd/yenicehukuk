@@ -55,13 +55,11 @@ const CaseEdit = () => {
     }
   }, [caseData]);
 
-  // Fetch clients for dropdown
   const { data: clientsData } = useQuery({
     queryKey: ['clients', { limit: 100 }],
     queryFn: () => clientApi.getAll({ limit: 100 }),
   });
 
-  // Fetch lawyers for dropdown
   const { data: lawyersData } = useQuery({
     queryKey: ['users', { role: 'lawyer' }],
     queryFn: () => userApi.getAll({ role: 'lawyer' }),
@@ -203,7 +201,8 @@ const CaseEdit = () => {
               <option value="">Müvekkil seçin</option>
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
-                  {client.first_name} {client.last_name} {client.company_name ? `(${client.company_name})` : ''}
+                  {client.name} {/* ✅ DEĞİŞTİ */}
+                  {client.client_type === 'corporate' ? ' 🏢' : ''}
                 </option>
               ))}
             </select>
