@@ -14,36 +14,26 @@ export const searchService = {
     let where = {};
     
     if (parts.length === 1) {
-      // TEK KELİME: Sadece o kelimeyi içeren kayıtları getir
+      // TEK KELİME: name, email, phone, identification_number içinde ara
       where[Op.or] = [
-        { first_name: { [Op.iLike]: `%${parts[0]}%` } },
-        { last_name: { [Op.iLike]: `%${parts[0]}%` } },
-        { company_name: { [Op.iLike]: `%${parts[0]}%` } },
+        { name: { [Op.iLike]: `%${parts[0]}%` } },
         { email: { [Op.iLike]: `%${parts[0]}%` } },
         { phone: { [Op.iLike]: `%${parts[0]}%` } },
-        { tc_number: { [Op.iLike]: `%${parts[0]}%` } },
+        { identification_number: { [Op.iLike]: `%${parts[0]}%` } },
       ];
     } else if (parts.length >= 2) {
-      // ÇOKLU KELİME: İLK kelime first_name, SONRAKİLER last_name olarak ARA!
-      const firstName = parts[0];
-      const lastName = parts.slice(1).join(' ');
-      
-      // SADECE first_name + last_name kombinasyonu!
+      // ÇOKLU KELİME: name içinde ara
       where = {
-        [Op.and]: [
-          { first_name: { [Op.iLike]: `%${firstName}%` } },
-          { last_name: { [Op.iLike]: `%${lastName}%` } },
-        ]
+        name: { [Op.iLike]: `%${searchTerm}%` }
       };
     }
 
     return Client.findAll({
       where,
-      attributes: ['id', 'first_name', 'last_name', 'company_name', 'email', 'phone', 'status'],
+      attributes: ['id', 'name', 'identification_number', 'email', 'phone', 'status', 'client_type'],
       limit,
       order: [
-        ['first_name', 'ASC'],
-        ['last_name', 'ASC'],
+        ['name', 'ASC'],
       ],
     });
   },
@@ -64,7 +54,7 @@ export const searchService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name', 'company_name'],
+          attributes: ['id', 'name'],
         },
       ],
       attributes: ['id', 'title', 'case_number', 'court_name', 'status', 'opening_date'],
@@ -93,7 +83,7 @@ export const searchService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name'],
+          attributes: ['id', 'name'],
         },
         {
           model: User,
@@ -130,7 +120,7 @@ export const searchService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name'],
+          attributes: ['id', 'name'],
         },
       ],
       attributes: ['id', 'title', 'status', 'priority', 'due_date'],
@@ -159,7 +149,7 @@ export const searchService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name'],
+          attributes: ['id', 'name'],
         },
         {
           model: User,
@@ -231,13 +221,9 @@ export const searchService = {
     // Client suggestions
     const clients = await Client.findAll({
       where: {
-        [Op.or]: [
-          { first_name: { [Op.iLike]: `%${searchTerm}%` } },
-          { last_name: { [Op.iLike]: `%${searchTerm}%` } },
-          { company_name: { [Op.iLike]: `%${searchTerm}%` } },
-        ],
+        name: { [Op.iLike]: `%${searchTerm}%` },
       },
-      attributes: ['id', 'first_name', 'last_name', 'company_name'],
+      attributes: ['id', 'name'],
       limit: 3,
     });
 
@@ -245,7 +231,7 @@ export const searchService = {
       suggestions.push({
         type: 'client',
         id: client.id,
-        label: `${client.first_name} ${client.last_name}${client.company_name ? ` (${client.company_name})` : ''}`,
+        label: client.name,
         url: `/clients/${client.id}`,
       });
     });
