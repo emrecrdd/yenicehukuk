@@ -1,5 +1,6 @@
 import { powerOfAttorneyService } from './powerOfAttorney.service.js';
-import { response } from '../../utils/response.js';
+import { successResponse, errorResponse } from '../../utils/response.js';
+import { logger } from '../../config/logger.js';
 
 export const powerOfAttorneyController = {
   // ✅ Yeni Vekaletname Oluştur
@@ -11,9 +12,10 @@ export const powerOfAttorneyController = {
       };
 
       const powerOfAttorney = await powerOfAttorneyService.create(data);
-      return response.success(res, 201, powerOfAttorney, 'Vekaletname başarıyla oluşturuldu');
+      return successResponse(res, 201, powerOfAttorney, 'Vekaletname başarıyla oluşturuldu');
     } catch (error) {
-      return response.error(res, 400, error.message);
+      logger.error('Vekaletname oluşturma hatası:', error);
+      return errorResponse(res, 400, error.message);
     }
   },
 
@@ -29,9 +31,10 @@ export const powerOfAttorneyController = {
         status,
         search,
       });
-      return response.success(res, 200, result);
+      return successResponse(res, 200, result, 'Vekaletnameler başarıyla getirildi');
     } catch (error) {
-      return response.error(res, 500, error.message);
+      logger.error('Vekaletnameler getirme hatası:', error);
+      return errorResponse(res, 500, error.message);
     }
   },
 
@@ -40,9 +43,10 @@ export const powerOfAttorneyController = {
     try {
       const { id } = req.params;
       const powerOfAttorney = await powerOfAttorneyService.findOne(id);
-      return response.success(res, 200, powerOfAttorney);
+      return successResponse(res, 200, powerOfAttorney, 'Vekaletname başarıyla getirildi');
     } catch (error) {
-      return response.error(res, 404, error.message);
+      logger.error('Vekaletname getirme hatası:', error);
+      return errorResponse(res, 404, error.message);
     }
   },
 
@@ -51,9 +55,10 @@ export const powerOfAttorneyController = {
     try {
       const { clientId } = req.params;
       const powerOfAttorneys = await powerOfAttorneyService.findByClient(clientId);
-      return response.success(res, 200, powerOfAttorneys);
+      return successResponse(res, 200, powerOfAttorneys, 'Müvekkile ait vekaletnameler getirildi');
     } catch (error) {
-      return response.error(res, 500, error.message);
+      logger.error('Müvekkil vekaletnameleri getirme hatası:', error);
+      return errorResponse(res, 500, error.message);
     }
   },
 
@@ -62,9 +67,10 @@ export const powerOfAttorneyController = {
     try {
       const { id } = req.params;
       const powerOfAttorney = await powerOfAttorneyService.update(id, req.body);
-      return response.success(res, 200, powerOfAttorney, 'Vekaletname başarıyla güncellendi');
+      return successResponse(res, 200, powerOfAttorney, 'Vekaletname başarıyla güncellendi');
     } catch (error) {
-      return response.error(res, 400, error.message);
+      logger.error('Vekaletname güncelleme hatası:', error);
+      return errorResponse(res, 400, error.message);
     }
   },
 
@@ -73,9 +79,10 @@ export const powerOfAttorneyController = {
     try {
       const { id } = req.params;
       await powerOfAttorneyService.delete(id);
-      return response.success(res, 200, null, 'Vekaletname başarıyla silindi');
+      return successResponse(res, 200, null, 'Vekaletname başarıyla silindi');
     } catch (error) {
-      return response.error(res, 404, error.message);
+      logger.error('Vekaletname silme hatası:', error);
+      return errorResponse(res, 404, error.message);
     }
   },
 
@@ -85,9 +92,10 @@ export const powerOfAttorneyController = {
       const { id } = req.params;
       const { status } = req.body;
       const powerOfAttorney = await powerOfAttorneyService.updateStatus(id, status);
-      return response.success(res, 200, powerOfAttorney, 'Durum başarıyla güncellendi');
+      return successResponse(res, 200, powerOfAttorney, 'Durum başarıyla güncellendi');
     } catch (error) {
-      return response.error(res, 400, error.message);
+      logger.error('Vekaletname durum güncelleme hatası:', error);
+      return errorResponse(res, 400, error.message);
     }
   },
 
@@ -95,9 +103,10 @@ export const powerOfAttorneyController = {
   async getStatistics(req, res) {
     try {
       const stats = await powerOfAttorneyService.getStatistics();
-      return response.success(res, 200, stats);
+      return successResponse(res, 200, stats, 'İstatistikler başarıyla getirildi');
     } catch (error) {
-      return response.error(res, 500, error.message);
+      logger.error('Vekaletname istatistik getirme hatası:', error);
+      return errorResponse(res, 500, error.message);
     }
   },
 };
