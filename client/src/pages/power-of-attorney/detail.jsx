@@ -9,10 +9,22 @@ import toast from 'react-hot-toast';
 const PowerOfAttorneyDetail = () => {
   const { id } = useParams();
 
+  // ✅ DEBUG - ID'yi kontrol et
+  console.log('🔍 Detay ID:', id);
+
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['powerOfAttorney', id],
     queryFn: () => powerOfAttorneyApi.getOne(id),
   });
+
+  // ✅ DEBUG - Gelen veriyi kontrol et
+  console.log('📦 Data:', data);
+  console.log('📦 Data?.data:', data?.data);
+
+  // ✅ VERI YAPISINI DÜZELT - data?.data?.data veya data?.data
+  const item = data?.data?.data || data?.data;
+
+  console.log('📦 Item:', item);
 
   const deleteMutation = useMutation({
     mutationFn: () => powerOfAttorneyApi.delete(id),
@@ -35,8 +47,6 @@ const PowerOfAttorneyDetail = () => {
       toast.error(error.response?.data?.message || 'Durum güncellenemedi');
     },
   });
-
-  const item = data?.data;
 
   const statuses = [
     { value: 'active', label: 'Aktif' },
@@ -81,6 +91,7 @@ const PowerOfAttorneyDetail = () => {
   }
 
   if (error || !item) {
+    console.error('❌ Hata veya item yok:', error);
     return (
       <div className="text-center py-12">
         <p className="text-red-600">Vekaletname bulunamadı</p>
@@ -191,14 +202,13 @@ const PowerOfAttorneyDetail = () => {
             <div>
               <p className="text-sm text-gray-500">Oluşturan</p>
               <p className="text-gray-900 dark:text-white">
-  {item.creator ? `${item.creator.first_name} ${item.creator.last_name}` : '-'}
-</p>
+                {item.creator ? `${item.creator.first_name} ${item.creator.last_name}` : '-'}
+              </p>
             </div>
           </Card.Body>
         </Card>
       </div>
 
-      {/* Yetkiler */}
       {item.authorities && item.authorities.length > 0 && (
         <Card>
           <Card.Header>
@@ -216,7 +226,6 @@ const PowerOfAttorneyDetail = () => {
         </Card>
       )}
 
-      {/* Dosya */}
       {item.file_url && (
         <Card>
           <Card.Header>
@@ -244,7 +253,6 @@ const PowerOfAttorneyDetail = () => {
         </Card>
       )}
 
-      {/* Notlar */}
       {item.notes && (
         <Card>
           <Card.Header>
