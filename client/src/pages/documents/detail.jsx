@@ -16,9 +16,8 @@ const DocumentDetail = () => {
     enabled: !!id,
   });
 
-  // ✅ BURASI DÜZELTİLDİ - data.data değil, data
-const document = data?.data?.data;
-  // ✅ DEBUG - Backend'den gelen veriyi göster
+  const document = data?.data?.data;
+
   console.log('📄 TÜM DATA:', data);
   console.log('📄 document:', document);
   console.log('📌 uploader:', document?.uploader);
@@ -144,7 +143,6 @@ const document = data?.data?.data;
           <p className="text-sm text-gray-500">{document.original_name}</p>
         </div>
         <div className="flex gap-2">
-         
           <Button variant="secondary" onClick={() => navigate(`/documents/${id}/edit`)}>✏️ Düzenle</Button>
         </div>
       </div>
@@ -167,7 +165,6 @@ const document = data?.data?.data;
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Kategori */}
             <div>
               <p className="text-sm text-gray-500">Kategori</p>
               <Badge className={`mt-1 ${getCategoryColor(document.category)}`}>
@@ -175,7 +172,6 @@ const document = data?.data?.data;
               </Badge>
             </div>
 
-            {/* Yükleyen */}
             <div>
               <p className="text-sm text-gray-500">Yükleyen</p>
               <p className="font-medium text-gray-900 dark:text-white">
@@ -186,19 +182,16 @@ const document = data?.data?.data;
               )}
             </div>
 
-            {/* Yüklenme Tarihi */}
             <div>
               <p className="text-sm text-gray-500">Yüklenme Tarihi</p>
               <p className="font-medium text-gray-900 dark:text-white">{formatDate(document.created_at)}</p>
             </div>
 
-            {/* Son Güncelleme */}
             <div>
               <p className="text-sm text-gray-500">Son Güncelleme</p>
               <p className="font-medium text-gray-900 dark:text-white">{formatDate(document.updated_at)}</p>
             </div>
 
-            {/* İlişkili Dava */}
             <div>
               <p className="text-sm text-gray-500">İlişkili Dava</p>
               {document.case ? (
@@ -213,12 +206,11 @@ const document = data?.data?.data;
               )}
             </div>
 
-            {/* İlişkili Müvekkil */}
             <div>
               <p className="text-sm text-gray-500">İlişkili Müvekkil</p>
               {document.client ? (
                 <Link to={`/clients/${document.client.id}`} className="font-medium text-blue-600 hover:underline">
-                  {document.client.first_name} {document.client.last_name}
+                  {document.client.name}  {/* ✅ DÜZELTİLDİ */}
                   {document.client.company_name && (
                     <span className="text-sm text-gray-500 block">{document.client.company_name}</span>
                   )}
@@ -231,7 +223,6 @@ const document = data?.data?.data;
               )}
             </div>
 
-            {/* Herkese Açık */}
             <div>
               <p className="text-sm text-gray-500">Herkese Açık</p>
               <Badge className={`mt-1 ${document.is_public ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
@@ -239,7 +230,6 @@ const document = data?.data?.data;
               </Badge>
             </div>
 
-            {/* Versiyon */}
             {document.version && document.version > 1 && (
               <div>
                 <p className="text-sm text-gray-500">Versiyon</p>
@@ -248,7 +238,6 @@ const document = data?.data?.data;
             )}
           </div>
 
-          {/* Etiketler */}
           {document.tags && document.tags.length > 0 && (
             <div>
               <p className="text-sm text-gray-500 mb-2">Etiketler</p>
@@ -262,7 +251,6 @@ const document = data?.data?.data;
             </div>
           )}
 
-          {/* Açıklama */}
           {document.description && (
             <div>
               <p className="text-sm text-gray-500 mb-1">Açıklama</p>

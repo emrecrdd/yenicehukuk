@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import eventApi from '../../features/events/event.api.js';
-import meetingApi from '../../features/meetings/meeting.api.js';  // ✅ EKLENDI
+import meetingApi from '../../features/meetings/meeting.api.js';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import Badge from '../../components/ui/Badge.jsx';
@@ -17,13 +17,11 @@ const Calendar = () => {
   const year = currentDate.year();
   const month = currentDate.month() + 1;
 
-  // ✅ Events (Duruşmalar)
   const { data: eventsData, isLoading: eventsLoading } = useQuery({
     queryKey: ['calendar-events', year, month],
     queryFn: () => eventApi.getCalendarEvents({ year, month }),
   });
 
-  // ✅ Meetings (Toplantılar)
   const { data: meetingsData, isLoading: meetingsLoading } = useQuery({
     queryKey: ['calendar-meetings', year, month],
     queryFn: () => meetingApi.getAll({ page: 1, limit: 100 }),
@@ -34,7 +32,6 @@ const Calendar = () => {
   const events = eventsData?.data?.data || [];
   const meetings = meetingsData?.data?.data || [];
 
-  // ✅ TÜM ETKİNLİKLERİ BİRLEŞTİR
   const allEvents = [
     ...events,
     ...meetings.map(m => ({
@@ -48,7 +45,7 @@ const Calendar = () => {
       case_id: m.case_id,
       case_title: m.case?.title,
       client_id: m.client_id,
-      client_name: m.client ? `${m.client.first_name} ${m.client.last_name}` : null,
+      client_name: m.client ? m.client.name : null,  // ✅ DÜZELTİLDİ
       color: '#10b981',
     }))
   ];
@@ -116,7 +113,6 @@ const Calendar = () => {
   const days = getDaysInMonth();
   const todayEvents = allEvents.filter(event => dayjs(event.start).isSame(dayjs(), 'day'));
 
-  // BOŞ GÜN HESAPLAMA
   const allDays = days.filter(d => d.date !== null);
   const emptyDays = allDays.filter(d => d.events.length === 0);
   const emptyCount = emptyDays.length;
@@ -124,7 +120,6 @@ const Calendar = () => {
   const busyCount = totalDays - emptyCount;
   const emptyRatio = totalDays > 0 ? Math.round((emptyCount / totalDays) * 100) : 0;
 
-  // İSTATİSTİK KARTLARI
   const hearingCount = events.filter(e => e.event_type === 'hearing').length;
   const meetingCount = meetings.length;
   const taskCount = events.filter(e => e.type === 'task').length;
@@ -139,7 +134,6 @@ const Calendar = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           📅 Takvim
@@ -158,7 +152,6 @@ const Calendar = () => {
         </div>
       </div>
 
-      {/* View Toggle */}
       <div className="flex gap-2">
         {['month', 'week', 'day'].map((viewOption) => (
           <Button
@@ -172,7 +165,6 @@ const Calendar = () => {
         ))}
       </div>
 
-      {/* İSTATİSTİK KARTLARI */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
           <p className="text-sm text-red-600 dark:text-red-400">⚖️ Duruşma</p>
@@ -192,7 +184,6 @@ const Calendar = () => {
         </div>
       </div>
 
-      {/* Calendar Grid */}
       <Card>
         <Card.Body>
           <div className="grid grid-cols-7 gap-1">
@@ -248,7 +239,6 @@ const Calendar = () => {
         </Card.Body>
       </Card>
 
-      {/* Bugünün Etkinlikleri */}
       <Card>
         <Card.Header>
           <h2 className="font-semibold text-gray-900 dark:text-white">
@@ -258,8 +248,8 @@ const Calendar = () => {
         <Card.Body>
           {todayEvents.length === 0 ? (
             <div className="text-center py-4">
-              <p className="text-gray-500">Bugün için planlanmış etkinlik yok </p>
-              <p className="text-sm text-green-500 mt-1">Bugün boş günün! Değerlendir! </p>
+              <p className="text-gray-500">Bugün için planlanmış etkinlik yok 😎</p>
+              <p className="text-sm text-green-500 mt-1">Bugün boş günün! Değerlendir! 🎉</p>
             </div>
           ) : (
             <div className="space-y-2">

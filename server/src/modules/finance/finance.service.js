@@ -11,7 +11,6 @@ export const financeService = {
     return Payment.create(data);
   },
 
-  // ✅ GÜNCELLENMİŞ - search parametresi eklendi
   async findAllPayments({ page, limit, client_id, case_id, status, start_date, end_date, search }) {
     const where = {};
 
@@ -33,12 +32,10 @@ export const financeService = {
       };
     }
 
-    // ✅ SEARCH EKLENDİ
+    // ✅ SEARCH - DÜZELTİLDİ
     if (search) {
       where[Op.or] = [
-        { '$client.first_name$': { [Op.iLike]: `%${search}%` } },
-        { '$client.last_name$': { [Op.iLike]: `%${search}%` } },
-        { '$client.company_name$': { [Op.iLike]: `%${search}%` } },
+        { '$client.name$': { [Op.iLike]: `%${search}%` } },  // ✅ DÜZELTİLDİ
         { '$case.title$': { [Op.iLike]: `%${search}%` } },
         { description: { [Op.iLike]: `%${search}%` } },
       ];
@@ -51,7 +48,7 @@ export const financeService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name', 'company_name'],
+          attributes: ['id', 'name', 'company_name'],  // ✅ DÜZELTİLDİ
         },
         {
           model: Case,
@@ -81,7 +78,7 @@ export const financeService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name', 'company_name', 'phone', 'email'],
+          attributes: ['id', 'name', 'company_name', 'phone', 'email'],  // ✅ DÜZELTİLDİ
         },
         {
           model: Case,
@@ -144,7 +141,7 @@ export const financeService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name'],
+          attributes: ['id', 'name'],  // ✅ DÜZELTİLDİ
         },
       ],
       order: [['payment_date', 'DESC']],
@@ -294,7 +291,7 @@ export const financeService = {
     });
 
     return {
-      clientName: `${client.first_name} ${client.last_name}`,
+      clientName: client.name,  // ✅ DÜZELTİLDİ
       totalAgreed: totalAgreed || 0,
       totalReceived: totalReceived || 0,
       totalPending: totalPending || 0,
@@ -313,7 +310,7 @@ export const financeService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'first_name', 'last_name', 'company_name', 'phone', 'email'],
+          attributes: ['id', 'name', 'company_name', 'phone', 'email'],  // ✅ DÜZELTİLDİ
         },
         {
           model: Case,

@@ -230,7 +230,7 @@ const DocumentEdit = () => {
                 <option value="">Müvekkil seçin</option>
                 {clients.map((client) => (
                   <option key={client.id} value={client.id}>
-                    {client.first_name} {client.last_name}
+                    {client.name}  {/* ✅ DÜZELTİLDİ */}
                   </option>
                 ))}
               </select>
