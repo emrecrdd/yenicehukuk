@@ -13,6 +13,7 @@ import Login from '../../pages/auth/login.jsx';
 import Register from '../../pages/auth/register.jsx';
 import ForgotPassword from '../../pages/auth/forgot-password.jsx';
 import ResetPassword from '../../pages/auth/reset-password.jsx';
+
 // Dashboard Pages
 import Dashboard from '../../pages/dashboard/index.jsx';
 import ClientsList from '../../pages/clients/list.jsx';
@@ -60,11 +61,18 @@ import FinanceCreate from '../../pages/finance/create.jsx';
 import AIAssistant from '../../pages/ai/index.jsx';
 import Search from '../../pages/search/index.jsx';
 import Settings from '../../pages/settings/index.jsx';
-// ✅ Users (Sadece Admin) - EKLENDI
+
+// ✅ Users (Sadece Admin)
 import UserList from '../../pages/users/list.jsx';
 // ✅ AuditLog (Sadece Admin)
 import AuditLogList from '../../pages/audit-logs/list.jsx';
 import AuditLogDetail from '../../pages/audit-logs/detail.jsx';
+
+// ✅ Power of Attorney (Vekaletname)
+import PowerOfAttorneyList from '../../pages/power-of-attorney/list.jsx';
+import PowerOfAttorneyDetail from '../../pages/power-of-attorney/detail.jsx';
+import PowerOfAttorneyCreate from '../../pages/power-of-attorney/create.jsx';
+import PowerOfAttorneyEdit from '../../pages/power-of-attorney/edit.jsx';
 
 const AppRouter = () => {
   const { loading } = useAuth();
@@ -77,8 +85,8 @@ const AppRouter = () => {
     <Routes>
       {/* Public Routes */}
       <Route element={<PublicRoute />}>
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-<Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -141,19 +149,25 @@ const AppRouter = () => {
           <Route path="/finance" element={<Finance />} />
           <Route path="/finance/create" element={<FinanceCreate />} />
 
+          {/* ✅ Power of Attorney (Vekaletname) */}
+          <Route path="/power-of-attorney" element={<PowerOfAttorneyList />} />
+          <Route path="/power-of-attorney/create" element={<PowerOfAttorneyCreate />} />
+          <Route path="/power-of-attorney/:id" element={<PowerOfAttorneyDetail />} />
+          <Route path="/power-of-attorney/:id/edit" element={<PowerOfAttorneyEdit />} />
+
           {/* AI & Search */}
           <Route path="/ai" element={<AIAssistant />} />
           <Route path="/search" element={<Search />} />
 
           {/* Settings */}
-<Route path="/settings" element={<Settings />} />
+          <Route path="/settings" element={<Settings />} />
 
-{/* ✅ ADMIN ROUTES - SADECE ADMIN */}
-<Route element={<PrivateRoute requiredRole="admin" />}>
-  <Route path="users" element={<UserList />} />
-  <Route path="audit-logs" element={<AuditLogList />} />
-  <Route path="audit-logs/:id" element={<AuditLogDetail />} />
-</Route>
+          {/* ✅ ADMIN ROUTES - SADECE ADMIN */}
+          <Route element={<PrivateRoute requiredRole="admin" />}>
+            <Route path="users" element={<UserList />} />
+            <Route path="audit-logs" element={<AuditLogList />} />
+            <Route path="audit-logs/:id" element={<AuditLogDetail />} />
+          </Route>
           
         </Route>
       </Route>

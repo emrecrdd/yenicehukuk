@@ -1,10 +1,11 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import clientApi from '../../features/clients/client.api.js';
+import { powerOfAttorneyApi } from '../../features/power-of-attorney/powerOfAttorney.api.js';  // ✅ EKLENDI
 import Badge from '../../components/ui/Badge.jsx';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
-import { Phone, Mail, MessageCircle, Edit2, Briefcase, DollarSign, Calendar, MapPin, User, ArrowLeft, Building2, Scale, UserCog } from 'lucide-react';
+import { Phone, Mail, MessageCircle, Edit2, Briefcase, DollarSign, Calendar, MapPin, User, ArrowLeft, Building2, Scale, UserCog, FileText } from 'lucide-react';  // ✅ FileText eklendi
 
 const getCaseStatusLabel = (status) => {
   const labels = {
@@ -32,16 +33,44 @@ const getCaseStatusVariant = (status) => {
   return variants[status] || 'default';
 };
 
+// ✅ Vekaletname durum etiketleri
+const getPOAStatusLabel = (status) => {
+  const labels = {
+    active: 'Aktif',
+    expired: 'Süresi Doldu',
+    cancelled: 'İptal',
+  };
+  return labels[status] || status;
+};
+
+const getPOAStatusVariant = (status) => {
+  const variants = {
+    active: 'success',
+    expired: 'warning',
+    cancelled: 'danger',
+  };
+  return variants[status] || 'default';
+};
+
 const ClientDetail = () => {
   const { id } = useParams();
 
+  // ✅ Müvekkil bilgileri
   const { data, isLoading, error } = useQuery({
     queryKey: ['client', id],
     queryFn: () => clientApi.getOne(id),
     enabled: !!id,
   });
 
+  // ✅ Vekaletnameleri getir
+  const { data: poaData, isLoading: poaLoading } = useQuery({
+    queryKey: ['powerOfAttorneys', { client_id: id }],
+    queryFn: () => powerOfAttorneyApi.getByClient(id),
+    enabled: !!id,
+  });
+
   const client = data?.data?.data;
+  const powerOfAttorneys = poaData?.data || [];
 
   if (isLoading) {
     return (
@@ -66,18 +95,12 @@ const ClientDetail = () => {
     );
   }
 
-  // ✅ İletişim linkleri
   const phone = client.phone || '';
   const email = client.email || '';
 
-  // WhatsApp - Direkt mesaj
   const message = encodeURIComponent(`Merhaba, ${client.name} ile iletişime geçmek istiyorum.`);
   const whatsappUrl = phone ? `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${message}` : '#';
-
-  // Telefon
   const telUrl = phone ? `tel:${phone}` : '#';
-
-  // Gmail
   const gmailUrl = email ? `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=Konu&body=Merhaba%2C` : '#';
   
   const totalPaid = client.payments?.reduce((sum, p) => sum + parseFloat(p.amount), 0) || 0;
@@ -118,35 +141,21 @@ const ClientDetail = () => {
           </div>
         </div>
 
-        {/* İletişim Butonları */}
         <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
           {phone && (
             <>
-              <a
-                href={telUrl}
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors"
-              >
+              <a href={telUrl} className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors">
                 <Phone className="w-4 h-4" />
                 Ara
               </a>
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors"
-              >
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors">
                 <MessageCircle className="w-4 h-4" />
                 WhatsApp
               </a>
             </>
           )}
           {email && (
-            <a
-              href={gmailUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors"
-            >
+            <a href={gmailUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors">
               <Mail className="w-4 h-4" />
               Mail Gönder
             </a>
@@ -262,7 +271,87 @@ const ClientDetail = () => {
         </Card>
       </div>
 
-      {/* Davalar - Detaylı */}
+      {/* ✅ VEKALETNAMELER BÖLÜMÜ - Davalar'ın ÜSTÜNDE! */}
+      <Card className="border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+        <Card.Header className="border-b border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-gray-500" />
+              <h2 className="font-semibold text-gray-900 dark:text-white">📜 Vekaletnameler</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="default" className="bg-gray-100 dark:bg-gray-700">
+                {powerOfAttorneys.length || 0} Vekaletname
+              </Badge>
+              <Link to={`/power-of-attorney/create?client_id=${client.id}`}>
+                <Button size="sm">+ Yeni Vekaletname</Button>
+              </Link>
+            </div>
+          </div>
+        </Card.Header>
+        <Card.Body>
+          {poaLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-2 text-sm text-gray-400">Yükleniyor...</p>
+            </div>
+          ) : powerOfAttorneys.length === 0 ? (
+            <div className="text-center py-8">
+              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-400">Henüz vekaletname bulunmuyor</p>
+              <Link to={`/power-of-attorney/create?client_id=${client.id}`}>
+                <Button size="sm" variant="outline" className="mt-2">
+                  + İlk Vekaletnameyi Ekle
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {powerOfAttorneys.map((poa) => (
+                <Link
+                  key={poa.id}
+                  to={`/power-of-attorney/${poa.id}`}
+                  className="block p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors border border-gray-100 dark:border-gray-700"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-5 h-5 text-blue-500" />
+                      <div>
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {poa.title}
+                        </p>
+                        {poa.description && (
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {poa.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {poa.case && (
+                        <span className="text-xs text-gray-400 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
+                          {poa.case.title}
+                        </span>
+                      )}
+                      <Badge variant={getPOAStatusVariant(poa.status)}>
+                        {getPOAStatusLabel(poa.status)}
+                      </Badge>
+                    </div>
+                  </div>
+                  {poa.start_date && (
+                    <div className="mt-2 text-xs text-gray-400">
+                      Başlangıç: {new Date(poa.start_date).toLocaleDateString('tr-TR')}
+                      {poa.end_date && ` - Bitiş: ${new Date(poa.end_date).toLocaleDateString('tr-TR')}`}
+                    </div>
+                  )}
+                </Link>
+              ))}
+            </div>
+          )}
+        </Card.Body>
+      </Card>
+
+      {/* Davalar - Detaylı (Vekaletname'den SONRA!) */}
       <Card className="border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
         <Card.Header className="border-b border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
@@ -288,7 +377,6 @@ const ClientDetail = () => {
                   to={`/cases/${caseItem.id}`}
                   className="block p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors border border-gray-100 dark:border-gray-700"
                 >
-                  {/* Dava Başlığı ve Durum */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <p className="font-semibold text-gray-900 dark:text-white">
@@ -303,7 +391,6 @@ const ClientDetail = () => {
                     </Badge>
                   </div>
 
-                  {/* Detay Bilgileri */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3 text-sm">
                     <div>
                       <p className="text-gray-400 text-xs flex items-center gap-1">
