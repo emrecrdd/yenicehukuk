@@ -20,9 +20,10 @@ const PowerOfAttorneyList = () => {
     keepPreviousData: true,
   });
 
-  // ✅ DOĞRU - data?.data?.data (3 katman)
-  const powerOfAttorneys = data?.data?.data || [];
-  const pagination = data?.data?.pagination;
+  // ✅ SON VE KESİN ÇÖZÜM
+  const responseData = data?.data?.data;
+  const powerOfAttorneys = responseData?.data || [];
+  const pagination = responseData?.pagination;
 
   console.log('📜 powerOfAttorneys:', powerOfAttorneys);
   console.log('📜 Array mi?', Array.isArray(powerOfAttorneys));
@@ -234,4 +235,4 @@ const PowerOfAttorneyList = () => {
   );
 };
 
-export default PowerOfAttorneyList;
+export default PowerOfAttorneyList; 
