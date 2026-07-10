@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { powerOfAttorneyApi } from '../../features/power-of-attorney/powerOfAttorney.api.js';
+import documentApi from '../../features/documents/document.api.js';  // ✅ EKLENDI
 import Badge from '../../components/ui/Badge.jsx';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
@@ -9,7 +10,6 @@ import toast from 'react-hot-toast';
 const PowerOfAttorneyDetail = () => {
   const { id } = useParams();
 
-  // ✅ DEBUG - ID'yi kontrol et
   console.log('🔍 Detay ID:', id);
 
   const { data, isLoading, error, refetch } = useQuery({
@@ -17,11 +17,6 @@ const PowerOfAttorneyDetail = () => {
     queryFn: () => powerOfAttorneyApi.getOne(id),
   });
 
-  // ✅ DEBUG - Gelen veriyi kontrol et
-  console.log('📦 Data:', data);
-  console.log('📦 Data?.data:', data?.data);
-
-  // ✅ VERI YAPISINI DÜZELT - data?.data?.data veya data?.data
   const item = data?.data?.data || data?.data;
 
   console.log('📦 Item:', item);
@@ -47,6 +42,26 @@ const PowerOfAttorneyDetail = () => {
       toast.error(error.response?.data?.message || 'Durum güncellenemedi');
     },
   });
+
+  // ✅ Belge indirme fonksiyonu
+  const handleDownload = async (docId, docName) => {
+    try {
+      const response = await documentApi.download(docId);
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = docName || 'belge';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Belge indirildi');
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Belge indirilemedi');
+    }
+  };
 
   const statuses = [
     { value: 'active', label: 'Aktif' },
@@ -80,6 +95,16 @@ const PowerOfAttorneyDetail = () => {
   const formatDateTime = (date) => {
     if (!date) return '-';
     return new Date(date).toLocaleString('tr-TR');
+  };
+
+  const getFileIcon = (fileType) => {
+    switch (fileType) {
+      case 'pdf': return '📄';
+      case 'word': return '📝';
+      case 'excel': return '📊';
+      case 'image': return '🖼️';
+      default: return '📎';
+    }
   };
 
   if (isLoading) {
@@ -226,7 +251,51 @@ const PowerOfAttorneyDetail = () => {
         </Card>
       )}
 
-      {item.file_url && (
+      {/* ✅ BELGELER BÖLÜMÜ */}
+      {item.documents && item.documents.length > 0 && (
+        <Card>
+          <Card.Header>
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-gray-900 dark:text-white">📎 Belgeler</h2>
+              <Link to={`/documents/upload?power_of_attorney_id=${item.id}`}>
+                <Button size="sm">+ Belge Ekle</Button>
+              </Link>
+            </div>
+          </Card.Header>
+          <Card.Body>
+            <div className="space-y-2">
+              {item.documents.map((doc) => (
+                <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{getFileIcon(doc.file_type)}</span>
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">{doc.name || doc.original_name}</p>
+                      <p className="text-sm text-gray-500">
+                        {doc.file_size ? (doc.file_size / 1024).toFixed(1) : 0} KB
+                        {doc.created_at && ` • ${formatDateTime(doc.created_at)}`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Link to={`/documents/${doc.id}`} className="text-blue-600 hover:underline text-sm">
+                      Görüntüle
+                    </Link>
+                    <button
+                      onClick={() => handleDownload(doc.id, doc.original_name || doc.name)}
+                      className="text-green-600 hover:text-green-800 dark:text-green-400 text-sm flex items-center gap-1"
+                    >
+                      ⬇️ İndir
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card.Body>
+        </Card>
+      )}
+
+      {/* Eski Dosya (artık Documents ile entegre) */}
+      {item.file_url && !item.documents?.length && (
         <Card>
           <Card.Header>
             <h2 className="font-semibold text-gray-900 dark:text-white">📎 Dosya</h2>

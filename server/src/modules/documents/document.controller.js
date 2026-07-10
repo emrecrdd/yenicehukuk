@@ -35,7 +35,6 @@ export const documentController = {
     }
   },
 
-  // ✅ TOPLU YÜKLEME
   async uploadMultiple(req, res) {
     try {
       if (!req.files || req.files.length === 0) {
@@ -82,10 +81,19 @@ export const documentController = {
     }
   },
 
+  // ✅ findAll - power_of_attorney_id parametresi eklendi
   async findAll(req, res) {
     try {
-      const { page = 1, limit = 10, search, category, case_id, client_id } = req.query;
-      const result = await documentService.findAll({ page, limit, search, category, case_id, client_id });
+      const { page = 1, limit = 10, search, category, case_id, client_id, power_of_attorney_id } = req.query;
+      const result = await documentService.findAll({ 
+        page, 
+        limit, 
+        search, 
+        category, 
+        case_id, 
+        client_id,
+        power_of_attorney_id,  // ✅ EKLENDI
+      });
       return paginatedResponse(res, result.data, result.pagination, 'Documents fetched successfully');
     } catch (error) {
       logger.error('Get documents error:', error);

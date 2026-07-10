@@ -10,7 +10,7 @@ import { Payment } from './Payment.js';
 import { Note } from './Note.js';
 import { AuditLog } from './AuditLog.js';
 import { Notification } from './Notification.js';
-import { PowerOfAttorney } from './PowerOfAttorney.js';  // ✅ EKLENDI
+import { PowerOfAttorney } from './PowerOfAttorney.js';
 
 const initModels = (sequelize) => {
   // Initialize all models
@@ -26,7 +26,7 @@ const initModels = (sequelize) => {
   Note.initModel(sequelize);
   AuditLog.initModel(sequelize);
   Notification.initModel(sequelize);
-  PowerOfAttorney.initModel(sequelize);  // ✅ EKLENDI
+  PowerOfAttorney.initModel(sequelize);
 
   // ============ USER ASSOCIATIONS ============
   User.hasMany(Client, { foreignKey: 'created_by', as: 'clients' });
@@ -87,7 +87,7 @@ const initModels = (sequelize) => {
   Client.hasMany(Meeting, { foreignKey: 'client_id', as: 'meetings' });
   Meeting.belongsTo(Client, { foreignKey: 'client_id', as: 'client' });
 
-  // ✅ POWER OF ATTORNEY - CLIENT ASSOCIATION
+  // POWER OF ATTORNEY - CLIENT ASSOCIATION
   Client.hasMany(PowerOfAttorney, { foreignKey: 'client_id', as: 'powerOfAttorneys' });
   PowerOfAttorney.belongsTo(Client, { foreignKey: 'client_id', as: 'client' });
 
@@ -114,13 +114,23 @@ const initModels = (sequelize) => {
   Case.hasMany(Meeting, { foreignKey: 'case_id', as: 'meetings' });
   Meeting.belongsTo(Case, { foreignKey: 'case_id', as: 'case' });
 
-  // ✅ POWER OF ATTORNEY - CASE ASSOCIATION
+  // POWER OF ATTORNEY - CASE ASSOCIATION
   Case.hasMany(PowerOfAttorney, { foreignKey: 'case_id', as: 'powerOfAttorneys' });
   PowerOfAttorney.belongsTo(Case, { foreignKey: 'case_id', as: 'case' });
 
   // ============ DOCUMENT ASSOCIATIONS ============
   Document.hasMany(Document, { foreignKey: 'parent_id', as: 'versions' });
   Document.belongsTo(Document, { foreignKey: 'parent_id', as: 'parent' });
+
+  // ✅ POWER OF ATTORNEY - DOCUMENT ASSOCIATION
+  PowerOfAttorney.hasMany(Document, {
+    foreignKey: 'power_of_attorney_id',
+    as: 'documents',
+  });
+  Document.belongsTo(PowerOfAttorney, {
+    foreignKey: 'power_of_attorney_id',
+    as: 'powerOfAttorney',
+  });
 
   // ============ TASK ASSOCIATIONS ============
   Task.hasMany(Task, { foreignKey: 'parent_task_id', as: 'subtasks' });
@@ -133,7 +143,7 @@ const initModels = (sequelize) => {
   User.hasMany(Notification, { foreignKey: 'user_id', as: 'notifications' });
   Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
-  // ✅ POWER OF ATTORNEY - USER ASSOCIATION
+  // POWER OF ATTORNEY - USER ASSOCIATION
   User.hasMany(PowerOfAttorney, { foreignKey: 'created_by', as: 'powerOfAttorneys' });
   PowerOfAttorney.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 
@@ -154,5 +164,5 @@ export {
   Note,
   AuditLog,
   Notification,
-  PowerOfAttorney,  // ✅ EKLENDI
+  PowerOfAttorney,
 };

@@ -2,6 +2,7 @@ import { PowerOfAttorney } from '../../models/PowerOfAttorney.js';
 import { Client } from '../../models/Client.js';
 import { Case } from '../../models/Case.js';
 import { User } from '../../models/User.js';
+import { Document } from '../../models/Document.js';  // ✅ EKLENDI
 import { Op } from 'sequelize';
 import { paginate, getPaginationData } from '../../utils/paginate.js';
 
@@ -10,6 +11,7 @@ export const powerOfAttorneyService = {
     return PowerOfAttorney.create(data);
   },
 
+  // ✅ findAll - documents include edildi
   async findAll({ page, limit, client_id, case_id, status, search }) {
     const where = {};
 
@@ -51,7 +53,14 @@ export const powerOfAttorneyService = {
         {
           model: User,
           as: 'creator',
-          attributes: ['id', 'first_name', 'last_name', 'email'],  // ✅ DÜZELTİLDİ
+          attributes: ['id', 'first_name', 'last_name', 'email'],
+        },
+        {
+          model: Document,  // ✅ EKLENDI
+          as: 'documents',
+          attributes: ['id', 'name', 'original_name', 'file_size', 'file_type', 'created_at'],
+          limit: 1,  // Sadece ilk belgeyi göster (liste için yeterli)
+          order: [['created_at', 'DESC']],
         },
       ],
       order: [['created_at', 'DESC']],
@@ -65,6 +74,7 @@ export const powerOfAttorneyService = {
     };
   },
 
+  // ✅ findOne - documents include edildi
   async findOne(id) {
     const powerOfAttorney = await PowerOfAttorney.findByPk(id, {
       include: [
@@ -81,7 +91,12 @@ export const powerOfAttorneyService = {
         {
           model: User,
           as: 'creator',
-          attributes: ['id', 'first_name', 'last_name', 'email'],  // ✅ DÜZELTİLDİ
+          attributes: ['id', 'first_name', 'last_name', 'email'],
+        },
+        {
+          model: Document,  // ✅ EKLENDI
+          as: 'documents',
+          attributes: ['id', 'name', 'original_name', 'file_size', 'file_type', 'created_at', 'file_path'],
         },
       ],
     });
@@ -93,6 +108,7 @@ export const powerOfAttorneyService = {
     return powerOfAttorney;
   },
 
+  // ✅ findByClient - documents include edildi
   async findByClient(clientId) {
     return PowerOfAttorney.findAll({
       where: { client_id: clientId },
@@ -105,7 +121,14 @@ export const powerOfAttorneyService = {
         {
           model: User,
           as: 'creator',
-          attributes: ['id', 'first_name', 'last_name', 'email'],  // ✅ DÜZELTİLDİ
+          attributes: ['id', 'first_name', 'last_name', 'email'],
+        },
+        {
+          model: Document,  // ✅ EKLENDI
+          as: 'documents',
+          attributes: ['id', 'name', 'original_name', 'file_size', 'file_type', 'created_at'],
+          limit: 1,
+          order: [['created_at', 'DESC']],
         },
       ],
       order: [['created_at', 'DESC']],

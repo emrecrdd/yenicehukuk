@@ -4,6 +4,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import documentApi from '../../features/documents/document.api.js';
 import caseApi from '../../features/cases/case.api.js';
 import clientApi from '../../features/clients/client.api.js';
+import { powerOfAttorneyApi } from '../../features/power-of-attorney/powerOfAttorney.api.js';  // ✅ EKLENDI
 import Button from '../../components/ui/Button.jsx';
 import Input from '../../components/ui/Input.jsx';
 import Card from '../../components/ui/Card.jsx';
@@ -21,7 +22,8 @@ const DocumentUpload = () => {
     category: 'general',
     tags: '',
     case_id: searchParams.get('case') || '',
-    client_id: '',
+    client_id: searchParams.get('client') || '',
+    power_of_attorney_id: searchParams.get('power_of_attorney_id') || '',  // ✅ EKLENDI
     is_public: false,
   });
   const [files, setFiles] = useState([]);
@@ -39,6 +41,12 @@ const DocumentUpload = () => {
     queryFn: () => clientApi.getAll({ limit: 100 }),
   });
 
+  // ✅ Vekaletnameleri getir
+  const { data: poaData } = useQuery({
+    queryKey: ['powerOfAttorneys', { limit: 100 }],
+    queryFn: () => powerOfAttorneyApi.getAll({ limit: 100 }),
+  });
+
   const mutation = useMutation({
     mutationFn: (data) => documentApi.upload(data),
     onSuccess: (response) => {
@@ -52,6 +60,7 @@ const DocumentUpload = () => {
 
   const cases = casesData?.data?.data || [];
   const clients = clientsData?.data?.data || [];
+  const powerOfAttorneys = poaData?.data?.data || [];
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -159,6 +168,7 @@ const DocumentUpload = () => {
       formDataToSend.append('tags', formData.tags.split(',').map(t => t.trim()).filter(Boolean));
       formDataToSend.append('case_id', formData.case_id || '');
       formDataToSend.append('client_id', formData.client_id || '');
+      formDataToSend.append('power_of_attorney_id', formData.power_of_attorney_id || '');  // ✅ EKLENDI
       formDataToSend.append('is_public', formData.is_public);
       
       return documentApi.upload(formDataToSend);
@@ -366,11 +376,31 @@ const DocumentUpload = () => {
                 <option value="">Müvekkil seçin</option>
                 {clients.map((client) => (
                   <option key={client.id} value={client.id}>
-                    {client.name}  {/* ✅ SADECE BURASI DEĞİŞTİ */}
+                    {client.name}
                   </option>
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* ✅ VEKALETNAME SEÇİMİ */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              📜 İlişkili Vekaletname (Opsiyonel)
+            </label>
+            <select
+              name="power_of_attorney_id"
+              value={formData.power_of_attorney_id}
+              onChange={handleChange}
+              className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Vekaletname seçin</option>
+              {powerOfAttorneys.map((poa) => (
+                <option key={poa.id} value={poa.id}>
+                  {poa.title} - {poa.client?.name || 'Müvekkil yok'}
+                </option>
+              ))}
+            </select>
           </div>
 
           <Input

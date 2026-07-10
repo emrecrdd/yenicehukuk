@@ -73,6 +73,15 @@ class Document extends Sequelize.Model {
             key: 'id',
           },
         },
+        // ✅ VEKALETNAME İLİŞKİSİ - YENİ
+        power_of_attorney_id: {
+          type: DataTypes.UUID,
+          allowNull: true,
+          references: {
+            model: 'power_of_attorneys',
+            key: 'id',
+          },
+        },
         uploaded_by: {
           type: DataTypes.UUID,
           allowNull: false,
@@ -103,7 +112,7 @@ class Document extends Sequelize.Model {
     );
   }
 
-  // ✅ İLİŞKİLERİ BURADA KUR
+  // ✅ İLİŞKİLER
   static associate(models) {
     Document.belongsTo(models.User, {
       foreignKey: 'uploaded_by',
@@ -116,6 +125,11 @@ class Document extends Sequelize.Model {
     Document.belongsTo(models.Client, {
       foreignKey: 'client_id',
       as: 'client',
+    });
+    // ✅ VEKALETNAME İLİŞKİSİ - YENİ
+    Document.belongsTo(models.PowerOfAttorney, {
+      foreignKey: 'power_of_attorney_id',
+      as: 'powerOfAttorney',
     });
     Document.belongsTo(Document, {
       foreignKey: 'parent_id',

@@ -2,6 +2,7 @@ import { Document } from '../../models/Document.js';
 import { User } from '../../models/User.js';
 import { Case } from '../../models/Case.js';
 import { Client } from '../../models/Client.js';
+import { PowerOfAttorney } from '../../models/PowerOfAttorney.js';  // ✅ EKLENDI
 import { Op, Sequelize } from 'sequelize';
 import { paginate, getPaginationData } from '../../utils/paginate.js';
 import fs from 'fs';
@@ -67,6 +68,7 @@ export const documentService = {
       description: documentData.description,
       case_id: documentData.case_id || null,
       client_id: documentData.client_id || null,
+      power_of_attorney_id: documentData.power_of_attorney_id || null,  // ✅ EKLENDI
       uploaded_by: documentData.uploaded_by,
       is_public: documentData.is_public || false,
       metadata: documentData.metadata || {},
@@ -76,7 +78,8 @@ export const documentService = {
     return document;
   },
 
-  async findAll({ page, limit, search, category, case_id, client_id }) {
+  // ✅ findAll - power_of_attorney_id filtresi eklendi
+  async findAll({ page, limit, search, category, case_id, client_id, power_of_attorney_id }) {
     const where = {};
 
     if (search) {
@@ -90,6 +93,7 @@ export const documentService = {
     if (category) where.category = category;
     if (case_id) where.case_id = case_id;
     if (client_id) where.client_id = client_id;
+    if (power_of_attorney_id) where.power_of_attorney_id = power_of_attorney_id;  // ✅ EKLENDI
 
     const query = paginate({ where, order: [['created_at', 'DESC']] }, page, limit);
     const { count, rows } = await Document.findAndCountAll({
@@ -108,7 +112,12 @@ export const documentService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'name'], // ✅ DEĞİŞTİ
+          attributes: ['id', 'name'],
+        },
+        {
+          model: PowerOfAttorney,  // ✅ EKLENDI
+          as: 'powerOfAttorney',
+          attributes: ['id', 'title'],
         },
       ],
     });
@@ -121,6 +130,7 @@ export const documentService = {
     };
   },
 
+  // ✅ findOne - PowerOfAttorney ilişkisi eklendi
   async findOne(id) {
     const document = await Document.findByPk(id, {
       include: [
@@ -137,7 +147,12 @@ export const documentService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'name'], // ✅ DEĞİŞTİ
+          attributes: ['id', 'name'],
+        },
+        {
+          model: PowerOfAttorney,  // ✅ EKLENDI
+          as: 'powerOfAttorney',
+          attributes: ['id', 'title'],
         },
       ],
     });
