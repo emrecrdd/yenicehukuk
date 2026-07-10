@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { powerOfAttorneyController } from './powerOfAttorney.controller.js';
-import { authMiddleware } from '../../middlewares/auth.middleware.js';
+import { authenticate } from '../../middlewares/auth.middleware.js';  // ✅ DÜZELTİLDİ
 import { validate } from '../../middlewares/validate.middleware.js';
 import { body } from 'express-validator';
 
@@ -16,8 +16,8 @@ const updateValidation = [
   body('title').optional().notEmpty().withMessage('Başlık boş olamaz'),
 ];
 
-// ✅ Tüm rotalar auth gerektirir
-router.use(authMiddleware);
+// ✅ Tüm rotalar auth gerektirir (searchRoutes ile aynı stil)
+router.use(authenticate);  // ✅ DÜZELTİLDİ
 
 // 📋 Vekaletname İşlemleri
 router.get('/', powerOfAttorneyController.findAll);
@@ -31,4 +31,4 @@ router.put('/:id', validate(updateValidation), powerOfAttorneyController.update)
 router.patch('/:id/status', powerOfAttorneyController.updateStatus);
 router.delete('/:id', powerOfAttorneyController.delete);
 
-export default router;
+export { router as powerOfAttorneyRoutes };
