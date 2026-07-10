@@ -20,26 +20,12 @@ const PowerOfAttorneyList = () => {
     keepPreviousData: true,
   });
 
-  // ✅ GÜVENLİ VERİ OKUMA
-  let powerOfAttorneys = [];
-  let pagination = null;
+  // ✅ DOĞRU - data?.data?.data (3 katman)
+  const powerOfAttorneys = data?.data?.data || [];
+  const pagination = data?.data?.pagination;
 
-  if (data?.data?.data && Array.isArray(data.data.data)) {
-    powerOfAttorneys = data.data.data;
-    pagination = data.data.pagination;
-  } else if (data?.data && Array.isArray(data.data)) {
-    powerOfAttorneys = data.data;
-  } else if (data && Array.isArray(data)) {
-    powerOfAttorneys = data;
-  }
-
-  // ✅ DEBUG
-  console.log('📜 data:', data);
-  console.log('📜 data?.data:', data?.data);
-  console.log('📜 data?.data?.data:', data?.data?.data);
   console.log('📜 powerOfAttorneys:', powerOfAttorneys);
   console.log('📜 Array mi?', Array.isArray(powerOfAttorneys));
-  console.log('📜 Uzunluk:', powerOfAttorneys.length);
 
   const handleSearch = () => {
     setSearchQuery(search);
