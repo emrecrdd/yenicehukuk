@@ -70,7 +70,7 @@ const ClientDetail = () => {
   });
 
   const client = data?.data?.data;
-  const powerOfAttorneys = poaData?.data || [];
+  const powerOfAttorneys = poaData?.data?.data || [];
 
   if (isLoading) {
     return (
