@@ -1,11 +1,11 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import clientApi from '../../features/clients/client.api.js';
-import { powerOfAttorneyApi } from '../../features/power-of-attorney/powerOfAttorney.api.js';  // ✅ EKLENDI
+import { powerOfAttorneyApi } from '../../features/power-of-attorney/powerOfAttorney.api.js';
 import Badge from '../../components/ui/Badge.jsx';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
-import { Phone, Mail, MessageCircle, Edit2, Briefcase, DollarSign, Calendar, MapPin, User, ArrowLeft, Building2, Scale, UserCog, FileText } from 'lucide-react';  // ✅ FileText eklendi
+import { Phone, Mail, MessageCircle, Edit2, Briefcase, DollarSign, Calendar, MapPin, User, ArrowLeft, Building2, Scale, UserCog, FileText } from 'lucide-react';
 
 const getCaseStatusLabel = (status) => {
   const labels = {
@@ -33,7 +33,6 @@ const getCaseStatusVariant = (status) => {
   return variants[status] || 'default';
 };
 
-// ✅ Vekaletname durum etiketleri
 const getPOAStatusLabel = (status) => {
   const labels = {
     active: 'Aktif',
@@ -55,14 +54,12 @@ const getPOAStatusVariant = (status) => {
 const ClientDetail = () => {
   const { id } = useParams();
 
-  // ✅ Müvekkil bilgileri
   const { data, isLoading, error } = useQuery({
     queryKey: ['client', id],
     queryFn: () => clientApi.getOne(id),
     enabled: !!id,
   });
 
-  // ✅ Vekaletnameleri getir
   const { data: poaData, isLoading: poaLoading } = useQuery({
     queryKey: ['powerOfAttorneys', { client_id: id }],
     queryFn: () => powerOfAttorneyApi.getByClient(id),
@@ -71,6 +68,13 @@ const ClientDetail = () => {
 
   const client = data?.data?.data;
   const powerOfAttorneys = poaData?.data?.data || [];
+
+  // ✅ DEBUG - Console'a yazdır
+  console.log('📜 poaData:', poaData);
+  console.log('📜 poaData?.data:', poaData?.data);
+  console.log('📜 poaData?.data?.data:', poaData?.data?.data);
+  console.log('📜 powerOfAttorneys:', powerOfAttorneys);
+  console.log('📜 İlk elemanın ID:', powerOfAttorneys[0]?.id);
 
   if (isLoading) {
     return (
@@ -109,7 +113,6 @@ const ClientDetail = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between">
           <div className="flex-1">
@@ -166,9 +169,7 @@ const ClientDetail = () => {
         </div>
       </div>
 
-      {/* Kartlar Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Bilgi Kartı */}
         <Card className="border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
           <Card.Header className="border-b border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-2">
@@ -239,7 +240,6 @@ const ClientDetail = () => {
           </Card.Body>
         </Card>
 
-        {/* Finans Kartı */}
         <Card className="border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
           <Card.Header className="border-b border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-2">
@@ -271,7 +271,6 @@ const ClientDetail = () => {
         </Card>
       </div>
 
-      {/* ✅ VEKALETNAMELER BÖLÜMÜ - Davalar'ın ÜSTÜNDE! */}
       <Card className="border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
         <Card.Header className="border-b border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
@@ -351,7 +350,6 @@ const ClientDetail = () => {
         </Card.Body>
       </Card>
 
-      {/* Davalar - Detaylı (Vekaletname'den SONRA!) */}
       <Card className="border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
         <Card.Header className="border-b border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
