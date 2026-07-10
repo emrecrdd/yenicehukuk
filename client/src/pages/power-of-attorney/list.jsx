@@ -20,6 +20,7 @@ const PowerOfAttorneyList = () => {
     keepPreviousData: true,
   });
 
+  // ✅ DÜZELTİLDİ - data?.data?.data
   const powerOfAttorneys = data?.data?.data || [];
   const pagination = data?.data?.pagination;
 
