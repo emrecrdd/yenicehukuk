@@ -190,7 +190,9 @@ const PowerOfAttorneyDetail = () => {
             </div>
             <div>
               <p className="text-sm text-gray-500">Oluşturan</p>
-              <p className="text-gray-900 dark:text-white">{item.creator?.name || '-'}</p>
+              <p className="text-gray-900 dark:text-white">
+  {item.creator ? `${item.creator.first_name} ${item.creator.last_name}` : '-'}
+</p>
             </div>
           </Card.Body>
         </Card>

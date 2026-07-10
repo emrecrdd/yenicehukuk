@@ -6,12 +6,10 @@ import { Op } from 'sequelize';
 import { paginate, getPaginationData } from '../../utils/paginate.js';
 
 export const powerOfAttorneyService = {
-  // ✅ Yeni Vekaletname Oluştur
   async create(data) {
     return PowerOfAttorney.create(data);
   },
 
-  // ✅ Tüm Vekaletnameleri Getir
   async findAll({ page, limit, client_id, case_id, status, search }) {
     const where = {};
 
@@ -53,7 +51,7 @@ export const powerOfAttorneyService = {
         {
           model: User,
           as: 'creator',
-          attributes: ['id', 'name', 'email'],
+          attributes: ['id', 'first_name', 'last_name', 'email'],  // ✅ DÜZELTİLDİ
         },
       ],
       order: [['created_at', 'DESC']],
@@ -67,7 +65,6 @@ export const powerOfAttorneyService = {
     };
   },
 
-  // ✅ Tek Vekaletname Getir
   async findOne(id) {
     const powerOfAttorney = await PowerOfAttorney.findByPk(id, {
       include: [
@@ -84,7 +81,7 @@ export const powerOfAttorneyService = {
         {
           model: User,
           as: 'creator',
-          attributes: ['id', 'name', 'email'],
+          attributes: ['id', 'first_name', 'last_name', 'email'],  // ✅ DÜZELTİLDİ
         },
       ],
     });
@@ -96,7 +93,6 @@ export const powerOfAttorneyService = {
     return powerOfAttorney;
   },
 
-  // ✅ Müvekkile Göre Vekaletnameler
   async findByClient(clientId) {
     return PowerOfAttorney.findAll({
       where: { client_id: clientId },
@@ -106,12 +102,16 @@ export const powerOfAttorneyService = {
           as: 'case',
           attributes: ['id', 'title', 'case_number'],
         },
+        {
+          model: User,
+          as: 'creator',
+          attributes: ['id', 'first_name', 'last_name', 'email'],  // ✅ DÜZELTİLDİ
+        },
       ],
       order: [['created_at', 'DESC']],
     });
   },
 
-  // ✅ Vekaletname Güncelle
   async update(id, data) {
     const powerOfAttorney = await PowerOfAttorney.findByPk(id);
     if (!powerOfAttorney) {
@@ -122,7 +122,6 @@ export const powerOfAttorneyService = {
     return powerOfAttorney;
   },
 
-  // ✅ Vekaletname Sil
   async delete(id) {
     const powerOfAttorney = await PowerOfAttorney.findByPk(id);
     if (!powerOfAttorney) {
@@ -133,7 +132,6 @@ export const powerOfAttorneyService = {
     return powerOfAttorney;
   },
 
-  // ✅ Vekaletname Durum Güncelle
   async updateStatus(id, status) {
     const powerOfAttorney = await PowerOfAttorney.findByPk(id);
     if (!powerOfAttorney) {
@@ -144,7 +142,6 @@ export const powerOfAttorneyService = {
     return powerOfAttorney;
   },
 
-  // ✅ İstatistik
   async getStatistics() {
     const total = await PowerOfAttorney.count();
     const active = await PowerOfAttorney.count({ where: { status: 'active' } });
