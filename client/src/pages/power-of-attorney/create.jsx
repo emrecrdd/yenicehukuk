@@ -8,7 +8,7 @@ import Button from '../../components/ui/Button.jsx';
 import Input from '../../components/ui/Input.jsx';
 import Card from '../../components/ui/Card.jsx';
 import toast from 'react-hot-toast';
-
+console.log("🔥🔥🔥 PowerOfAttorneyCreate COMPONENTI ÇALIŞTI!");
 const PowerOfAttorneyCreate = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
