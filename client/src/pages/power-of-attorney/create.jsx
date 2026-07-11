@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';  // ✅ useRef EKLENDI
+import { useState, useRef } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { powerOfAttorneyApi } from '../../features/power-of-attorney/powerOfAttorney.api.js';
@@ -13,7 +13,7 @@ const PowerOfAttorneyCreate = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const clientIdFromUrl = searchParams.get('client_id');
-  const fileInputRef = useRef(null);  // ✅ Dosya input referansı
+  const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     client_id: clientIdFromUrl || '',
@@ -27,20 +27,16 @@ const PowerOfAttorneyCreate = () => {
     notes: '',
   });
 
-  // ✅ Dosya state'i
   const [file, setFile] = useState(null);
   const [fileError, setFileError] = useState('');
-
   const [authorityInput, setAuthorityInput] = useState('');
   const [errors, setErrors] = useState({});
 
-  // Müvekkilleri getir
   const { data: clientsData } = useQuery({
     queryKey: ['clients', { limit: 100 }],
     queryFn: () => clientApi.getAll({ limit: 100 }),
   });
 
-  // Davaları getir (müvekkil seçiliyse ona göre filtrele)
   const { data: casesData } = useQuery({
     queryKey: ['cases', { client_id: formData.client_id || undefined, limit: 100 }],
     queryFn: () => caseApi.getAll({ client_id: formData.client_id || undefined, limit: 100 }),
@@ -69,31 +65,24 @@ const PowerOfAttorneyCreate = () => {
     }
   };
 
-  // ✅ Dosya seçme
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
-
-    // Dosya boyutu kontrolü (max 10MB)
     if (selectedFile.size > 10 * 1024 * 1024) {
       setFileError('Dosya boyutu 10MB\'dan büyük olamaz!');
       setFile(null);
       return;
     }
-
-    // Dosya tipi kontrolü
     const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     if (!allowedTypes.includes(selectedFile.type)) {
       setFileError('Sadece PDF veya Word dosyası yükleyebilirsiniz!');
       setFile(null);
       return;
     }
-
     setFileError('');
     setFile(selectedFile);
   };
 
-  // ✅ Dosyayı kaldır
   const handleRemoveFile = () => {
     setFile(null);
     setFileError('');
@@ -121,17 +110,14 @@ const PowerOfAttorneyCreate = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     const newErrors = {};
     if (!formData.client_id) newErrors.client_id = 'Müvekkil seçimi zorunludur';
     if (!formData.title) newErrors.title = 'Başlık zorunludur';
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    // ✅ FormData oluştur (dosya için)
     const submitData = new FormData();
     submitData.append('client_id', formData.client_id);
     submitData.append('case_id', formData.case_id || '');
@@ -142,12 +128,9 @@ const PowerOfAttorneyCreate = () => {
     submitData.append('status', formData.status);
     submitData.append('authorities', JSON.stringify(formData.authorities));
     submitData.append('notes', formData.notes || '');
-
-    // ✅ Dosya varsa ekle
     if (file) {
       submitData.append('file', file);
     }
-
     mutation.mutate(submitData);
   };
 
@@ -175,9 +158,7 @@ const PowerOfAttorneyCreate = () => {
               name="client_id"
               value={formData.client_id}
               onChange={handleChange}
-              className={`w-full rounded-md border ${
-                errors.client_id ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              } bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              className={`w-full rounded-md border ${errors.client_id ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
             >
               <option value="">Müvekkil seçin</option>
               {clients.map((client) => (
@@ -186,9 +167,7 @@ const PowerOfAttorneyCreate = () => {
                 </option>
               ))}
             </select>
-            {errors.client_id && (
-              <p className="mt-1 text-sm text-red-600">{errors.client_id}</p>
-            )}
+            {errors.client_id && <p className="mt-1 text-sm text-red-600">{errors.client_id}</p>}
           </div>
 
           {/* Dava Seçimi (Opsiyonel) */}
@@ -318,57 +297,29 @@ const PowerOfAttorneyCreate = () => {
             )}
           </div>
 
-          {/* ✅ BELGE YÜKLEME ALANI */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              📎 Vekaletname Belgesi (PDF/Word - Opsiyonel)
-            </label>
-            <div
-              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
-                file ? 'border-green-500 bg-green-50 dark:bg-green-900/20' :
-                fileError ? 'border-red-500 bg-red-50 dark:bg-red-900/20' :
-                'border-gray-300 dark:border-gray-600 hover:border-blue-500'
-              }`}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              {file ? (
-                <div>
-                  <div className="text-4xl mb-2">📄</div>
-                  <p className="font-medium text-gray-900 dark:text-white">{file.name}</p>
-                  <p className="text-sm text-gray-500">{(file.size / 1024).toFixed(1)} KB</p>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveFile();
-                    }}
-                    className="mt-2 text-sm text-red-600 hover:text-red-800"
-                  >
-                    Dosyayı Kaldır
-                  </button>
-                </div>
-              ) : (
-                <div>
-                  <div className="text-4xl mb-2">📤</div>
-                  <p className="text-gray-600 dark:text-gray-400 font-medium">
-                    Vekaletname dosyasını sürükle veya tıkla
-                  </p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    PDF veya Word (max 10MB)
-                  </p>
-                </div>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                onChange={handleFileChange}
-                accept=".pdf,.doc,.docx"
-              />
-            </div>
-            {fileError && (
-              <p className="mt-1 text-sm text-red-600">{fileError}</p>
+          {/* ✅ BELGE YÜKLEME ALANI - EN SADE HALİ */}
+          <div className="border-2 border-blue-500 p-4 rounded-lg">
+            <p className="font-bold text-blue-600 mb-2">📎 Vekaletname Belgesi (PDF/Word)</p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              onChange={handleFileChange}
+              accept=".pdf,.doc,.docx"
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+            {file && (
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-sm text-green-600">✅ {file.name}</span>
+                <button
+                  type="button"
+                  onClick={handleRemoveFile}
+                  className="text-sm text-red-600 hover:text-red-800"
+                >
+                  Kaldır
+                </button>
+              </div>
             )}
+            {fileError && <p className="mt-1 text-sm text-red-600">{fileError}</p>}
           </div>
 
           {/* Notlar */}
