@@ -59,14 +59,12 @@ const initModels = (sequelize) => {
   User.hasMany(Event, { foreignKey: 'assigned_to', as: 'assignedEvents' });
   Event.belongsTo(User, { foreignKey: 'assigned_to', as: 'assignedTo' });
 
-  // MEETING - USER ASSOCIATIONS
   User.hasMany(Meeting, { foreignKey: 'created_by', as: 'createdMeetings' });
   Meeting.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 
   User.hasMany(Meeting, { foreignKey: 'assigned_to', as: 'assignedMeetings' });
   Meeting.belongsTo(User, { foreignKey: 'assigned_to', as: 'assignee' });
 
-  // ============ PAYMENT - USER ASSOCIATION ============
   User.hasMany(Payment, { foreignKey: 'created_by', as: 'payments' });
   Payment.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 
@@ -74,6 +72,14 @@ const initModels = (sequelize) => {
   // ❌ ESKİ (KALDIRILDI - çoklu müvekkil için)
   // Client.hasMany(Case, { foreignKey: 'client_id', as: 'cases' });
   // Case.belongsTo(Client, { foreignKey: 'client_id', as: 'client' });
+
+  // ✅ YENİ - Client - Case (Çoklu müvekkil)
+  Client.belongsToMany(Case, {
+    through: 'case_clients',
+    foreignKey: 'client_id',
+    otherKey: 'case_id',
+    as: 'cases',
+  });
 
   Client.hasMany(Note, { foreignKey: 'client_id', as: 'clientNotes' });
   Note.belongsTo(Client, { foreignKey: 'client_id', as: 'client' });
@@ -84,16 +90,13 @@ const initModels = (sequelize) => {
   Client.hasMany(Document, { foreignKey: 'client_id', as: 'documents' });
   Document.belongsTo(Client, { foreignKey: 'client_id', as: 'client' });
 
-  // MEETING - CLIENT ASSOCIATIONS
   Client.hasMany(Meeting, { foreignKey: 'client_id', as: 'meetings' });
   Meeting.belongsTo(Client, { foreignKey: 'client_id', as: 'client' });
 
-  // POWER OF ATTORNEY - CLIENT ASSOCIATION
   Client.hasMany(PowerOfAttorney, { foreignKey: 'client_id', as: 'powerOfAttorneys' });
   PowerOfAttorney.belongsTo(Client, { foreignKey: 'client_id', as: 'client' });
 
   // ============ CASE ASSOCIATIONS ============
-  // ✅ YENİ - Çoklu müvekkil (AKTİF!)
   Case.belongsToMany(Client, {
     through: 'case_clients',
     foreignKey: 'case_id',
@@ -119,11 +122,9 @@ const initModels = (sequelize) => {
   Case.hasMany(Payment, { foreignKey: 'case_id', as: 'payments' });
   Payment.belongsTo(Case, { foreignKey: 'case_id', as: 'case' });
 
-  // MEETING - CASE ASSOCIATIONS
   Case.hasMany(Meeting, { foreignKey: 'case_id', as: 'meetings' });
   Meeting.belongsTo(Case, { foreignKey: 'case_id', as: 'case' });
 
-  // POWER OF ATTORNEY - CASE ASSOCIATION
   Case.hasMany(PowerOfAttorney, { foreignKey: 'case_id', as: 'powerOfAttorneys' });
   PowerOfAttorney.belongsTo(Case, { foreignKey: 'case_id', as: 'case' });
 
@@ -131,7 +132,6 @@ const initModels = (sequelize) => {
   Document.hasMany(Document, { foreignKey: 'parent_id', as: 'versions' });
   Document.belongsTo(Document, { foreignKey: 'parent_id', as: 'parent' });
 
-  // POWER OF ATTORNEY - DOCUMENT ASSOCIATION
   PowerOfAttorney.hasMany(Document, {
     foreignKey: 'power_of_attorney_id',
     as: 'documents',
@@ -152,7 +152,6 @@ const initModels = (sequelize) => {
   User.hasMany(Notification, { foreignKey: 'user_id', as: 'notifications' });
   Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
-  // POWER OF ATTORNEY - USER ASSOCIATION
   User.hasMany(PowerOfAttorney, { foreignKey: 'created_by', as: 'powerOfAttorneys' });
   PowerOfAttorney.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 
