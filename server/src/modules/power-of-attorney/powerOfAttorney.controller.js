@@ -16,7 +16,12 @@ export const powerOfAttorneyController = {
         created_by: req.user.id,
       };
 
-      // authorities JSON parse et (frontend'den string geliyor)
+      // ✅ case_id boş string ise null yap (UUID hatasını önle)
+      if (!data.case_id || data.case_id === '') {
+        data.case_id = null;
+      }
+
+      // ✅ authorities JSON parse et (frontend'den string geliyor)
       if (data.authorities && typeof data.authorities === 'string') {
         try {
           data.authorities = JSON.parse(data.authorities);
