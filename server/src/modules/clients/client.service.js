@@ -16,10 +16,10 @@ export const clientService = {
 
     if (search) {
       where[Op.or] = [
-        { name: { [Op.iLike]: `%${search}%` } }, // ✅ name
+        { name: { [Op.iLike]: `%${search}%` } },
         { email: { [Op.iLike]: `%${search}%` } },
         { phone: { [Op.iLike]: `%${search}%` } },
-        { identification_number: { [Op.iLike]: `%${search}%` } }, // ✅ identification_number
+        { identification_number: { [Op.iLike]: `%${search}%` } },
       ];
     }
 
@@ -140,10 +140,17 @@ export const clientService = {
     };
   },
 
+  // ✅ GÜNCELLENDİ - Çoklu müvekkil desteği
   async getCaseHistory(clientId) {
-    return Case.findAll({
-      where: { client_id: clientId },
+    const cases = await Case.findAll({
       include: [
+        {
+          model: Client,
+          as: 'clients',
+          where: { id: clientId },
+          through: { attributes: [] },
+          attributes: [],
+        },
         {
           model: User,
           as: 'creator',
@@ -152,6 +159,8 @@ export const clientService = {
       ],
       order: [['created_at', 'DESC']],
     });
+
+    return cases;
   },
 
   async getPayments(clientId) {
