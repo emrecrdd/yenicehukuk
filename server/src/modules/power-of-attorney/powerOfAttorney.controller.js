@@ -1,4 +1,5 @@
 import { powerOfAttorneyService } from './powerOfAttorney.service.js';
+import { documentService } from '../documents/document.service.js';  // ✅ EKLENDI
 import { logger } from '../../config/logger.js';
 
 export const powerOfAttorneyController = {
@@ -9,7 +10,48 @@ export const powerOfAttorneyController = {
         created_by: req.user.id,
       };
 
+      // ✅ authorities JSON parse et (frontend'den string geliyor)
+      if (data.authorities && typeof data.authorities === 'string') {
+        try {
+          data.authorities = JSON.parse(data.authorities);
+        } catch (e) {
+          data.authorities = [];
+        }
+      }
+
+      // ✅ Dosya varsa service'e gönder (ama önce vekaletname oluşturulmalı)
       const powerOfAttorney = await powerOfAttorneyService.create(data);
+      
+      // ✅ Dosya varsa documentService ile kaydet
+      if (req.file) {
+        try {
+          const documentData = {
+            file: req.file,
+            name: data.title + ' - Vekaletname',
+            original_name: req.file.originalname,
+            description: data.description || 'Vekaletname belgesi',
+            category: 'general',
+            uploaded_by: req.user.id,
+            power_of_attorney_id: powerOfAttorney.id,
+            client_id: data.client_id,
+            case_id: data.case_id || null,
+            is_public: false,
+            tags: ['vekaletname'],
+          };
+          await documentService.upload(documentData);
+          logger.info(`📎 Vekaletname belgesi yüklendi: ${req.file.originalname}`);
+        } catch (docError) {
+          logger.error('Belge yükleme hatası:', docError);
+          // Vekaletname oluşturuldu ama belge yüklenemedi - uyarı ver
+          return res.status(201).json({
+            success: true,
+            message: 'Vekaletname oluşturuldu ama belge yüklenemedi',
+            data: powerOfAttorney,
+            warning: 'Belge yüklenirken bir hata oluştu',
+          });
+        }
+      }
+
       return res.status(201).json({
         success: true,
         message: 'Vekaletname başarıyla oluşturuldu',
