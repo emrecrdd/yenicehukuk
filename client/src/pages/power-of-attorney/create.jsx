@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';  // ✅ useRef EKLENDI
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { powerOfAttorneyApi } from '../../features/power-of-attorney/powerOfAttorney.api.js';
@@ -13,6 +13,7 @@ const PowerOfAttorneyCreate = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const clientIdFromUrl = searchParams.get('client_id');
+  const fileInputRef = useRef(null);  // ✅ Dosya input referansı
 
   const [formData, setFormData] = useState({
     client_id: clientIdFromUrl || '',
@@ -25,6 +26,10 @@ const PowerOfAttorneyCreate = () => {
     authorities: [],
     notes: '',
   });
+
+  // ✅ Dosya state'i
+  const [file, setFile] = useState(null);
+  const [fileError, setFileError] = useState('');
 
   const [authorityInput, setAuthorityInput] = useState('');
   const [errors, setErrors] = useState({});
@@ -64,6 +69,39 @@ const PowerOfAttorneyCreate = () => {
     }
   };
 
+  // ✅ Dosya seçme
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
+
+    // Dosya boyutu kontrolü (max 10MB)
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      setFileError('Dosya boyutu 10MB\'dan büyük olamaz!');
+      setFile(null);
+      return;
+    }
+
+    // Dosya tipi kontrolü
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedTypes.includes(selectedFile.type)) {
+      setFileError('Sadece PDF veya Word dosyası yükleyebilirsiniz!');
+      setFile(null);
+      return;
+    }
+
+    setFileError('');
+    setFile(selectedFile);
+  };
+
+  // ✅ Dosyayı kaldır
+  const handleRemoveFile = () => {
+    setFile(null);
+    setFileError('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleAddAuthority = () => {
     if (authorityInput.trim()) {
       setFormData((prev) => ({
@@ -93,12 +131,22 @@ const PowerOfAttorneyCreate = () => {
       return;
     }
 
-    const submitData = {
-      ...formData,
-      case_id: formData.case_id || null,
-      start_date: formData.start_date || null,
-      end_date: formData.end_date || null,
-    };
+    // ✅ FormData oluştur (dosya için)
+    const submitData = new FormData();
+    submitData.append('client_id', formData.client_id);
+    submitData.append('case_id', formData.case_id || '');
+    submitData.append('title', formData.title);
+    submitData.append('description', formData.description || '');
+    submitData.append('start_date', formData.start_date || '');
+    submitData.append('end_date', formData.end_date || '');
+    submitData.append('status', formData.status);
+    submitData.append('authorities', JSON.stringify(formData.authorities));
+    submitData.append('notes', formData.notes || '');
+
+    // ✅ Dosya varsa ekle
+    if (file) {
+      submitData.append('file', file);
+    }
 
     mutation.mutate(submitData);
   };
@@ -267,6 +315,59 @@ const PowerOfAttorneyCreate = () => {
                   </span>
                 ))}
               </div>
+            )}
+          </div>
+
+          {/* ✅ BELGE YÜKLEME ALANI */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              📎 Vekaletname Belgesi (PDF/Word - Opsiyonel)
+            </label>
+            <div
+              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                file ? 'border-green-500 bg-green-50 dark:bg-green-900/20' :
+                fileError ? 'border-red-500 bg-red-50 dark:bg-red-900/20' :
+                'border-gray-300 dark:border-gray-600 hover:border-blue-500'
+              }`}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {file ? (
+                <div>
+                  <div className="text-4xl mb-2">📄</div>
+                  <p className="font-medium text-gray-900 dark:text-white">{file.name}</p>
+                  <p className="text-sm text-gray-500">{(file.size / 1024).toFixed(1)} KB</p>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveFile();
+                    }}
+                    className="mt-2 text-sm text-red-600 hover:text-red-800"
+                  >
+                    Dosyayı Kaldır
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div className="text-4xl mb-2">📤</div>
+                  <p className="text-gray-600 dark:text-gray-400 font-medium">
+                    Vekaletname dosyasını sürükle veya tıkla
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    PDF veya Word (max 10MB)
+                  </p>
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={handleFileChange}
+                accept=".pdf,.doc,.docx"
+              />
+            </div>
+            {fileError && (
+              <p className="mt-1 text-sm text-red-600">{fileError}</p>
             )}
           </div>
 
