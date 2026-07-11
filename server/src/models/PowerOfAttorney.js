@@ -111,6 +111,11 @@ class PowerOfAttorney extends Sequelize.Model {
       foreignKey: 'created_by',
       as: 'creator',
     });
+    // ✅ Document ilişkisi - EKLENDI
+    PowerOfAttorney.hasMany(models.Document, {
+      foreignKey: 'power_of_attorney_id',
+      as: 'documents',
+    });
   }
 }
 
