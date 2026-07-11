@@ -10,29 +10,40 @@ class Case extends Sequelize.Model {
           defaultValue: DataTypes.UUIDV4,
           primaryKey: true,
         },
-        title: {
-          type: DataTypes.STRING,
-          allowNull: false,
-        },
-        case_number: {
+        // ✅ YARGI BİLGİLERİ (Formdan gelenler)
+        judiciary_type: {
           type: DataTypes.STRING,
           allowNull: true,
         },
-        decision_number: {
+        judiciary_unit: {
           type: DataTypes.STRING,
+          allowNull: true,
+        },
+        opening_date: {
+          type: DataTypes.DATE,
           allowNull: true,
         },
         court_name: {
           type: DataTypes.STRING,
           allowNull: true,
         },
-        court_type: {
+        case_number: {
           type: DataTypes.STRING,
           allowNull: true,
         },
-        case_type: {
+        // ❌ KALDIRILAN ALANLAR
+        // decision_number: KALDIRILDI
+        // court_type: KALDIRILDI
+        // case_type: KALDIRILDI
+        // closing_date: KALDIRILDI
+        // client_id: KALDIRILDI (çoklu müvekkil için)
+        // estimated_value: KALDIRILDI
+        // is_confidential: KALDIRILDI
+
+        // ✅ ESKİ ALANLAR (KALANLAR)
+        title: {
           type: DataTypes.STRING,
-          allowNull: true,
+          allowNull: false,
         },
         subject: {
           type: DataTypes.TEXT,
@@ -45,23 +56,6 @@ class Case extends Sequelize.Model {
         status: {
           type: DataTypes.ENUM(...Object.values(CASE_STATUS)),
           defaultValue: CASE_STATUS.PREPARATION,
-        },
-        opening_date: {
-          type: DataTypes.DATE,
-          allowNull: false,
-          defaultValue: DataTypes.NOW,
-        },
-        closing_date: {
-          type: DataTypes.DATE,
-          allowNull: true,
-        },
-        client_id: {
-          type: DataTypes.UUID,
-          allowNull: false,
-          references: {
-            model: 'clients',
-            key: 'id',
-          },
         },
         created_by: {
           type: DataTypes.UUID,
@@ -83,20 +77,64 @@ class Case extends Sequelize.Model {
           type: DataTypes.ENUM('low', 'normal', 'high', 'critical'),
           defaultValue: 'normal',
         },
-        estimated_value: {
-          type: DataTypes.DECIMAL(15, 2),
-          allowNull: true,
-        },
-        is_confidential: {
-          type: DataTypes.BOOLEAN,
-          defaultValue: false,
-        },
       },
       {
         sequelize,
         tableName: 'cases',
+        timestamps: true,
+        paranoid: true,
       }
     );
+  }
+
+  static associate(models) {
+    // ✅ ÇOKLU MÜVEKKİL İLİŞKİSİ (N-N)
+    Case.belongsToMany(models.Client, {
+      through: 'case_clients',
+      foreignKey: 'case_id',
+      otherKey: 'client_id',
+      as: 'clients',
+    });
+
+    // 👤 KULLANICI İLİŞKİLERİ
+    Case.belongsTo(models.User, {
+      foreignKey: 'created_by',
+      as: 'creator',
+    });
+    Case.belongsTo(models.User, {
+      foreignKey: 'assigned_to',
+      as: 'assignee',
+    });
+
+    // 📄 ALT MODÜLLER
+    Case.hasMany(models.Task, {
+      foreignKey: 'case_id',
+      as: 'tasks',
+    });
+    Case.hasMany(models.Event, {
+      foreignKey: 'case_id',
+      as: 'events',
+    });
+    Case.hasMany(models.Document, {
+      foreignKey: 'case_id',
+      as: 'documents',
+    });
+    Case.hasMany(models.Note, {
+      foreignKey: 'case_id',
+      as: 'notes',
+    });
+    Case.hasMany(models.Payment, {
+      foreignKey: 'case_id',
+      as: 'payments',
+    });
+    Case.hasMany(models.Meeting, {
+      foreignKey: 'case_id',
+      as: 'meetings',
+    });
+    Case.hasMany(models.PowerOfAttorney, {
+      foreignKey: 'case_id',
+      as: 'powerOfAttorneys',
+    });
   }
 }
 

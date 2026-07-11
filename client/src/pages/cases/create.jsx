@@ -16,7 +16,7 @@ const CaseCreate = () => {
     judiciary_unit: '',
     court_name: '',
     case_number: '',
-    client_ids: [],  // ✅ Array olarak kalacak
+    client_ids: [],
     assigned_to: '',
     status: 'preparation',
     priority: 'normal',
@@ -58,7 +58,6 @@ const CaseCreate = () => {
     }
   };
 
-  // ✅ Çoklu müvekkil seçimi - DÜZELTİLDİ
   const handleClientChange = (e) => {
     const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
     setFormData((prev) => ({ ...prev, client_ids: selectedOptions }));
@@ -81,11 +80,17 @@ const CaseCreate = () => {
       return;
     }
 
+    // ✅ title otomatik oluştur
+    const title = `${formData.judiciary_type} - ${formData.judiciary_unit}`;
+
     const submitData = {
       ...formData,
+      title: title,  // ✅ title eklendi
       assigned_to: formData.assigned_to || null,
       opening_date: formData.opening_date || null,
     };
+    
+    console.log('📤 Gönderilen veri:', submitData);  // ✅ Debug için
     mutation.mutate(submitData);
   };
 
@@ -170,8 +175,6 @@ const CaseCreate = () => {
             onChange={handleChange}
             placeholder="Esas no"
           />
-
-          {/* ❌ MAHKEME TÜRÜ KALDIRILDI */}
 
           {/* 6. MÜVEKKİLLER (ÇOKLU SEÇİM) */}
           <div>

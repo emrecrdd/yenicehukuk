@@ -106,13 +106,20 @@ const CaseDetail = () => {
             ← Davalar
           </Link>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-            {caseItem.title}
+            {caseItem.title || caseItem.judiciary_type || 'Dava'}
           </h1>
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="text-sm text-gray-500">{caseItem.case_number || 'Esas no yok'}</span>
             <Badge variant={getStatusVariant(caseItem.status)}>
               {statuses.find(s => s.value === caseItem.status)?.label || caseItem.status}
             </Badge>
+            {/* ✅ YARGI TÜRÜ VE BİRİMİ */}
+            {caseItem.judiciary_type && (
+              <Badge variant="default">{caseItem.judiciary_type}</Badge>
+            )}
+            {caseItem.judiciary_unit && (
+              <Badge variant="default">{caseItem.judiciary_unit}</Badge>
+            )}
           </div>
         </div>
         <div className="flex gap-2">
@@ -126,39 +133,68 @@ const CaseDetail = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* ✅ BİLGİLER KARTI - GÜNCELLENDİ */}
         <Card>
           <Card.Header>
             <h2 className="font-semibold text-gray-900 dark:text-white">📋 Bilgiler</h2>
           </Card.Header>
           <Card.Body className="space-y-3">
+            {/* ✅ YARGI TÜRÜ */}
+            {caseItem.judiciary_type && (
+              <div>
+                <p className="text-sm text-gray-500">Yargı Türü</p>
+                <p className="text-gray-900 dark:text-white">{caseItem.judiciary_type}</p>
+              </div>
+            )}
+            {/* ✅ YARGI BİRİMİ */}
+            {caseItem.judiciary_unit && (
+              <div>
+                <p className="text-sm text-gray-500">Yargı Birimi</p>
+                <p className="text-gray-900 dark:text-white">{caseItem.judiciary_unit}</p>
+              </div>
+            )}
+            {/* ✅ MAHKEME */}
             <div>
               <p className="text-sm text-gray-500">Mahkeme</p>
               <p className="text-gray-900 dark:text-white">{caseItem.court_name || '-'}</p>
             </div>
-            
+            {/* ✅ DOSYA NO */}
+            <div>
+              <p className="text-sm text-gray-500">Dosya No</p>
+              <p className="text-gray-900 dark:text-white">{caseItem.case_number || '-'}</p>
+            </div>
+            {/* ✅ AÇILIŞ TARİHİ */}
             <div>
               <p className="text-sm text-gray-500">Açılış Tarihi</p>
-              <p className="text-gray-900 dark:text-white">{formatDate(caseItem.opening_date)}</p>
+              <p className="text-gray-900 dark:text-white">{formatDate(caseItem.opening_date) || '-'}</p>
             </div>
+            {/* ✅ MÜVEKKİLLER - ÇOKLU */}
             <div>
-              <p className="text-sm text-gray-500">Müvekkil</p>
-              {caseItem.client ? (
-                <Link
-                  to={`/clients/${caseItem.client.id}`}
-                  className="text-blue-600 hover:underline"
-                >
-                  {caseItem.client.name} {/* ✅ DEĞİŞTİ */}
-                </Link>
+              <p className="text-sm text-gray-500">Müvekkiller</p>
+              {caseItem.clients && caseItem.clients.length > 0 ? (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {caseItem.clients.map((client) => (
+                    <Link
+                      key={client.id}
+                      to={`/clients/${client.id}`}
+                      className="text-blue-600 hover:underline text-sm"
+                    >
+                      {client.name}
+                    </Link>
+                  ))}
+                </div>
               ) : (
                 <p className="text-gray-900 dark:text-white">-</p>
               )}
             </div>
+            {/* ✅ ATANAN AVUKAT */}
             <div>
               <p className="text-sm text-gray-500">Atanan Avukat</p>
               <p className="text-gray-900 dark:text-white">
                 {caseItem.assignee?.first_name} {caseItem.assignee?.last_name || 'Atanmadı'}
               </p>
             </div>
+            {/* ✅ ÖNCELİK */}
             <div>
               <p className="text-sm text-gray-500">Öncelik</p>
               <Badge
@@ -175,6 +211,13 @@ const CaseDetail = () => {
                 {caseItem.priority || 'Normal'}
               </Badge>
             </div>
+            {/* ✅ KONU */}
+            {caseItem.subject && (
+              <div>
+                <p className="text-sm text-gray-500">Konu</p>
+                <p className="text-gray-900 dark:text-white">{caseItem.subject}</p>
+              </div>
+            )}
           </Card.Body>
         </Card>
 
@@ -218,6 +261,18 @@ const CaseDetail = () => {
           </Card.Body>
         </Card>
       </div>
+
+      {/* ✅ AÇIKLAMA */}
+      {caseItem.description && (
+        <Card>
+          <Card.Header>
+            <h2 className="font-semibold text-gray-900 dark:text-white">📝 Açıklama</h2>
+          </Card.Header>
+          <Card.Body>
+            <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{caseItem.description}</p>
+          </Card.Body>
+        </Card>
+      )}
 
       {/* ✅ Documents */}
       <Card>

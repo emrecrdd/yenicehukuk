@@ -5,35 +5,50 @@ import { AuditLog } from '../../models/AuditLog.js';
 
 export const caseController = {
   async create(req, res) {
-  try {
-    const caseData = { 
-      ...req.body, 
-      created_by: req.user.id,
-      assigned_to: req.body.assigned_to || null  // ← EKLENDİ!
-    };
-    const caseItem = await caseService.create(caseData);
+    try {
+      // ✅ title otomatik oluştur (frontend'den gelmezse)
+      const title = req.body.title || `${req.body.judiciary_type || 'Dava'} - ${req.body.judiciary_unit || 'Birim'}`;
 
-    await AuditLog.create({
-      action: 'create',
-      entity_type: 'case',
-      entity_id: caseItem.id,
-      user_id: req.user.id,
-      description: `"${caseItem.title}" davası oluşturuldu`,
-      ip_address: req.ip,
-      user_agent: req.headers['user-agent'],
-    });
+      const caseData = { 
+        ...req.body, 
+        created_by: req.user.id,
+        assigned_to: req.body.assigned_to || null,
+        title: title,  // ✅ title eklendi
+        judiciary_type: req.body.judiciary_type || null,
+        judiciary_unit: req.body.judiciary_unit || null,
+        opening_date: req.body.opening_date || null,
+        court_name: req.body.court_name || null,
+        case_number: req.body.case_number || null,
+        subject: req.body.subject || null,
+        description: req.body.description || null,
+        status: req.body.status || 'preparation',
+        priority: req.body.priority || 'normal',
+        client_ids: req.body.client_ids || [],
+      };
+      
+      const caseItem = await caseService.create(caseData);
 
-    return successResponse(res, caseItem, 'Case created successfully', 201);
-  } catch (error) {
-    logger.error('Create case error:', error);
-    return errorResponse(res, error.message, 400);
-  }
-},
+      await AuditLog.create({
+        action: 'create',
+        entity_type: 'case',
+        entity_id: caseItem.id,
+        user_id: req.user.id,
+        description: `"${caseItem.title}" davası oluşturuldu`,
+        ip_address: req.ip,
+        user_agent: req.headers['user-agent'],
+      });
+
+      return successResponse(res, caseItem, 'Case created successfully', 201);
+    } catch (error) {
+      logger.error('Create case error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
 
   async findAll(req, res) {
     try {
-      const { page = 1, limit = 10, search, status, case_type, client_id } = req.query;
-      const result = await caseService.findAll({ page, limit, search, status, case_type, client_id });
+      const { page = 1, limit = 10, search, status } = req.query;
+      const result = await caseService.findAll({ page, limit, search, status });
       return paginatedResponse(res, result.data, result.pagination, 'Cases fetched successfully');
     } catch (error) {
       logger.error('Get cases error:', error);
@@ -53,7 +68,26 @@ export const caseController = {
 
   async update(req, res) {
     try {
-      const caseItem = await caseService.update(req.params.id, req.body);
+      // ✅ title otomatik oluştur (güncellemede de)
+      const title = req.body.title || `${req.body.judiciary_type || 'Dava'} - ${req.body.judiciary_unit || 'Birim'}`;
+
+      const updateData = {
+        ...req.body,
+        title: title,  // ✅ title eklendi
+        judiciary_type: req.body.judiciary_type || null,
+        judiciary_unit: req.body.judiciary_unit || null,
+        opening_date: req.body.opening_date || null,
+        court_name: req.body.court_name || null,
+        case_number: req.body.case_number || null,
+        subject: req.body.subject || null,
+        description: req.body.description || null,
+        status: req.body.status || 'preparation',
+        priority: req.body.priority || 'normal',
+        assigned_to: req.body.assigned_to || null,
+        client_ids: req.body.client_ids || [],
+      };
+      
+      const caseItem = await caseService.update(req.params.id, updateData);
 
       await AuditLog.create({
         action: 'update',

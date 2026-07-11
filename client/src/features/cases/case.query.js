@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';  // ✅ useInfiniteQuery EKLENDI
 import caseApi from './case.api.js';
 import toast from 'react-hot-toast';
 
@@ -9,7 +9,7 @@ export const useCases = (params = {}) => {
     queryKey: ['cases', params],
     queryFn: () => caseApi.getAll(params),
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (cacheTime → gcTime)
     keepPreviousData: true,
   });
 };
@@ -20,7 +20,7 @@ export const useCase = (id) => {
     queryFn: () => caseApi.getOne(id),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 };
 
@@ -29,7 +29,7 @@ export const useCaseStatistics = () => {
     queryKey: ['case-statistics'],
     queryFn: () => caseApi.getStatistics(),
     staleTime: 10 * 60 * 1000, // 10 minutes
-    cacheTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
 };
 
@@ -223,7 +223,8 @@ export const useInfiniteCases = (params = {}) => {
       return undefined;
     },
     staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    initialPageParam: 1,
   });
 };
 
@@ -282,7 +283,7 @@ export const useSearchCases = (query, params = {}) => {
     queryFn: () => caseApi.getAll({ ...params, search: query }),
     enabled: query && query.length >= 2,
     staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 };
 

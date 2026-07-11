@@ -152,20 +152,49 @@ const CasesList = () => {
               ) : (
                 cases.map((caseItem) => (
                   <Table.Row key={caseItem.id}>
+                    {/* ✅ YARGI TÜRÜ */}
                     <Table.Cell>
-                      <div className="font-medium">{caseItem.title}</div>
-                      <div className="text-sm text-gray-500">{caseItem.case_type || '-'}</div>
+                      <div className="font-medium">{caseItem.judiciary_type || '-'}</div>
+                      <div className="text-sm text-gray-500">{caseItem.case_number || '-'}</div>
                     </Table.Cell>
-                    <Table.Cell>{caseItem.case_number || '-'}</Table.Cell>
-                    <Table.Cell>{caseItem.court_name || '-'}</Table.Cell>
+                    {/* ✅ YARGI BİRİMİ */}
                     <Table.Cell>
-                      {caseItem.client?.name || '-'} {/* ✅ DEĞİŞTİ */}
+                      {caseItem.judiciary_unit || '-'}
                     </Table.Cell>
+                    {/* ✅ MAHKEME */}
+                    <Table.Cell>
+                      {caseItem.court_name || '-'}
+                    </Table.Cell>
+                    {/* ✅ MÜVEKKİL (ÇOKLU) */}
+                    <Table.Cell>
+                      {caseItem.clients && caseItem.clients.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {caseItem.clients.slice(0, 2).map((client) => (
+                            <Link
+                              key={client.id}
+                              to={`/clients/${client.id}`}
+                              className="text-blue-600 hover:underline text-sm"
+                            >
+                              {client.name}
+                            </Link>
+                          ))}
+                          {caseItem.clients.length > 2 && (
+                            <span className="text-sm text-gray-500">
+                              +{caseItem.clients.length - 2}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        '-'
+                      )}
+                    </Table.Cell>
+                    {/* ✅ DURUM */}
                     <Table.Cell>
                       <Badge variant={getStatusVariant(caseItem.status)}>
                         {statuses.find(s => s.value === caseItem.status)?.label || caseItem.status}
                       </Badge>
                     </Table.Cell>
+                    {/* ✅ İŞLEM */}
                     <Table.Cell>
                       <Link
                         to={`/cases/${caseItem.id}`}

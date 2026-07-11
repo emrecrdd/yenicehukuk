@@ -11,11 +11,23 @@ import { Op } from 'sequelize';
 import { paginate, getPaginationData } from '../../utils/paginate.js';
 
 export const caseService = {
+  // ✅ CREATE - Çoklu müvekkil desteği
   async create(data) {
-    return Case.create(data);
+    const { client_ids, ...caseData } = data;
+    
+    // Case'i oluştur
+    const newCase = await Case.create(caseData);
+    
+    // Müvekkilleri ilişkilendir
+    if (client_ids && client_ids.length > 0) {
+      await newCase.setClients(client_ids);
+    }
+    
+    return newCase;
   },
 
-  async findAll({ page, limit, search, status, case_type, client_id }) {
+  // ✅ FIND ALL - client_id filtresi KALDIRILDI (çoklu müvekkil)
+  async findAll({ page, limit, search, status }) {
     const where = {};
 
     if (search) {
@@ -24,12 +36,12 @@ export const caseService = {
         { case_number: { [Op.iLike]: `%${search}%` } },
         { court_name: { [Op.iLike]: `%${search}%` } },
         { subject: { [Op.iLike]: `%${search}%` } },
+        { judiciary_type: { [Op.iLike]: `%${search}%` } },
+        { judiciary_unit: { [Op.iLike]: `%${search}%` } },
       ];
     }
 
     if (status) where.status = status;
-    if (case_type) where.case_type = case_type;
-    if (client_id) where.client_id = client_id;
 
     const query = paginate({ where }, page, limit);
     const { count, rows } = await Case.findAndCountAll({
@@ -37,8 +49,9 @@ export const caseService = {
       include: [
         {
           model: Client,
-          as: 'client',
-          attributes: ['id', 'name'], // ✅ DEĞİŞTİ
+          as: 'clients',
+          attributes: ['id', 'name'],
+          through: { attributes: [] },
         },
         {
           model: User,
@@ -67,19 +80,15 @@ export const caseService = {
     };
   },
 
+  // ✅ FIND ONE - clients (çoklu)
   async findOne(id) {
     const caseItem = await Case.findByPk(id, {
       include: [
         {
           model: Client,
-          as: 'client',
-          include: [
-            {
-              model: User,
-              as: 'creator',
-              attributes: ['id', 'first_name', 'last_name'],
-            },
-          ],
+          as: 'clients',
+          attributes: ['id', 'name', 'identification_number', 'phone', 'email'],
+          through: { attributes: [] },
         },
         {
           model: User,
@@ -158,13 +167,21 @@ export const caseService = {
     return caseItem;
   },
 
+  // ✅ UPDATE - Çoklu müvekkil güncelleme
   async update(id, data) {
+    const { client_ids, ...updateData } = data;
     const caseItem = await Case.findByPk(id);
     if (!caseItem) {
       throw new Error('Case not found');
     }
 
-    await caseItem.update(data);
+    await caseItem.update(updateData);
+
+    // Müvekkilleri güncelle
+    if (client_ids && Array.isArray(client_ids)) {
+      await caseItem.setClients(client_ids);
+    }
+
     return caseItem;
   },
 
