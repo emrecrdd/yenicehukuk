@@ -16,8 +16,7 @@ const CaseCreate = () => {
     judiciary_unit: '',
     court_name: '',
     case_number: '',
-    court_type: '',
-    client_ids: [],
+    client_ids: [],  // ✅ Array olarak kalacak
     assigned_to: '',
     status: 'preparation',
     priority: 'normal',
@@ -59,6 +58,7 @@ const CaseCreate = () => {
     }
   };
 
+  // ✅ Çoklu müvekkil seçimi - DÜZELTİLDİ
   const handleClientChange = (e) => {
     const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
     setFormData((prev) => ({ ...prev, client_ids: selectedOptions }));
@@ -104,7 +104,7 @@ const CaseCreate = () => {
 
       <Card>
         <form onSubmit={handleSubmit} className="space-y-6 p-6">
-          {/* YARGI TÜRÜ */}
+          {/* 1. YARGI TÜRÜ */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Yargı Türü *
@@ -124,7 +124,7 @@ const CaseCreate = () => {
             )}
           </div>
 
-          {/* YARGI BİRİMİ */}
+          {/* 2. YARGI BİRİMİ */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Yargı Birimi *
@@ -144,7 +144,7 @@ const CaseCreate = () => {
             )}
           </div>
 
-          {/* DAVA AÇILIŞ TARİHİ */}
+          {/* 3. DAVA AÇILIŞ TARİHİ */}
           <Input
             label="Dava Açılış Tarihi"
             name="opening_date"
@@ -153,7 +153,7 @@ const CaseCreate = () => {
             onChange={handleChange}
           />
 
-          {/* MAHKEME */}
+          {/* 4. MAHKEME */}
           <Input
             label="Mahkeme"
             name="court_name"
@@ -162,7 +162,7 @@ const CaseCreate = () => {
             placeholder="Mahkeme adı"
           />
 
-          {/* DOSYA NO */}
+          {/* 5. DOSYA NO */}
           <Input
             label="Dosya No"
             name="case_number"
@@ -171,16 +171,9 @@ const CaseCreate = () => {
             placeholder="Esas no"
           />
 
-          {/* MAHKEME TÜRÜ */}
-          <Input
-            label="Mahkeme Türü"
-            name="court_type"
-            value={formData.court_type}
-            onChange={handleChange}
-            placeholder="Örn: Asliye Hukuk, Sulh Hukuk, Ağır Ceza"
-          />
+          {/* ❌ MAHKEME TÜRÜ KALDIRILDI */}
 
-          {/* MÜVEKKİLLER (ÇOKLU SEÇİM) */}
+          {/* 6. MÜVEKKİLLER (ÇOKLU SEÇİM) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Müvekkil *
@@ -192,7 +185,7 @@ const CaseCreate = () => {
               onChange={handleClientChange}
               className={`w-full rounded-md border ${
                 errors.client_ids ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              } bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]`}
+              } bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[120px]`}
             >
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
@@ -200,13 +193,15 @@ const CaseCreate = () => {
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-gray-400">Birden fazla seçmek için Ctrl (Cmd) tuşuna basılı tutun</p>
+            <p className="mt-1 text-xs text-gray-400">
+              Birden fazla seçmek için Ctrl (Windows) / Cmd (Mac) tuşuna basılı tutun
+            </p>
             {errors.client_ids && (
               <p className="mt-1 text-sm text-red-600">{errors.client_ids}</p>
             )}
           </div>
 
-          {/* ATANAN AVUKAT */}
+          {/* 7. ATANAN AVUKAT */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Atanan Avukat
@@ -226,7 +221,7 @@ const CaseCreate = () => {
             </select>
           </div>
 
-          {/* DURUM */}
+          {/* 8. DURUM */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Durum
@@ -247,7 +242,7 @@ const CaseCreate = () => {
             </select>
           </div>
 
-          {/* ÖNCELİK */}
+          {/* 9. ÖNCELİK */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Öncelik
@@ -265,7 +260,7 @@ const CaseCreate = () => {
             </select>
           </div>
 
-          {/* KONU */}
+          {/* 10. KONU */}
           <Input
             label="Konu"
             name="subject"
@@ -274,7 +269,7 @@ const CaseCreate = () => {
             placeholder="Dava konusu"
           />
 
-          {/* AÇIKLAMA */}
+          {/* 11. AÇIKLAMA */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Açıklama
