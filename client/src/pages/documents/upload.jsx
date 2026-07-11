@@ -4,7 +4,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import documentApi from '../../features/documents/document.api.js';
 import caseApi from '../../features/cases/case.api.js';
 import clientApi from '../../features/clients/client.api.js';
-import { powerOfAttorneyApi } from '../../features/power-of-attorney/powerOfAttorney.api.js';  // ✅ EKLENDI
+import { powerOfAttorneyApi } from '../../features/power-of-attorney/powerOfAttorney.api.js';
 import Button from '../../components/ui/Button.jsx';
 import Input from '../../components/ui/Input.jsx';
 import Card from '../../components/ui/Card.jsx';
@@ -23,7 +23,7 @@ const DocumentUpload = () => {
     tags: '',
     case_id: searchParams.get('case') || '',
     client_id: searchParams.get('client') || '',
-    power_of_attorney_id: searchParams.get('power_of_attorney_id') || '',  // ✅ EKLENDI
+    power_of_attorney_id: searchParams.get('power_of_attorney_id') || '',
     is_public: false,
   });
   const [files, setFiles] = useState([]);
@@ -60,7 +60,14 @@ const DocumentUpload = () => {
 
   const cases = casesData?.data?.data || [];
   const clients = clientsData?.data?.data || [];
-  const powerOfAttorneys = poaData?.data?.data || [];
+
+  // ✅ GÜVENLİ VERİ OKUMA - Array kontrolü
+  const powerOfAttorneys = Array.isArray(poaData?.data?.data) 
+    ? poaData.data.data 
+    : [];
+
+  console.log('📜 powerOfAttorneys:', powerOfAttorneys);
+  console.log('📜 Array mi?', Array.isArray(powerOfAttorneys));
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -168,7 +175,7 @@ const DocumentUpload = () => {
       formDataToSend.append('tags', formData.tags.split(',').map(t => t.trim()).filter(Boolean));
       formDataToSend.append('case_id', formData.case_id || '');
       formDataToSend.append('client_id', formData.client_id || '');
-      formDataToSend.append('power_of_attorney_id', formData.power_of_attorney_id || '');  // ✅ EKLENDI
+      formDataToSend.append('power_of_attorney_id', formData.power_of_attorney_id || '');
       formDataToSend.append('is_public', formData.is_public);
       
       return documentApi.upload(formDataToSend);
