@@ -4,7 +4,7 @@ import { Document } from '../../models/Document.js';
 import { Task } from '../../models/Task.js';
 import { Event } from '../../models/Event.js';
 import { Payment } from '../../models/Payment.js';
-import { User } from '../../models/User.js'; // ✅ EKLENDI
+import { User } from '../../models/User.js';
 import { Op } from 'sequelize';
 
 export const dashboardService = {
@@ -32,6 +32,7 @@ export const dashboardService = {
     };
   },
 
+  // ✅ DÜZELTİLDİ - as: 'client' → as: 'clients'
   async getTodayHearings() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -52,8 +53,9 @@ export const dashboardService = {
           include: [
             {
               model: Client,
-              as: 'client',
-              attributes: ['id', 'name'], // ✅ DEĞİŞTİ
+              as: 'clients',  // ✅ DÜZELTİLDİ! (client → clients)
+              attributes: ['id', 'name'],
+              through: { attributes: [] },  // ✅ Junction table için eklendi
             },
           ],
         },
@@ -86,13 +88,14 @@ export const dashboardService = {
     return tasks;
   },
 
+  // ✅ DÜZELTİLDİ - as: 'client' → as: 'clients'
   async getRecentActivities(limit = 5) {
     const recentDocuments = await Document.findAll({
       include: [
         {
           model: User,
           as: 'uploader',
-          attributes: ['id', 'first_name', 'last_name'], // ✅ User'da değişiklik yok
+          attributes: ['id', 'first_name', 'last_name'],
         },
       ],
       order: [['created_at', 'DESC']],
@@ -103,8 +106,9 @@ export const dashboardService = {
       include: [
         {
           model: Client,
-          as: 'client',
-          attributes: ['id', 'name'], // ✅ DEĞİŞTİ
+          as: 'clients',  // ✅ DÜZELTİLDİ! (client → clients)
+          attributes: ['id', 'name'],
+          through: { attributes: [] },  // ✅ Junction table için eklendi
         },
       ],
       order: [['created_at', 'DESC']],
