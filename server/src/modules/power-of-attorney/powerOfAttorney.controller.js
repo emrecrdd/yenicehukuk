@@ -1,16 +1,22 @@
 import { powerOfAttorneyService } from './powerOfAttorney.service.js';
-import { documentService } from '../documents/document.service.js';  // ✅ EKLENDI
+import { documentService } from '../documents/document.service.js';
 import { logger } from '../../config/logger.js';
 
 export const powerOfAttorneyController = {
   async create(req, res) {
     try {
+      // 🔥 DEBUG - req.file ve req.body'i kontrol et
+      console.log('🔥🔥🔥 CREATE ÇAĞRILDI!');
+      console.log('📁 req.file:', req.file);
+      console.log('📁 req.body:', req.body);
+      console.log('📁 req.headers["content-type"]:', req.headers['content-type']);
+
       const data = {
         ...req.body,
         created_by: req.user.id,
       };
 
-      // ✅ authorities JSON parse et (frontend'den string geliyor)
+      // authorities JSON parse et (frontend'den string geliyor)
       if (data.authorities && typeof data.authorities === 'string') {
         try {
           data.authorities = JSON.parse(data.authorities);
@@ -19,12 +25,15 @@ export const powerOfAttorneyController = {
         }
       }
 
-      // ✅ Dosya varsa service'e gönder (ama önce vekaletname oluşturulmalı)
+      // 1️⃣ VEKALETNAMEYİ KAYDET
       const powerOfAttorney = await powerOfAttorneyService.create(data);
-      
-      // ✅ Dosya varsa documentService ile kaydet
+      console.log('✅ Vekaletname kaydedildi:', powerOfAttorney.id);
+
+      // 2️⃣ DOSYA VARSA BELGE OLARAK KAYDET
       if (req.file) {
         try {
+          console.log('📁 Dosya işleniyor:', req.file.originalname);
+
           const documentData = {
             file: req.file,
             name: data.title + ' - Vekaletname',
@@ -38,18 +47,24 @@ export const powerOfAttorneyController = {
             is_public: false,
             tags: ['vekaletname'],
           };
-          await documentService.upload(documentData);
+
+          const savedDoc = await documentService.upload(documentData);
+          console.log('✅ Belge kaydedildi:', savedDoc.id);
           logger.info(`📎 Vekaletname belgesi yüklendi: ${req.file.originalname}`);
         } catch (docError) {
+          console.error('❌ Belge yükleme hatası:', docError);
           logger.error('Belge yükleme hatası:', docError);
-          // Vekaletname oluşturuldu ama belge yüklenemedi - uyarı ver
+
+          // Vekaletname oluştu ama belge yüklenemedi
           return res.status(201).json({
             success: true,
             message: 'Vekaletname oluşturuldu ama belge yüklenemedi',
             data: powerOfAttorney,
-            warning: 'Belge yüklenirken bir hata oluştu',
+            warning: docError.message || 'Belge yüklenirken bir hata oluştu',
           });
         }
+      } else {
+        console.log('⚠️ Dosya yok, sadece vekaletname kaydedildi.');
       }
 
       return res.status(201).json({
@@ -58,6 +73,7 @@ export const powerOfAttorneyController = {
         data: powerOfAttorney,
       });
     } catch (error) {
+      console.error('❌ Vekaletname oluşturma hatası:', error);
       logger.error('Vekaletname oluşturma hatası:', error);
       return res.status(400).json({
         success: false,
