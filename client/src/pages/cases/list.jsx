@@ -134,8 +134,8 @@ const CasesList = () => {
           <Table>
             <Table.Head>
               <Table.Row>
-                <Table.HeadCell>Dava Adı</Table.HeadCell>
-                <Table.HeadCell>Esas No</Table.HeadCell>
+                <Table.HeadCell>Yargı Türü</Table.HeadCell>
+                <Table.HeadCell>Yargı Birimi</Table.HeadCell>
                 <Table.HeadCell>Mahkeme</Table.HeadCell>
                 <Table.HeadCell>Müvekkil</Table.HeadCell>
                 <Table.HeadCell>Durum</Table.HeadCell>

@@ -399,15 +399,7 @@ const ClientDetail = () => {
                         {caseItem.court_name || '-'}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-gray-400 text-xs flex items-center gap-1">
-                        <Scale className="w-3 h-3" />
-                        Dava Türü
-                      </p>
-                      <p className="font-medium text-gray-700 dark:text-gray-300">
-                        {caseItem.case_type || '-'}
-                      </p>
-                    </div>
+                   
                     <div>
                       <p className="text-gray-400 text-xs flex items-center gap-1">
                         <Calendar className="w-3 h-3" />

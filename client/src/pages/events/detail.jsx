@@ -300,7 +300,7 @@ const EventDetail = () => {
               <div className="flex items-center gap-2">
                 <Gavel className="w-5 h-5 text-blue-600" />
                 <span className="font-semibold text-gray-900 dark:text-white">
-                  {caseItem.case_number || 'Esas no yok'}
+                  {caseItem.case_number || 'Yargı Birimi * yok'}
                 </span>
                 <span className="text-sm text-gray-500">|</span>
                 <span className="text-sm text-gray-600 dark:text-gray-400">
@@ -526,17 +526,14 @@ const EventDetail = () => {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
                   <div>
-                    <p className="text-xs text-gray-400 font-medium">📋 Esas No</p>
+                    <p className="text-xs text-gray-400 font-medium">📋 Yargı Birimi *</p>
                     <p className="font-medium text-gray-900 dark:text-white">{caseItem.case_number || '-'}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-400 font-medium">🏛️ Mahkeme</p>
                     <p className="font-medium text-gray-900 dark:text-white">{caseItem.court_name || '-'}</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-400 font-medium">⚖️ Dava Türü</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{caseItem.case_type || '-'}</p>
-                  </div>
+                  
                   <div>
                     <p className="text-xs text-gray-400 font-medium">👤 Müvekkil</p>
                     <Link 

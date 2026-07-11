@@ -135,10 +135,7 @@ const CaseDetail = () => {
               <p className="text-sm text-gray-500">Mahkeme</p>
               <p className="text-gray-900 dark:text-white">{caseItem.court_name || '-'}</p>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Dava Türü</p>
-              <p className="text-gray-900 dark:text-white">{caseItem.case_type || '-'}</p>
-            </div>
+            
             <div>
               <p className="text-sm text-gray-500">Açılış Tarihi</p>
               <p className="text-gray-900 dark:text-white">{formatDate(caseItem.opening_date)}</p>

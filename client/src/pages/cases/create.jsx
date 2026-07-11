@@ -94,7 +94,7 @@ const CaseCreate = () => {
       <Card>
         <form onSubmit={handleSubmit} className="space-y-6 p-6">
           <Input
-            label="Dava Adı *"
+            label="Yargı Türü *"
             name="title"
             value={formData.title}
             onChange={handleChange}
@@ -103,7 +103,7 @@ const CaseCreate = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label="Esas Numarası"
+              label="Yargı Birimi *"
               name="case_number"
               value={formData.case_number}
               onChange={handleChange}
@@ -118,19 +118,13 @@ const CaseCreate = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              label="Mahkeme Türü"
+              label="Dosya No"
               name="court_type"
               value={formData.court_type}
               onChange={handleChange}
               placeholder="Örn: Asliye Hukuk, Sulh Hukuk, Ağır Ceza"
             />
-            <Input
-              label="Dava Türü"
-              name="case_type"
-              value={formData.case_type}
-              onChange={handleChange}
-              placeholder="Örn: İş Davası, Tazminat, Boşanma"
-            />
+           
           </div>
 
           <div>
@@ -214,14 +208,7 @@ const CaseCreate = () => {
             </select>
           </div>
 
-          <Input
-            label="Tahmini Değer (TL)"
-            name="estimated_value"
-            type="number"
-            value={formData.estimated_value}
-            onChange={handleChange}
-            placeholder="0.00"
-          />
+         
 
           <Input
             label="Konu"
