@@ -182,7 +182,7 @@ const TemplateEdit = () => {
             ← Şablonlar
           </Link>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-            ✏️ Şablon Düzenle
+             Şablon Düzenle
           </h1>
           <p className="text-sm text-gray-500">{template.title}</p>
         </div>
@@ -317,13 +317,13 @@ const TemplateEdit = () => {
           {/* BUTONLAR */}
           <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <Button type="submit" loading={updateMutation.isPending}>
-              💾 Güncelle
+              Güncelle
             </Button>
             <Button type="button" variant="secondary" onClick={() => navigate(`/templates/${id}`)}>
               İptal
             </Button>
             <Button type="button" variant="danger" onClick={handleDelete} loading={deleteMutation.isPending}>
-              🗑️ Sil
+             Sil
             </Button>
           </div>
         </form>

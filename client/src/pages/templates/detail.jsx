@@ -110,14 +110,12 @@ const TemplateDetail = () => {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleDownload}>
-            ⬇️ İndir
-          </Button>
+          
           <Link to={`/templates/${template.id}/edit`}>
-            <Button variant="outline">✏️ Düzenle</Button>
+            <Button variant="outline"> Düzenle</Button>
           </Link>
           <Button variant="danger" onClick={handleDelete} loading={deleteMutation.isPending}>
-            🗑️ Sil
+             Sil
           </Button>
         </div>
       </div>
@@ -195,9 +193,7 @@ const TemplateDetail = () => {
                 {template.file_type} • {template.file_size ? (template.file_size / 1024).toFixed(1) : 0} KB
               </p>
             </div>
-            <Button variant="primary" onClick={handleDownload}>
-              ⬇️ İndir
-            </Button>
+            
           </div>
         </Card.Body>
       </Card>
