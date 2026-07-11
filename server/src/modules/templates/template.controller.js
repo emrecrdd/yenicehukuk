@@ -1,33 +1,38 @@
 import { templateService } from './template.service.js';
 import { successResponse, errorResponse, paginatedResponse } from '../../utils/response.js';
 import { logger } from '../../config/logger.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const templateController = {
- async create(req, res) {
-  try {
-    console.log('📥 REQ.BODY:', req.body);
-    console.log('📁 REQ.FILE:', req.file);
+  async create(req, res) {
+    try {
+      console.log('📥 REQ.BODY:', req.body);
+      console.log('📁 REQ.FILE:', req.file);
 
-    const data = {
-      ...req.body,
-      created_by: req.user.id,
-    };
+      const data = {
+        ...req.body,
+        created_by: req.user.id,
+      };
 
-    // ✅ Dosya varsa kaydet
-    if (req.file) {
-      data.file_url = `/uploads/${req.file.filename}`;
-      data.file_name = req.file.originalname;
-      data.file_size = req.file.size;
-      data.file_type = req.file.mimetype;
+      if (req.file) {
+        data.file_url = `/uploads/${req.file.filename}`;
+        data.file_name = req.file.originalname;
+        data.file_size = req.file.size;
+        data.file_type = req.file.mimetype;
+      }
+
+      const template = await templateService.create(data);
+      return successResponse(res, template, 'Template created successfully', 201);
+    } catch (error) {
+      logger.error('Create template error:', error);
+      return errorResponse(res, error.message, 400);
     }
-
-    const template = await templateService.create(data);
-    return successResponse(res, template, 'Template created successfully', 201);
-  } catch (error) {
-    logger.error('Create template error:', error);
-    return errorResponse(res, error.message, 400);
-  }
-},
+  },
 
   async findAll(req, res) {
     try {
@@ -77,10 +82,30 @@ export const templateController = {
     }
   },
 
+  // ✅ DÜZELTİLMİŞ DOWNLOAD METODU
   async download(req, res) {
     try {
+      console.log('📥 Download isteği, ID:', req.params.id);
+      
       const template = await templateService.incrementDownload(req.params.id);
-      return successResponse(res, { downloadUrl: template.file_url, fileName: template.file_name }, 'Download initiated');
+      
+      // Dosya yolunu kontrol et
+      const filePath = path.join(__dirname, '../../../uploads', path.basename(template.file_url));
+      console.log('📁 Dosya yolu:', filePath);
+      
+      // Dosya var mı kontrol et
+      if (!fs.existsSync(filePath)) {
+        console.error('❌ Dosya bulunamadı:', filePath);
+        return errorResponse(res, 'Dosya bulunamadı', 404);
+      }
+
+      // Dosyayı indir
+      res.download(filePath, template.file_name, (err) => {
+        if (err) {
+          logger.error('Download error:', err);
+          return errorResponse(res, 'Dosya indirilemedi', 500);
+        }
+      });
     } catch (error) {
       logger.error('Download template error:', error);
       return errorResponse(res, error.message, 404);

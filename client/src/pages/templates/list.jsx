@@ -49,6 +49,34 @@ const TemplatesList = () => {
     }
   };
 
+  // ✅ Belge indirme fonksiyonu
+  const handleDownload = async (id, fileName) => {
+    console.log('🔍 Download ID:', id);
+    console.log('🔍 File name:', fileName);
+    
+    if (!id) {
+      toast.error('Şablon ID bulunamadı');
+      return;
+    }
+
+    try {
+      const response = await templateApi.download(id);
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName || 'sablon';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Şablon indirildi');
+    } catch (err) {
+      console.error('Download error:', err);
+      toast.error('İndirilemedi');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -158,15 +186,7 @@ const TemplatesList = () => {
                       <div className="flex items-center gap-2">
                         <Link to={`/templates/${template.id}`} className="text-blue-600 hover:underline">Görüntüle</Link>
                         <button
-                          onClick={async () => {
-                            try {
-                              const res = await templateApi.download(template.id);
-                              window.open(res.data.data.downloadUrl, '_blank');
-                              toast.success('İndirme başlatıldı');
-                            } catch (err) {
-                              toast.error('İndirilemedi');
-                            }
-                          }}
+                          onClick={() => handleDownload(template.id, template.file_name)}
                           className="text-green-600 hover:underline"
                         >
                           ⬇️ İndir

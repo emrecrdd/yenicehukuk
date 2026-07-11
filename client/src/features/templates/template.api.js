@@ -14,16 +14,25 @@ export const templateApi = {
   getLawAreas: () => axios.get('/templates/law-areas'),
 
   // ✅ Yeni şablon oluştur
-  create: (data) => axios.post('/templates', data),
+  create: (data) => axios.post('/templates', data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
 
   // ✅ Şablon güncelle
-  update: (id, data) => axios.put(`/templates/${id}`, data),
+  update: (id, data) => axios.put(`/templates/${id}`, data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
 
   // ✅ Şablon sil
   delete: (id) => axios.delete(`/templates/${id}`),
 
   // ✅ Şablon indir
-  download: (id) => axios.get(`/templates/${id}/download`),
+  download: (id) => {
+    console.log('📤 Download çağrısı, ID:', id);
+    return axios.get(`/templates/${id}/download`, {
+      responseType: 'blob',
+    });
+  },
 };
 
 export default templateApi;
