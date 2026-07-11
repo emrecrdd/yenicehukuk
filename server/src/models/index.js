@@ -93,8 +93,13 @@ const initModels = (sequelize) => {
   PowerOfAttorney.belongsTo(Client, { foreignKey: 'client_id', as: 'client' });
 
   // ============ CASE ASSOCIATIONS ============
-  // ✅ YENİ (Çoklu müvekkil - Case modelinde tanımlandı)
-  // Case.belongsToMany(Client, { through: 'case_clients', foreignKey: 'case_id', otherKey: 'client_id', as: 'clients' });
+  // ✅ YENİ - Çoklu müvekkil (AKTİF!)
+  Case.belongsToMany(Client, {
+    through: 'case_clients',
+    foreignKey: 'case_id',
+    otherKey: 'client_id',
+    as: 'clients',
+  });
 
   Case.hasMany(CaseParty, { foreignKey: 'case_id', as: 'parties' });
   CaseParty.belongsTo(Case, { foreignKey: 'case_id', as: 'case' });
