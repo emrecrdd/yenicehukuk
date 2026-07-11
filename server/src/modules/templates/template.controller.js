@@ -3,28 +3,31 @@ import { successResponse, errorResponse, paginatedResponse } from '../../utils/r
 import { logger } from '../../config/logger.js';
 
 export const templateController = {
-  async create(req, res) {
-    try {
-      const data = {
-        ...req.body,
-        created_by: req.user.id,
-      };
+ async create(req, res) {
+  try {
+    console.log('📥 REQ.BODY:', req.body);
+    console.log('📁 REQ.FILE:', req.file);
 
-      // Dosya bilgilerini al
-      if (req.file) {
-        data.file_url = `/uploads/${req.file.filename}`;
-        data.file_name = req.file.originalname;
-        data.file_size = req.file.size;
-        data.file_type = req.file.mimetype;
-      }
+    const data = {
+      ...req.body,
+      created_by: req.user.id,
+    };
 
-      const template = await templateService.create(data);
-      return successResponse(res, template, 'Template created successfully', 201);
-    } catch (error) {
-      logger.error('Create template error:', error);
-      return errorResponse(res, error.message, 400);
+    // ✅ Dosya varsa kaydet
+    if (req.file) {
+      data.file_url = `/uploads/${req.file.filename}`;
+      data.file_name = req.file.originalname;
+      data.file_size = req.file.size;
+      data.file_type = req.file.mimetype;
     }
-  },
+
+    const template = await templateService.create(data);
+    return successResponse(res, template, 'Template created successfully', 201);
+  } catch (error) {
+    logger.error('Create template error:', error);
+    return errorResponse(res, error.message, 400);
+  }
+},
 
   async findAll(req, res) {
     try {

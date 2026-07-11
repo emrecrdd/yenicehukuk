@@ -30,11 +30,11 @@ class Template extends Sequelize.Model {
         // ✅ Dosya (PDF/Word)
         file_url: {
           type: DataTypes.STRING,
-          allowNull: false,
+          allowNull: true,
         },
         file_name: {
           type: DataTypes.STRING,
-          allowNull: false,
+          allowNull: true,
         },
         file_size: {
           type: DataTypes.INTEGER,
