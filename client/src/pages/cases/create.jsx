@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import caseApi from '../../features/cases/case.api.js';
@@ -12,18 +12,18 @@ import toast from 'react-hot-toast';
 const CaseCreate = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    title: '',
-    case_number: '',
+    judiciary_type: '',
+    judiciary_unit: '',
     court_name: '',
+    case_number: '',
     court_type: '',
-    case_type: '',
+    client_ids: [],
+    assigned_to: '',
+    status: 'preparation',
+    priority: 'normal',
     subject: '',
     description: '',
-    status: 'preparation',
-    client_id: '',
-    assigned_to: '',
-    priority: 'normal',
-    estimated_value: '',
+    opening_date: '',
   });
   const [errors, setErrors] = useState({});
 
@@ -59,12 +59,23 @@ const CaseCreate = () => {
     }
   };
 
+  const handleClientChange = (e) => {
+    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+    setFormData((prev) => ({ ...prev, client_ids: selectedOptions }));
+    if (errors.client_ids) {
+      setErrors((prev) => ({ ...prev, client_ids: '' }));
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = {};
-    if (!formData.title) newErrors.title = 'Dava adı gereklidir';
-    if (!formData.client_id) newErrors.client_id = 'Müvekkil seçilmelidir';
-    
+    if (!formData.judiciary_type) newErrors.judiciary_type = 'Yargı türü gereklidir';
+    if (!formData.judiciary_unit) newErrors.judiciary_unit = 'Yargı birimi gereklidir';
+    if (!formData.client_ids || formData.client_ids.length === 0) {
+      newErrors.client_ids = 'En az bir müvekkil seçilmelidir';
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -72,8 +83,8 @@ const CaseCreate = () => {
 
     const submitData = {
       ...formData,
-      estimated_value: formData.estimated_value ? parseFloat(formData.estimated_value) : null,
       assigned_to: formData.assigned_to || null,
+      opening_date: formData.opening_date || null,
     };
     mutation.mutate(submitData);
   };
@@ -93,65 +104,109 @@ const CaseCreate = () => {
 
       <Card>
         <form onSubmit={handleSubmit} className="space-y-6 p-6">
+          {/* YARGI TÜRÜ */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Yargı Türü *
+            </label>
+            <input
+              type="text"
+              name="judiciary_type"
+              value={formData.judiciary_type}
+              onChange={handleChange}
+              placeholder="Örn: Hukuk, Ceza, İdare, CBS, Arabuluculuk"
+              className={`w-full rounded-md border ${
+                errors.judiciary_type ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+              } bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            />
+            {errors.judiciary_type && (
+              <p className="mt-1 text-sm text-red-600">{errors.judiciary_type}</p>
+            )}
+          </div>
+
+          {/* YARGI BİRİMİ */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Yargı Birimi *
+            </label>
+            <input
+              type="text"
+              name="judiciary_unit"
+              value={formData.judiciary_unit}
+              onChange={handleChange}
+              placeholder="Örn: Sulh Hukuk, Asliye Hukuk, Aile Mahkemesi"
+              className={`w-full rounded-md border ${
+                errors.judiciary_unit ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+              } bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            />
+            {errors.judiciary_unit && (
+              <p className="mt-1 text-sm text-red-600">{errors.judiciary_unit}</p>
+            )}
+          </div>
+
+          {/* DAVA AÇILIŞ TARİHİ */}
           <Input
-            label="Yargı Türü *"
-            name="title"
-            value={formData.title}
+            label="Dava Açılış Tarihi"
+            name="opening_date"
+            type="date"
+            value={formData.opening_date}
             onChange={handleChange}
-            error={errors.title}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Yargı Birimi *"
-              name="case_number"
-              value={formData.case_number}
-              onChange={handleChange}
-            />
-            <Input
-              label="Mahkeme"
-              name="court_name"
-              value={formData.court_name}
-              onChange={handleChange}
-            />
-          </div>
+          {/* MAHKEME */}
+          <Input
+            label="Mahkeme"
+            name="court_name"
+            value={formData.court_name}
+            onChange={handleChange}
+            placeholder="Mahkeme adı"
+          />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Dosya No"
-              name="court_type"
-              value={formData.court_type}
-              onChange={handleChange}
-              placeholder="Örn: Asliye Hukuk, Sulh Hukuk, Ağır Ceza"
-            />
-           
-          </div>
+          {/* DOSYA NO */}
+          <Input
+            label="Dosya No"
+            name="case_number"
+            value={formData.case_number}
+            onChange={handleChange}
+            placeholder="Esas no"
+          />
 
+          {/* MAHKEME TÜRÜ */}
+          <Input
+            label="Mahkeme Türü"
+            name="court_type"
+            value={formData.court_type}
+            onChange={handleChange}
+            placeholder="Örn: Asliye Hukuk, Sulh Hukuk, Ağır Ceza"
+          />
+
+          {/* MÜVEKKİLLER (ÇOKLU SEÇİM) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Müvekkil *
             </label>
             <select
-              name="client_id"
-              value={formData.client_id}
-              onChange={handleChange}
+              name="client_ids"
+              multiple
+              value={formData.client_ids}
+              onChange={handleClientChange}
               className={`w-full rounded-md border ${
-                errors.client_id ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              } bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                errors.client_ids ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+              } bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]`}
             >
-              <option value="">Müvekkil seçin</option>
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
-                  {client.name} {/* ✅ DEĞİŞTİ */}
-                  {client.client_type === 'corporate' ? ' 🏢' : ''}
+                  {client.name} {client.client_type === 'corporate' ? '🏢' : ''}
                 </option>
               ))}
             </select>
-            {errors.client_id && (
-              <p className="mt-1 text-sm text-red-600">{errors.client_id}</p>
+            <p className="mt-1 text-xs text-gray-400">Birden fazla seçmek için Ctrl (Cmd) tuşuna basılı tutun</p>
+            {errors.client_ids && (
+              <p className="mt-1 text-sm text-red-600">{errors.client_ids}</p>
             )}
           </div>
 
+          {/* ATANAN AVUKAT */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Atanan Avukat
@@ -171,6 +226,7 @@ const CaseCreate = () => {
             </select>
           </div>
 
+          {/* DURUM */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Durum
@@ -191,6 +247,7 @@ const CaseCreate = () => {
             </select>
           </div>
 
+          {/* ÖNCELİK */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Öncelik
@@ -208,15 +265,16 @@ const CaseCreate = () => {
             </select>
           </div>
 
-         
-
+          {/* KONU */}
           <Input
             label="Konu"
             name="subject"
             value={formData.subject}
             onChange={handleChange}
+            placeholder="Dava konusu"
           />
 
+          {/* AÇIKLAMA */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Açıklama
@@ -227,10 +285,12 @@ const CaseCreate = () => {
               onChange={handleChange}
               rows="4"
               className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Dava hakkında detaylı açıklama..."
             />
           </div>
 
-          <div className="flex gap-3">
+          {/* BUTONLAR */}
+          <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <Button type="submit" loading={mutation.isPending}>
               Dava Oluştur
             </Button>
