@@ -19,14 +19,38 @@ export const templateController = {
         created_by: req.user.id,
       };
 
+      // ✅ DOSYA KAYDETME - DÜZELTİLDİ
       if (req.file) {
-        data.file_url = `/uploads/${req.file.filename}`;
+        // Uploads klasörünü kontrol et
+        const uploadDir = path.join(__dirname, '../../../uploads');
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+
+        // Benzersiz dosya adı oluştur
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(req.file.originalname);
+        const filename = uniqueSuffix + ext;
+        const filePath = path.join(uploadDir, filename);
+
+        // Dosyayı diske yaz (memoryStorage kullanıldığı için buffer'dan oku)
+        fs.writeFileSync(filePath, req.file.buffer);
+
+        // Veritabanına kaydet
+        data.file_url = `/uploads/${filename}`;
         data.file_name = req.file.originalname;
         data.file_size = req.file.size;
         data.file_type = req.file.mimetype;
+        
+        console.log('✅ Dosya kaydedildi:', filePath);
+        console.log('✅ file_url:', data.file_url);
+      } else {
+        console.warn('⚠️ Dosya yok! req.file undefined');
       }
 
       const template = await templateService.create(data);
+      console.log('✅ Template oluşturuldu:', template.id);
+      
       return successResponse(res, template, 'Template created successfully', 201);
     } catch (error) {
       logger.error('Create template error:', error);
@@ -58,12 +82,29 @@ export const templateController = {
   async update(req, res) {
     try {
       const data = { ...req.body, updated_by: req.user.id };
+      
+      // ✅ UPDATE - DOSYA KAYDETME
       if (req.file) {
-        data.file_url = `/uploads/${req.file.filename}`;
+        const uploadDir = path.join(__dirname, '../../../uploads');
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(req.file.originalname);
+        const filename = uniqueSuffix + ext;
+        const filePath = path.join(uploadDir, filename);
+
+        fs.writeFileSync(filePath, req.file.buffer);
+
+        data.file_url = `/uploads/${filename}`;
         data.file_name = req.file.originalname;
         data.file_size = req.file.size;
         data.file_type = req.file.mimetype;
+        
+        console.log('✅ Dosya güncellendi:', filePath);
       }
+
       const template = await templateService.update(req.params.id, data);
       return successResponse(res, template, 'Template updated successfully');
     } catch (error) {
@@ -74,6 +115,16 @@ export const templateController = {
 
   async remove(req, res) {
     try {
+      // ✅ Önce dosyayı sil
+      const template = await templateService.findOne(req.params.id);
+      if (template.file_url) {
+        const filePath = path.join(__dirname, '../../../uploads', path.basename(template.file_url));
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log('✅ Dosya silindi:', filePath);
+        }
+      }
+      
       await templateService.remove(req.params.id);
       return successResponse(res, null, 'Template deleted successfully');
     } catch (error) {
@@ -82,7 +133,6 @@ export const templateController = {
     }
   },
 
-  // ✅ GET CATEGORIES - EKLENDI
   async getCategories(req, res) {
     try {
       const categories = await templateService.getCategories();
@@ -93,7 +143,6 @@ export const templateController = {
     }
   },
 
-  // ✅ DOWNLOAD METODU
   async download(req, res) {
     try {
       console.log('📥 Download isteği, ID:', req.params.id);
