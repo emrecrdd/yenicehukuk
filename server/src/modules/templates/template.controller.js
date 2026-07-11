@@ -84,43 +84,42 @@ export const templateController = {
 
   // ✅ DÜZELTİLMİŞ DOWNLOAD METODU
   async download(req, res) {
-    try {
-      console.log('📥 Download isteği, ID:', req.params.id);
-      
-      const template = await templateService.incrementDownload(req.params.id);
-      
-      // Dosya yolunu kontrol et
-      const filePath = path.join(__dirname, '../../../uploads', path.basename(template.file_url));
-      console.log('📁 Dosya yolu:', filePath);
-      
-      // Dosya var mı kontrol et
-      if (!fs.existsSync(filePath)) {
-        console.error('❌ Dosya bulunamadı:', filePath);
-        return errorResponse(res, 'Dosya bulunamadı', 404);
+  try {
+    console.log('📥 Download isteği, ID:', req.params.id);
+    
+    const template = await templateService.findOne(req.params.id);
+    
+    // ✅ file_url kontrolü
+    if (!template.file_url) {
+      console.error('❌ file_url boş!');
+      return errorResponse(res, 'Dosya bulunamadı', 404);
+    }
+
+    // Dosya yolunu kontrol et
+    const filePath = path.join(__dirname, '../../../uploads', path.basename(template.file_url));
+    console.log('📁 Dosya yolu:', filePath);
+    
+    // Dosya var mı kontrol et
+    if (!fs.existsSync(filePath)) {
+      console.error('❌ Dosya bulunamadı:', filePath);
+      return errorResponse(res, 'Dosya bulunamadı', 404);
+    }
+
+    // İndirme sayısını artır
+    await templateService.incrementDownload(req.params.id);
+
+    // Dosyayı indir
+    res.download(filePath, template.file_name, (err) => {
+      if (err) {
+        logger.error('Download error:', err);
+        return errorResponse(res, 'Dosya indirilemedi', 500);
       }
-
-      // Dosyayı indir
-      res.download(filePath, template.file_name, (err) => {
-        if (err) {
-          logger.error('Download error:', err);
-          return errorResponse(res, 'Dosya indirilemedi', 500);
-        }
-      });
-    } catch (error) {
-      logger.error('Download template error:', error);
-      return errorResponse(res, error.message, 404);
-    }
-  },
-
-  async getCategories(req, res) {
-    try {
-      const categories = await templateService.getCategories();
-      return successResponse(res, categories, 'Categories fetched successfully');
-    } catch (error) {
-      logger.error('Get categories error:', error);
-      return errorResponse(res, error.message, 400);
-    }
-  },
+    });
+  } catch (error) {
+    logger.error('Download template error:', error);
+    return errorResponse(res, error.message, 404);
+  }
+},
 
   async getLawAreas(req, res) {
     try {
