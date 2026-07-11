@@ -54,6 +54,12 @@ import EventCreate from '../../pages/events/create.jsx';
 import EventDetail from '../../pages/events/detail.jsx';
 import EventEdit from '../../pages/events/edit.jsx';
 
+// Templates (Şablonlar)
+import TemplatesList from '../../pages/templates/list.jsx';
+import TemplateCreate from '../../pages/templates/create.jsx';
+import TemplateDetail from '../../pages/templates/detail.jsx';
+import TemplateEdit from '../../pages/templates/edit.jsx';
+
 // Other
 import Calendar from '../../pages/calendar/index.jsx';
 import Finance from '../../pages/finance/index.jsx';
@@ -141,6 +147,12 @@ const AppRouter = () => {
           <Route path="/events/create" element={<EventCreate />} />
           <Route path="/events/:id" element={<EventDetail />} />
           <Route path="/events/:id/edit" element={<EventEdit />} />
+
+          {/* Templates (Şablonlar) */}
+          <Route path="/templates" element={<TemplatesList />} />
+          <Route path="/templates/create" element={<TemplateCreate />} />
+          <Route path="/templates/:id" element={<TemplateDetail />} />
+          <Route path="/templates/:id/edit" element={<TemplateEdit />} />
 
           {/* Calendar */}
           <Route path="/calendar" element={<Calendar />} />

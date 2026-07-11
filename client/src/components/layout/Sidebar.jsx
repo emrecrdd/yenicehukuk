@@ -10,6 +10,7 @@ const Sidebar = ({ open, onClose }) => {
     { path: '/clients', label: 'Müvekkiller', icon: '👤' },
     { path: '/cases', label: 'Davalar', icon: '📁' },
     { path: '/documents', label: 'Belgeler', icon: '📄' },
+    { path: '/templates', label: 'Şablonlar', icon: '📋' },  // ✅ EKLENDI
     { path: '/meetings', label: 'Toplantılar', icon: '🤝' },
     { path: '/tasks', label: 'Görevler', icon: '✅' },
     { path: '/calendar', label: 'Takvim', icon: '📅' },

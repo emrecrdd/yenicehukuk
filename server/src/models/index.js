@@ -11,6 +11,7 @@ import { Note } from './Note.js';
 import { AuditLog } from './AuditLog.js';
 import { Notification } from './Notification.js';
 import { PowerOfAttorney } from './PowerOfAttorney.js';
+import { Template } from './Template.js';  // ✅ EKLENDI
 
 const initModels = (sequelize) => {
   // Initialize all models
@@ -27,6 +28,7 @@ const initModels = (sequelize) => {
   AuditLog.initModel(sequelize);
   Notification.initModel(sequelize);
   PowerOfAttorney.initModel(sequelize);
+  Template.initModel(sequelize);  // ✅ EKLENDI
 
   // ============ USER ASSOCIATIONS ============
   User.hasMany(Client, { foreignKey: 'created_by', as: 'clients' });
@@ -68,12 +70,14 @@ const initModels = (sequelize) => {
   User.hasMany(Payment, { foreignKey: 'created_by', as: 'payments' });
   Payment.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 
-  // ============ CLIENT ASSOCIATIONS ============
-  // ❌ ESKİ (KALDIRILDI - çoklu müvekkil için)
-  // Client.hasMany(Case, { foreignKey: 'client_id', as: 'cases' });
-  // Case.belongsTo(Client, { foreignKey: 'client_id', as: 'client' });
+  // ============ TEMPLATE - USER ASSOCIATIONS ============
+  User.hasMany(Template, { foreignKey: 'created_by', as: 'templates' });
+  Template.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 
-  // ✅ YENİ - Client - Case (Çoklu müvekkil)
+  User.hasMany(Template, { foreignKey: 'updated_by', as: 'updatedTemplates' });
+  Template.belongsTo(User, { foreignKey: 'updated_by', as: 'updater' });
+
+  // ============ CLIENT ASSOCIATIONS ============
   Client.belongsToMany(Case, {
     through: 'case_clients',
     foreignKey: 'client_id',
@@ -173,4 +177,5 @@ export {
   AuditLog,
   Notification,
   PowerOfAttorney,
+  Template,  // ✅ EKLENDI
 };

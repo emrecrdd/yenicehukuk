@@ -1,0 +1,106 @@
+import { templateService } from './template.service.js';
+import { successResponse, errorResponse, paginatedResponse } from '../../utils/response.js';
+import { logger } from '../../config/logger.js';
+
+export const templateController = {
+  async create(req, res) {
+    try {
+      const data = {
+        ...req.body,
+        created_by: req.user.id,
+      };
+
+      // Dosya bilgilerini al
+      if (req.file) {
+        data.file_url = `/uploads/${req.file.filename}`;
+        data.file_name = req.file.originalname;
+        data.file_size = req.file.size;
+        data.file_type = req.file.mimetype;
+      }
+
+      const template = await templateService.create(data);
+      return successResponse(res, template, 'Template created successfully', 201);
+    } catch (error) {
+      logger.error('Create template error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  async findAll(req, res) {
+    try {
+      const { page = 1, limit = 10, category, law_area, search } = req.query;
+      const result = await templateService.findAll({ page, limit, category, law_area, search });
+      return paginatedResponse(res, result.data, result.pagination, 'Templates fetched successfully');
+    } catch (error) {
+      logger.error('Get templates error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  async findOne(req, res) {
+    try {
+      const template = await templateService.findOne(req.params.id);
+      return successResponse(res, template, 'Template fetched successfully');
+    } catch (error) {
+      logger.error('Get template error:', error);
+      return errorResponse(res, error.message, 404);
+    }
+  },
+
+  async update(req, res) {
+    try {
+      const data = { ...req.body, updated_by: req.user.id };
+      if (req.file) {
+        data.file_url = `/uploads/${req.file.filename}`;
+        data.file_name = req.file.originalname;
+        data.file_size = req.file.size;
+        data.file_type = req.file.mimetype;
+      }
+      const template = await templateService.update(req.params.id, data);
+      return successResponse(res, template, 'Template updated successfully');
+    } catch (error) {
+      logger.error('Update template error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  async remove(req, res) {
+    try {
+      await templateService.remove(req.params.id);
+      return successResponse(res, null, 'Template deleted successfully');
+    } catch (error) {
+      logger.error('Delete template error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  async download(req, res) {
+    try {
+      const template = await templateService.incrementDownload(req.params.id);
+      return successResponse(res, { downloadUrl: template.file_url, fileName: template.file_name }, 'Download initiated');
+    } catch (error) {
+      logger.error('Download template error:', error);
+      return errorResponse(res, error.message, 404);
+    }
+  },
+
+  async getCategories(req, res) {
+    try {
+      const categories = await templateService.getCategories();
+      return successResponse(res, categories, 'Categories fetched successfully');
+    } catch (error) {
+      logger.error('Get categories error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  async getLawAreas(req, res) {
+    try {
+      const lawAreas = await templateService.getLawAreas();
+      return successResponse(res, lawAreas, 'Law areas fetched successfully');
+    } catch (error) {
+      logger.error('Get law areas error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+};

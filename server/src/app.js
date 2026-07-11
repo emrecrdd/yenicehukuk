@@ -23,7 +23,8 @@ import { meetingRoutes } from './modules/meetings/meeting.routes.js';
 import { notificationRoutes } from './modules/notifications/notification.routes.js';
 import { reminderJob } from './jobs/reminder.job.js';
 import { auditLogRoutes } from './modules/audit-logs/audit-log.routes.js';
-import { powerOfAttorneyRoutes } from './modules/power-of-attorney/powerOfAttorney.routes.js';  // ✅ EKLENDI
+import { powerOfAttorneyRoutes } from './modules/power-of-attorney/powerOfAttorney.routes.js';
+import { templateRoutes } from './modules/templates/template.routes.js';  // ✅ EKLENDI
 
 const app = express();
 
@@ -100,7 +101,8 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
-app.use('/api/power-of-attorney', powerOfAttorneyRoutes);  // ✅ EKLENDI
+app.use('/api/power-of-attorney', powerOfAttorneyRoutes);
+app.use('/api/templates', templateRoutes);  // ✅ EKLENDI
 
 // ✅ REMINDER JOB'U BAŞLAT
 try {
