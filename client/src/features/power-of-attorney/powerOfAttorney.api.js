@@ -16,9 +16,13 @@ export const powerOfAttorneyApi = {
     return axios.get(`/power-of-attorney/client/${clientId}`);
   },
 
-  // ✅ Yeni Vekaletname Oluştur
+  // ✅ Yeni Vekaletname Oluştur (FormData desteği)
   create: (data) => {
-    return axios.post('/power-of-attorney', data);
+    // Eğer data FormData ise, header'ları otomatik ayarla
+    const config = data instanceof FormData
+      ? { headers: { 'Content-Type': 'multipart/form-data' } }
+      : {};
+    return axios.post('/power-of-attorney', data, config);
   },
 
   // ✅ Vekaletname Güncelle
