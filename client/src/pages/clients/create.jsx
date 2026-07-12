@@ -30,7 +30,18 @@ const ClientCreate = () => {
       navigate('/clients');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Bir hata oluştu');
+      // ✅ KULLANICI DOSTU HATA MESAJLARI
+      const message = error.response?.data?.message || '';
+      
+      if (message.includes('email') || message.includes('Email')) {
+        toast.error('Bu email adresi zaten kullanılıyor. Lütfen farklı bir email girin.');
+      } else if (message.includes('phone') || message.includes('Telefon')) {
+        toast.error('Bu telefon numarası zaten kullanılıyor. Lütfen farklı bir telefon girin.');
+      } else if (message.includes('identification_number') || message.includes('TCKNO') || message.includes('VKN')) {
+        toast.error('Bu TCKNO / VKN zaten kullanılıyor. Lütfen kontrol edip tekrar deneyin.');
+      } else {
+        toast.error(message || 'Bir hata oluştu. Lütfen tekrar deneyin.');
+      }
     },
   });
 
@@ -46,20 +57,16 @@ const ClientCreate = () => {
     e.preventDefault();
     const newErrors = {};
     
-    // ✅ Ad Soyad / Unvan (Zorunlu)
     if (!formData.name) newErrors.name = 'Ad Soyad / Unvan gereklidir';
     
-    // ✅ TCKNO/VKN KONTROLÜ
     if (formData.identification_number && !/^[0-9]{10,11}$/.test(formData.identification_number)) {
       newErrors.identification_number = 'TCKNO 11 haneli, VKN 10 haneli olmalıdır';
     }
     
-    // ✅ TELEFON KONTROLÜ
     if (formData.phone && !/^[0-9]{10,11}$/.test(formData.phone)) {
       newErrors.phone = 'Telefon numarası 10-11 haneli olmalıdır';
     }
     
-    // ✅ EMAIL KONTROLÜ
     if (formData.email && !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)) {
       newErrors.email = 'Geçerli bir email adresi giriniz';
     }
@@ -87,7 +94,6 @@ const ClientCreate = () => {
 
       <Card>
         <form onSubmit={handleSubmit} className="space-y-6 p-6">
-          {/* Ad Soyad / Unvan */}
           <Input
             label="Ad Soyad / Unvan *"
             name="name"
@@ -97,7 +103,6 @@ const ClientCreate = () => {
             placeholder="Örn: Ahmet Yılmaz veya ABC Şirketi"
           />
 
-          {/* TCKNO / VKN */}
           <Input
             label="TCKNO / VKN"
             name="identification_number"

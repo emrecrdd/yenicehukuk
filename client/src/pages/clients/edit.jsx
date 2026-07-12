@@ -51,15 +51,25 @@ const ClientEdit = () => {
   }, [clientData]);
 
   const mutation = useMutation({
-    mutationFn: (data) => clientApi.update(id, data),
-    onSuccess: () => {
-      toast.success('Müvekkil başarıyla güncellendi');
-      navigate(`/clients/${id}`);
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Müvekkil güncellenemedi');
-    },
-  });
+  mutationFn: (data) => clientApi.update(id, data),
+  onSuccess: () => {
+    toast.success('Müvekkil başarıyla güncellendi');
+    navigate(`/clients/${id}`);
+  },
+  onError: (error) => {
+    const message = error.response?.data?.message || '';
+    
+    if (message.includes('email') || message.includes('Email')) {
+      toast.error('Bu email adresi zaten kullanılıyor. Lütfen farklı bir email girin.');
+    } else if (message.includes('phone') || message.includes('Telefon')) {
+      toast.error('Bu telefon numarası zaten kullanılıyor. Lütfen farklı bir telefon girin.');
+    } else if (message.includes('identification_number') || message.includes('TCKNO') || message.includes('VKN')) {
+      toast.error('Bu TCKNO / VKN zaten kullanılıyor. Lütfen kontrol edip tekrar deneyin.');
+    } else {
+      toast.error(message || 'Bir hata oluştu. Lütfen tekrar deneyin.');
+    }
+  },
+});
 
   const deleteMutation = useMutation({
     mutationFn: () => clientApi.delete(id),
