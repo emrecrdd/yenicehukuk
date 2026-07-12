@@ -21,7 +21,7 @@ const CasePartyEdit = () => {
     address: '',
     lawyer_name: '',
     lawyer_phone: '',
-    lawyer_email: '',
+    lawyer_registry_number: '',  // ✅ lawyer_email → lawyer_registry_number
     notes: '',
   });
 
@@ -45,7 +45,7 @@ const CasePartyEdit = () => {
         address: party.address || '',
         lawyer_name: party.lawyer_name || '',
         lawyer_phone: party.lawyer_phone || '',
-        lawyer_email: party.lawyer_email || '',
+        lawyer_registry_number: party.lawyer_registry_number || '',  // ✅ Değişti
         notes: party.notes || '',
       });
     }
@@ -196,12 +196,11 @@ const CasePartyEdit = () => {
               placeholder="5551234567"
             />
             <Input
-              label="Avukat E-posta"
-              name="lawyer_email"
-              type="email"
-              value={formData.lawyer_email}
+              label="Sicil No"  // ✅ Değiştirildi
+              name="lawyer_registry_number"  // ✅ Değiştirildi
+              value={formData.lawyer_registry_number}
               onChange={handleChange}
-              placeholder="avukat@email.com"
+              placeholder="123456"
             />
           </div>
 

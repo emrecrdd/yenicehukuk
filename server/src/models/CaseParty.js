@@ -48,10 +48,10 @@ class CaseParty extends Sequelize.Model {
           type: DataTypes.STRING,
           allowNull: true,
         },
-        lawyer_email: {
-          type: DataTypes.STRING,
-          allowNull: true,
-        },
+        lawyer_registry_number: {
+  type: DataTypes.STRING,
+  allowNull: true,
+},
         notes: {
           type: DataTypes.TEXT,
           allowNull: true,

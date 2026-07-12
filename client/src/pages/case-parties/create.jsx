@@ -20,7 +20,7 @@ const CasePartyCreate = () => {
     address: '',
     lawyer_name: '',
     lawyer_phone: '',
-    lawyer_email: '',
+    lawyer_registry_number: '',  // ✅ E-posta → Sicil No
     notes: '',
   });
 
@@ -28,7 +28,6 @@ const CasePartyCreate = () => {
     mutationFn: (data) => casePartyApi.create(caseId, data),
     onSuccess: (response) => {
       toast.success('Taraf başarıyla eklendi');
-      // ✅ Detay sayfasına yönlendir
       const partyId = response?.data?.data?.id;
       if (partyId) {
         navigate(`/cases/${caseId}/parties/${partyId}`);
@@ -153,12 +152,11 @@ const CasePartyCreate = () => {
               placeholder="5551234567"
             />
             <Input
-              label="Avukat E-posta"
-              name="lawyer_email"
-              type="email"
-              value={formData.lawyer_email}
+              label="Sicil No"  // ✅ Değiştirildi
+              name="lawyer_registry_number"  // ✅ Değiştirildi
+              value={formData.lawyer_registry_number}
               onChange={handleChange}
-              placeholder="avukat@email.com"
+              placeholder="123456"
             />
           </div>
 
