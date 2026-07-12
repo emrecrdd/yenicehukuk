@@ -57,7 +57,7 @@ export const searchService = {
       ],
       attributes: ['id', 'title', 'case_number', 'court_name', 'status', 'opening_date'],
       limit,
-      order: [['createdAt', 'DESC']],  // ✅ DÜZELTİLDİ
+      order: [['createdAt', 'DESC']],
     });
   },
 
@@ -90,13 +90,13 @@ export const searchService = {
           attributes: ['id', 'first_name', 'last_name'],
         },
       ],
-      attributes: ['id', 'name', 'original_name', 'file_type', 'file_size', 'category', 'createdAt'],  // ✅ DÜZELTİLDİ
+      attributes: ['id', 'name', 'original_name', 'file_type', 'file_size', 'category', 'createdAt'],
       limit,
-      order: [['createdAt', 'DESC']],  // ✅ DÜZELTİLDİ
+      order: [['createdAt', 'DESC']],
     });
   },
 
-  // ✅ Task - client (tekil)
+  // ✅ Task - client (tekil) - DÜZELTİLDİ
   async searchTasks(query, limit) {
     const searchTerm = query.trim();
     return Task.findAll({
@@ -158,9 +158,9 @@ export const searchService = {
           attributes: ['id', 'first_name', 'last_name'],
         },
       ],
-      attributes: ['id', 'content', 'note_type', 'createdAt'],  // ✅ DÜZELTİLDİ
+      attributes: ['id', 'content', 'note_type', 'created_at'],  // ✅ DÜZELTİLDİ
       limit,
-      order: [['createdAt', 'DESC']],  // ✅ DÜZELTİLDİ
+      order: [['created_at', 'DESC']],  // ✅ DÜZELTİLDİ
     });
   },
 
