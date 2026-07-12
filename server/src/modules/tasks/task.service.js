@@ -107,7 +107,7 @@ export const taskService = {
           attributes: ['id', 'first_name', 'last_name', 'email']
         }),
         Case.findByPk(task.case_id, {
-          attributes: ['id', 'title', 'caseNumber']
+          attributes: ['id', 'title', 'case_number']
         }),
         Client.findByPk(task.client_id, {
           attributes: ['id', 'name', 'email', 'phone']
