@@ -34,7 +34,7 @@ export const searchService = {
     });
   },
 
-  // ✅ DÜZELTİLDİ - as: 'client' → as: 'clients'
+  // ✅ Case - clients (çoğul)
   async searchCases(query, limit) {
     const searchTerm = query.trim();
     return Case.findAll({
@@ -50,9 +50,9 @@ export const searchService = {
       include: [
         {
           model: Client,
-          as: 'clients',  // ✅ DÜZELTİLDİ
+          as: 'clients',
           attributes: ['id', 'name'],
-          through: { attributes: [] },  // ✅ EKLENDI
+          through: { attributes: [] },
         },
       ],
       attributes: ['id', 'title', 'case_number', 'court_name', 'status', 'opening_date'],
@@ -61,7 +61,7 @@ export const searchService = {
     });
   },
 
-  // ✅ DÜZELTİLDİ - as: 'client' → as: 'clients'
+  // ✅ Document - client (tekil)
   async searchDocuments(query, limit) {
     const searchTerm = query.trim();
     return Document.findAll({
@@ -81,9 +81,8 @@ export const searchService = {
         },
         {
           model: Client,
-          as: 'clients',  // ✅ DÜZELTİLDİ
+          as: 'client',  // ✅ DÜZELTİLDİ
           attributes: ['id', 'name'],
-          through: { attributes: [] },  // ✅ EKLENDI
         },
         {
           model: User,
@@ -97,7 +96,7 @@ export const searchService = {
     });
   },
 
-  // ✅ DÜZELTİLDİ - as: 'client' → as: 'clients'
+  // ✅ Task - client (tekil)
   async searchTasks(query, limit) {
     const searchTerm = query.trim();
     return Task.findAll({
@@ -120,9 +119,8 @@ export const searchService = {
         },
         {
           model: Client,
-          as: 'clients',  // ✅ DÜZELTİLDİ
+          as: 'client',  // ✅ DÜZELTİLDİ
           attributes: ['id', 'name'],
-          through: { attributes: [] },  // ✅ EKLENDI
         },
       ],
       attributes: ['id', 'title', 'status', 'priority', 'due_date'],
@@ -134,7 +132,7 @@ export const searchService = {
     });
   },
 
-  // ✅ DÜZELTİLDİ - as: 'client' → as: 'clients'
+  // ✅ Note - client (tekil)
   async searchNotes(query, limit) {
     const searchTerm = query.trim();
     return Note.findAll({
@@ -151,9 +149,8 @@ export const searchService = {
         },
         {
           model: Client,
-          as: 'clients',  // ✅ DÜZELTİLDİ
+          as: 'client',  // ✅ DÜZELTİLDİ
           attributes: ['id', 'name'],
-          through: { attributes: [] },  // ✅ EKLENDI
         },
         {
           model: User,
@@ -222,7 +219,6 @@ export const searchService = {
     const searchTerm = query.trim();
     const suggestions = [];
 
-    // Client suggestions
     const clients = await Client.findAll({
       where: {
         name: { [Op.iLike]: `%${searchTerm}%` },
@@ -240,7 +236,6 @@ export const searchService = {
       });
     });
 
-    // Case suggestions
     const cases = await Case.findAll({
       where: {
         [Op.or]: [
@@ -261,7 +256,6 @@ export const searchService = {
       });
     });
 
-    // Document suggestions
     const documents = await Document.findAll({
       where: {
         [Op.or]: [
