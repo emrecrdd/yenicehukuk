@@ -35,31 +35,45 @@ export const searchService = {
   },
 
   async searchCases(query, limit) {
-    const searchTerm = query.trim();
-    return Case.findAll({
-      where: {
-        [Op.or]: [
-          { title: { [Op.iLike]: `%${searchTerm}%` } },
-          { case_number: { [Op.iLike]: `%${searchTerm}%` } },
-          { court_name: { [Op.iLike]: `%${searchTerm}%` } },
-          { subject: { [Op.iLike]: `%${searchTerm}%` } },
-          { description: { [Op.iLike]: `%${searchTerm}%` } },
-        ],
-      },
-      include: [
-        {
-          model: Client,
-          as: 'clients',
-          attributes: ['id', 'name'],
-          through: { attributes: [] },
-        },
-      ],
-      attributes: ['id', 'title', 'case_number', 'court_name', 'status', 'opening_date'],
-      limit,
-      order: [['created_at', 'DESC']],
-    });
-  },
+  const searchTerm = query.trim();
 
+  return Case.findAll({
+    where: {
+      [Op.or]: [
+        { title: { [Op.iLike]: `%${searchTerm}%` } },
+        { case_number: { [Op.iLike]: `%${searchTerm}%` } },
+        { court_name: { [Op.iLike]: `%${searchTerm}%` } },
+        { subject: { [Op.iLike]: `%${searchTerm}%` } },
+        { description: { [Op.iLike]: `%${searchTerm}%` } },
+      ],
+    },
+
+    include: [
+      {
+        model: Client,
+        as: 'clients',
+        attributes: ['id', 'name'],
+        through: { attributes: [] },
+      },
+    ],
+
+    attributes: [
+      'id',
+      'title',
+      'case_number',
+      'court_name',
+      'status',
+      'opening_date',
+      'created_at', // sıralama için ekledik
+    ],
+
+    order: [['created_at', 'DESC']],
+    limit: Number(limit),
+
+    subQuery: false,
+    distinct: true,
+  });
+}
   async searchDocuments(query, limit) {
     const searchTerm = query.trim();
     return Document.findAll({
