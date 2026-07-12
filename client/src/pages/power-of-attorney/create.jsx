@@ -8,7 +8,9 @@ import Button from '../../components/ui/Button.jsx';
 import Input from '../../components/ui/Input.jsx';
 import Card from '../../components/ui/Card.jsx';
 import toast from 'react-hot-toast';
+
 console.log("🔥🔥🔥 PowerOfAttorneyCreate COMPONENTI ÇALIŞTI!");
+
 const PowerOfAttorneyCreate = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -65,20 +67,33 @@ const PowerOfAttorneyCreate = () => {
     }
   };
 
+  // ✅ GÜNCELLENDİ - Resim desteği eklendi
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
+
     if (selectedFile.size > 10 * 1024 * 1024) {
       setFileError('Dosya boyutu 10MB\'dan büyük olamaz!');
       setFile(null);
       return;
     }
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+    ];
+
     if (!allowedTypes.includes(selectedFile.type)) {
-      setFileError('Sadece PDF veya Word dosyası yükleyebilirsiniz!');
+      setFileError('Sadece PDF, Word veya resim dosyası yükleyebilirsiniz!');
       setFile(null);
       return;
     }
+
     setFileError('');
     setFile(selectedFile);
   };
@@ -297,14 +312,14 @@ const PowerOfAttorneyCreate = () => {
             )}
           </div>
 
-          {/* ✅ BELGE YÜKLEME ALANI - EN SADE HALİ */}
+          {/* ✅ BELGE YÜKLEME ALANI - Resim desteği eklendi */}
           <div className="border-2 border-blue-500 p-4 rounded-lg">
-            <p className="font-bold text-blue-600 mb-2">📎 Vekaletname Belgesi (PDF/Word)</p>
+            <p className="font-bold text-blue-600 mb-2">📎 Vekaletname Belgesi (PDF/Word/Resim)</p>
             <input
               ref={fileInputRef}
               type="file"
               onChange={handleFileChange}
-              accept=".pdf,.doc,.docx"
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp"
               className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />
             {file && (

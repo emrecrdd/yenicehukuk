@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';  // ✅ useRef EKLENDI
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { powerOfAttorneyApi } from '../../features/power-of-attorney/powerOfAttorney.api.js';
@@ -13,6 +13,7 @@ const PowerOfAttorneyEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef(null);  // ✅ EKLENDI
 
   const [formData, setFormData] = useState({
     client_id: '',
@@ -25,6 +26,8 @@ const PowerOfAttorneyEdit = () => {
     authorities: [],
     notes: '',
   });
+  const [file, setFile] = useState(null);  // ✅ EKLENDI
+  const [fileError, setFileError] = useState('');  // ✅ EKLENDI
   const [authorityInput, setAuthorityInput] = useState('');
   const [errors, setErrors] = useState({});
 
@@ -102,6 +105,46 @@ const PowerOfAttorneyEdit = () => {
     }
   };
 
+  // ✅ Dosya seçme - Resim desteği eklendi
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
+
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      setFileError('Dosya boyutu 10MB\'dan büyük olamaz!');
+      setFile(null);
+      return;
+    }
+
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+    ];
+
+    if (!allowedTypes.includes(selectedFile.type)) {
+      setFileError('Sadece PDF, Word veya resim dosyası yükleyebilirsiniz!');
+      setFile(null);
+      return;
+    }
+
+    setFileError('');
+    setFile(selectedFile);
+  };
+
+  // ✅ Dosyayı kaldır
+  const handleRemoveFile = () => {
+    setFile(null);
+    setFileError('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleAddAuthority = () => {
     if (authorityInput.trim()) {
       setFormData((prev) => ({
@@ -131,12 +174,21 @@ const PowerOfAttorneyEdit = () => {
       return;
     }
 
-    const submitData = {
-      ...formData,
-      case_id: formData.case_id || null,
-      start_date: formData.start_date || null,
-      end_date: formData.end_date || null,
-    };
+    const submitData = new FormData();  // ✅ FormData kullan
+    submitData.append('client_id', formData.client_id);
+    submitData.append('case_id', formData.case_id || '');
+    submitData.append('title', formData.title);
+    submitData.append('description', formData.description || '');
+    submitData.append('start_date', formData.start_date || '');
+    submitData.append('end_date', formData.end_date || '');
+    submitData.append('status', formData.status);
+    submitData.append('authorities', JSON.stringify(formData.authorities));
+    submitData.append('notes', formData.notes || '');
+    
+    // ✅ Dosya varsa ekle
+    if (file) {
+      submitData.append('file', file);
+    }
 
     updateMutation.mutate(submitData);
   };
@@ -333,6 +385,31 @@ const PowerOfAttorneyEdit = () => {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* ✅ BELGE YÜKLEME ALANI - Resim desteği eklendi */}
+          <div className="border-2 border-blue-500 p-4 rounded-lg">
+            <p className="font-bold text-blue-600 mb-2">📎 Vekaletname Belgesi (PDF/Word/Resim)</p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              onChange={handleFileChange}
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp"
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+            {file && (
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-sm text-green-600">✅ {file.name}</span>
+                <button
+                  type="button"
+                  onClick={handleRemoveFile}
+                  className="text-sm text-red-600 hover:text-red-800"
+                >
+                  Kaldır
+                </button>
+              </div>
+            )}
+            {fileError && <p className="mt-1 text-sm text-red-600">{fileError}</p>}
           </div>
 
           {/* Notlar */}
