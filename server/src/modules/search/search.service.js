@@ -73,7 +73,7 @@ export const searchService = {
     subQuery: false,
     distinct: true,
   });
-}
+},
   async searchDocuments(query, limit) {
     const searchTerm = query.trim();
     return Document.findAll({
