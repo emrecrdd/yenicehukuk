@@ -34,7 +34,7 @@ export const searchService = {
     });
   },
 
-  // ✅ Case - clients (çoğul)
+  // ✅ Case - clients (çoğul) - DÜZELTİLDİ
   async searchCases(query, limit) {
     const searchTerm = query.trim();
     return Case.findAll({
@@ -57,11 +57,11 @@ export const searchService = {
       ],
       attributes: ['id', 'title', 'case_number', 'court_name', 'status', 'opening_date'],
       limit,
-      order: [['created_at', 'DESC']],
+      order: [['createdAt', 'DESC']],  // ✅ DÜZELTİLDİ
     });
   },
 
-  // ✅ Document - client (tekil)
+  // ✅ Document - client (tekil) - DÜZELTİLDİ
   async searchDocuments(query, limit) {
     const searchTerm = query.trim();
     return Document.findAll({
@@ -81,7 +81,7 @@ export const searchService = {
         },
         {
           model: Client,
-          as: 'client',  // ✅ DÜZELTİLDİ
+          as: 'client',
           attributes: ['id', 'name'],
         },
         {
@@ -90,9 +90,9 @@ export const searchService = {
           attributes: ['id', 'first_name', 'last_name'],
         },
       ],
-      attributes: ['id', 'name', 'original_name', 'file_type', 'file_size', 'category', 'created_at'],
+      attributes: ['id', 'name', 'original_name', 'file_type', 'file_size', 'category', 'createdAt'],  // ✅ DÜZELTİLDİ
       limit,
-      order: [['created_at', 'DESC']],
+      order: [['createdAt', 'DESC']],  // ✅ DÜZELTİLDİ
     });
   },
 
@@ -119,7 +119,7 @@ export const searchService = {
         },
         {
           model: Client,
-          as: 'client',  // ✅ DÜZELTİLDİ
+          as: 'client',
           attributes: ['id', 'name'],
         },
       ],
@@ -132,7 +132,7 @@ export const searchService = {
     });
   },
 
-  // ✅ Note - client (tekil)
+  // ✅ Note - client (tekil) - DÜZELTİLDİ
   async searchNotes(query, limit) {
     const searchTerm = query.trim();
     return Note.findAll({
@@ -149,7 +149,7 @@ export const searchService = {
         },
         {
           model: Client,
-          as: 'client',  // ✅ DÜZELTİLDİ
+          as: 'client',
           attributes: ['id', 'name'],
         },
         {
@@ -158,9 +158,9 @@ export const searchService = {
           attributes: ['id', 'first_name', 'last_name'],
         },
       ],
-      attributes: ['id', 'content', 'note_type', 'created_at'],
+      attributes: ['id', 'content', 'note_type', 'createdAt'],  // ✅ DÜZELTİLDİ
       limit,
-      order: [['created_at', 'DESC']],
+      order: [['createdAt', 'DESC']],  // ✅ DÜZELTİLDİ
     });
   },
 
