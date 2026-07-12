@@ -30,18 +30,22 @@ const ClientCreate = () => {
       navigate('/clients');
     },
     onError: (error) => {
-      // ✅ KULLANICI DOSTU HATA MESAJLARI
       const message = error.response?.data?.message || '';
+      const newErrors = {};
       
+      // ✅ Backend'den gelen hatayı parse et ve input'un altında göster
       if (message.includes('email') || message.includes('Email')) {
-        toast.error('Bu email adresi zaten kullanılıyor. Lütfen farklı bir email girin.');
+        newErrors.email = 'Bu email adresi zaten kullanılıyor. Lütfen farklı bir email girin.';
       } else if (message.includes('phone') || message.includes('Telefon')) {
-        toast.error('Bu telefon numarası zaten kullanılıyor. Lütfen farklı bir telefon girin.');
+        newErrors.phone = 'Bu telefon numarası zaten kullanılıyor. Lütfen farklı bir telefon girin.';
       } else if (message.includes('identification_number') || message.includes('TCKNO') || message.includes('VKN')) {
-        toast.error('Bu TCKNO / VKN zaten kullanılıyor. Lütfen kontrol edip tekrar deneyin.');
+        newErrors.identification_number = 'Bu TCKNO / VKN zaten kullanılıyor. Lütfen kontrol edip tekrar deneyin.';
       } else {
         toast.error(message || 'Bir hata oluştu. Lütfen tekrar deneyin.');
+        return;
       }
+      
+      setErrors(newErrors);
     },
   });
 
