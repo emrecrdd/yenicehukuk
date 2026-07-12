@@ -10,15 +10,15 @@ import toast from 'react-hot-toast';
 const ClientCreate = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: '',                      // ✅ Ad Soyad / Unvan
-    identification_number: '',     // ✅ TCKNO / VKN
+    name: '',
+    identification_number: '',
     email: '',
     phone: '',
     address: '',
     city: '',
     district: '',
     notes: '',
-    client_type: 'individual',     // ✅ Müvekkil Türü
+    client_type: 'individual',
     status: 'active',
   });
   const [errors, setErrors] = useState({});
@@ -45,7 +45,24 @@ const ClientCreate = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = {};
+    
+    // ✅ Ad Soyad / Unvan (Zorunlu)
     if (!formData.name) newErrors.name = 'Ad Soyad / Unvan gereklidir';
+    
+    // ✅ TCKNO/VKN KONTROLÜ
+    if (formData.identification_number && !/^[0-9]{10,11}$/.test(formData.identification_number)) {
+      newErrors.identification_number = 'TCKNO 11 haneli, VKN 10 haneli olmalıdır';
+    }
+    
+    // ✅ TELEFON KONTROLÜ
+    if (formData.phone && !/^[0-9]{10,11}$/.test(formData.phone)) {
+      newErrors.phone = 'Telefon numarası 10-11 haneli olmalıdır';
+    }
+    
+    // ✅ EMAIL KONTROLÜ
+    if (formData.email && !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)) {
+      newErrors.email = 'Geçerli bir email adresi giriniz';
+    }
     
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -70,7 +87,7 @@ const ClientCreate = () => {
 
       <Card>
         <form onSubmit={handleSubmit} className="space-y-6 p-6">
-          {/* ✅ Ad Soyad / Unvan */}
+          {/* Ad Soyad / Unvan */}
           <Input
             label="Ad Soyad / Unvan *"
             name="name"
@@ -80,12 +97,13 @@ const ClientCreate = () => {
             placeholder="Örn: Ahmet Yılmaz veya ABC Şirketi"
           />
 
-          {/* ✅ TCKNO / VKN */}
+          {/* TCKNO / VKN */}
           <Input
             label="TCKNO / VKN"
             name="identification_number"
             value={formData.identification_number}
             onChange={handleChange}
+            error={errors.identification_number}
             placeholder="12345678901 veya 1234567890"
           />
 
@@ -95,6 +113,7 @@ const ClientCreate = () => {
               name="phone"
               value={formData.phone}
               onChange={handleChange}
+              error={errors.phone}
             />
             <Input
               label="E-posta"
@@ -102,6 +121,7 @@ const ClientCreate = () => {
               type="email"
               value={formData.email}
               onChange={handleChange}
+              error={errors.email}
             />
           </div>
 
@@ -171,7 +191,7 @@ const ClientCreate = () => {
             />
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <Button type="submit" loading={mutation.isPending}>
               Müvekkil Oluştur
             </Button>

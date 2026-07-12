@@ -8,7 +8,21 @@ import { paginate, getPaginationData } from '../../utils/paginate.js';
 
 export const clientService = {
   async create(data) {
-    return Client.create(data);
+    try {
+      return await Client.create(data);
+    } catch (error) {
+      // ✅ UNIQUE CONSTRAINT HATA YAKALAMA
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        const field = error.errors[0].path;
+        const messages = {
+          email: 'Bu email adresi zaten kullanılıyor',
+          phone: 'Bu telefon numarası zaten kullanılıyor',
+          identification_number: 'Bu TCKNO/VKN zaten kullanılıyor'
+        };
+        throw new Error(messages[field] || 'Bu değer zaten kullanılıyor');
+      }
+      throw error;
+    }
   },
 
   async findAll({ page, limit, search, status, tags }) {
@@ -107,13 +121,27 @@ export const clientService = {
   },
 
   async update(id, data) {
-    const client = await Client.findByPk(id);
-    if (!client) {
-      throw new Error('Client not found');
-    }
+    try {
+      const client = await Client.findByPk(id);
+      if (!client) {
+        throw new Error('Client not found');
+      }
 
-    await client.update(data);
-    return client;
+      await client.update(data);
+      return client;
+    } catch (error) {
+      // ✅ UNIQUE CONSTRAINT HATA YAKALAMA (UPDATE için)
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        const field = error.errors[0].path;
+        const messages = {
+          email: 'Bu email adresi zaten kullanılıyor',
+          phone: 'Bu telefon numarası zaten kullanılıyor',
+          identification_number: 'Bu TCKNO/VKN zaten kullanılıyor'
+        };
+        throw new Error(messages[field] || 'Bu değer zaten kullanılıyor');
+      }
+      throw error;
+    }
   },
 
   async remove(id) {
@@ -140,7 +168,6 @@ export const clientService = {
     };
   },
 
-  // ✅ GÜNCELLENDİ - Çoklu müvekkil desteği
   async getCaseHistory(clientId) {
     const cases = await Case.findAll({
       include: [

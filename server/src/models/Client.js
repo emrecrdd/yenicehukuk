@@ -23,6 +23,7 @@ class Client extends Sequelize.Model {
         email: {
           type: DataTypes.STRING,
           allowNull: true,
+          unique: true,  // ✅ EKLENDI - Benzersiz
           validate: {
             isEmail: true,
           },
@@ -30,6 +31,7 @@ class Client extends Sequelize.Model {
         phone: {
           type: DataTypes.STRING,
           allowNull: true,
+          unique: true,  // ✅ EKLENDI - Benzersiz
         },
         address: {
           type: DataTypes.TEXT,
@@ -115,11 +117,11 @@ class Client extends Sequelize.Model {
       foreignKey: 'client_id',
       as: 'documents',
     });
-    // ✅ Vekaletname ilişkisi (sonra eklenecek)
-    // Client.hasMany(models.PowerOfAttorney, {
-    //   foreignKey: 'client_id',
-    //   as: 'powerOfAttorneys',
-    // });
+    // ✅ Vekaletname ilişkisi
+    Client.hasMany(models.PowerOfAttorney, {
+      foreignKey: 'client_id',
+      as: 'powerOfAttorneys',
+    });
   }
 }
 
