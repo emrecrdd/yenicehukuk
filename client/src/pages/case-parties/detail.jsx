@@ -16,6 +16,37 @@ const CasePartyDetail = () => {
 
   const party = data?.data?.data || data?.data;
 
+  // ✅ GÜNCELLENMİŞ TARAF TÜRLERİ
+  const getPartyTypeLabel = (type) => {
+    const types = {
+      davali: 'Davalı',
+      davaci: 'Davacı',
+      supheli: 'Şüpheli',
+      sanik: 'Sanık',
+      musteki: 'Müşteki',
+      katilan: 'Katılan',
+      alacakli: 'Alacaklı',
+      borclu: 'Borçlu',
+      ucuncu_kisi: 'Üçüncü Kişi',
+    };
+    return types[type] || type || 'Bilinmiyor';
+  };
+
+  const getPartyTypeVariant = (type) => {
+    const variants = {
+      davali: 'danger',
+      davaci: 'success',
+      supheli: 'warning',
+      sanik: 'danger',
+      musteki: 'info',
+      katilan: 'info',
+      alacakli: 'success',
+      borclu: 'warning',
+      ucuncu_kisi: 'default',
+    };
+    return variants[type] || 'default';
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -34,28 +65,6 @@ const CasePartyDetail = () => {
       </div>
     );
   }
-
-  const getPartyTypeLabel = (type) => {
-    const types = {
-      plaintiff: 'Davacı',
-      defendant: 'Davalı',
-      intervener: 'Müdahil',
-      witness: 'Tanık',
-      expert: 'Bilirkişi',
-    };
-    return types[type] || type;
-  };
-
-  const getPartyTypeVariant = (type) => {
-    const variants = {
-      plaintiff: 'success',
-      defendant: 'danger',
-      intervener: 'warning',
-      witness: 'info',
-      expert: 'secondary',
-    };
-    return variants[type] || 'default';
-  };
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -138,10 +147,10 @@ const CasePartyDetail = () => {
                     <p className="text-gray-900 dark:text-white">{party.lawyer_phone}</p>
                   </div>
                 )}
-                {party.lawyer_email && (
+                {party.lawyer_registry_number && (
                   <div>
-                    <p className="text-sm text-gray-500">📧 E-posta</p>
-                    <p className="text-gray-900 dark:text-white">{party.lawyer_email}</p>
+                    <p className="text-sm text-gray-500">📜 Sicil No</p>
+                    <p className="text-gray-900 dark:text-white">{party.lawyer_registry_number}</p>
                   </div>
                 )}
               </>

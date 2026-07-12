@@ -12,7 +12,7 @@ const CasePartyCreate = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    party_type: 'plaintiff',
+    party_type: 'davali',
     name: '',
     tc_number: '',
     phone: '',
@@ -20,9 +20,22 @@ const CasePartyCreate = () => {
     address: '',
     lawyer_name: '',
     lawyer_phone: '',
-    lawyer_registry_number: '',  // ✅ E-posta → Sicil No
+    lawyer_registry_number: '',
     notes: '',
   });
+
+  // ✅ TARAF TÜRLERİ
+  const partyTypes = [
+    { value: 'davali', label: 'Davalı' },
+    { value: 'davaci', label: 'Davacı' },
+    { value: 'supheli', label: 'Şüpheli' },
+    { value: 'sanik', label: 'Sanık' },
+    { value: 'musteki', label: 'Müşteki' },
+    { value: 'katilan', label: 'Katılan' },
+    { value: 'alacakli', label: 'Alacaklı' },
+    { value: 'borclu', label: 'Borçlu' },
+    { value: 'ucuncu_kisi', label: 'Üçüncü Kişi' },
+  ];
 
   const mutation = useMutation({
     mutationFn: (data) => casePartyApi.create(caseId, data),
@@ -75,10 +88,11 @@ const CasePartyCreate = () => {
               onChange={handleChange}
               className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="plaintiff">Davacı</option>
-              <option value="defendant">Davalı</option>
-              <option value="intervener">Müdahil</option>
-              <option value="witness">Tanık</option>
+              {partyTypes.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -152,8 +166,8 @@ const CasePartyCreate = () => {
               placeholder="5551234567"
             />
             <Input
-              label="Sicil No"  // ✅ Değiştirildi
-              name="lawyer_registry_number"  // ✅ Değiştirildi
+              label="Sicil No"
+              name="lawyer_registry_number"
               value={formData.lawyer_registry_number}
               onChange={handleChange}
               placeholder="123456"

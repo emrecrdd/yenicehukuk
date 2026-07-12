@@ -1,4 +1,5 @@
 import { Sequelize, DataTypes } from 'sequelize';
+
 class CaseParty extends Sequelize.Model {
   static initModel(sequelize) {
     CaseParty.init(
@@ -16,8 +17,19 @@ class CaseParty extends Sequelize.Model {
             key: 'id',
           },
         },
+        // ✅ GÜNCELLENMİŞ TARAF TÜRLERİ
         party_type: {
-          type: DataTypes.ENUM('plaintiff', 'defendant', 'intervener', 'witness'),
+          type: DataTypes.ENUM(
+            'davali',
+            'davaci',
+            'supheli',
+            'sanik',
+            'musteki',
+            'katilan',
+            'alacakli',
+            'borclu',
+            'ucuncu_kisi'
+          ),
           allowNull: false,
         },
         name: {
@@ -49,9 +61,9 @@ class CaseParty extends Sequelize.Model {
           allowNull: true,
         },
         lawyer_registry_number: {
-  type: DataTypes.STRING,
-  allowNull: true,
-},
+          type: DataTypes.STRING,
+          allowNull: true,
+        },
         notes: {
           type: DataTypes.TEXT,
           allowNull: true,
@@ -60,8 +72,17 @@ class CaseParty extends Sequelize.Model {
       {
         sequelize,
         tableName: 'case_parties',
+        timestamps: true,
+        paranoid: true,
       }
     );
+  }
+
+  static associate(models) {
+    CaseParty.belongsTo(models.Case, {
+      foreignKey: 'case_id',
+      as: 'case',
+    });
   }
 }
 
