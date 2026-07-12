@@ -30,7 +30,7 @@ class PowerOfAttorney extends Sequelize.Model {
         // ✅ Vekaletname Başlığı
         title: {
           type: DataTypes.STRING,
-          allowNull: false,
+          allowNull: true,
         },
         // ✅ Vekaletname Açıklaması
         description: {

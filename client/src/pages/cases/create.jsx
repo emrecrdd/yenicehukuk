@@ -66,6 +66,9 @@ const CaseCreate = () => {
     }
   };
 
+  // ✅ Seçilen müvekkilleri göster
+  const selectedClients = clients.filter(client => formData.client_ids.includes(client.id));
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = {};
@@ -80,17 +83,16 @@ const CaseCreate = () => {
       return;
     }
 
-    // ✅ title otomatik oluştur
     const title = `${formData.judiciary_type} - ${formData.judiciary_unit}`;
 
     const submitData = {
       ...formData,
-      title: title,  // ✅ title eklendi
+      title: title,
       assigned_to: formData.assigned_to || null,
       opening_date: formData.opening_date || null,
     };
     
-    console.log('📤 Gönderilen veri:', submitData);  // ✅ Debug için
+    console.log('📤 Gönderilen veri:', submitData);
     mutation.mutate(submitData);
   };
 
@@ -176,11 +178,39 @@ const CaseCreate = () => {
             placeholder="Esas no"
           />
 
-          {/* 6. MÜVEKKİLLER (ÇOKLU SEÇİM) */}
+          {/* 6. MÜVEKKİLLER (ÇOKLU SEÇİM) - GELİŞTİRİLDİ */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Müvekkil *
+              Müvekkil Seçin *
             </label>
+            
+            {/* ✅ Seçili müvekkiller */}
+            {selectedClients.length > 0 && (
+              <div className="mb-2 flex flex-wrap gap-1">
+                {selectedClients.map((client) => (
+                  <span
+                    key={client.id}
+                    className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-md text-sm"
+                  >
+                    {client.name}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          client_ids: prev.client_ids.filter(id => id !== client.id)
+                        }));
+                      }}
+                      className="text-blue-500 hover:text-red-500"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* ✅ Müvekkil seçme dropdown */}
             <select
               name="client_ids"
               multiple
@@ -190,15 +220,27 @@ const CaseCreate = () => {
                 errors.client_ids ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
               } bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[120px]`}
             >
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.name} {client.client_type === 'corporate' ? '🏢' : ''}
-                </option>
-              ))}
+              {clients.length === 0 ? (
+                <option value="" disabled>Henüz müvekkil bulunmuyor</option>
+              ) : (
+                clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name} {client.client_type === 'corporate' ? '🏢' : '👤'}
+                    {client.identification_number && ` (${client.identification_number})`}
+                  </option>
+                ))
+              )}
             </select>
-            <p className="mt-1 text-xs text-gray-400">
-              Birden fazla seçmek için Ctrl (Windows) / Cmd (Mac) tuşuna basılı tutun
-            </p>
+            
+            <div className="mt-1 flex items-center justify-between">
+              <p className="text-xs text-gray-400">
+                Birden fazla seçmek için Ctrl (Windows) / Cmd (Mac) tuşuna basılı tutun
+              </p>
+              <p className="text-xs text-gray-400">
+                {selectedClients.length} müvekkil seçildi
+              </p>
+            </div>
+            
             {errors.client_ids && (
               <p className="mt-1 text-sm text-red-600">{errors.client_ids}</p>
             )}
@@ -219,6 +261,7 @@ const CaseCreate = () => {
               {lawyers.map((lawyer) => (
                 <option key={lawyer.id} value={lawyer.id}>
                   {lawyer.first_name} {lawyer.last_name}
+                  {lawyer.role === 'admin' && ' (Admin)'}
                 </option>
               ))}
             </select>

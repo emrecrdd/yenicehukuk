@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';  // ✅ useRef EKLENDI
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { powerOfAttorneyApi } from '../../features/power-of-attorney/powerOfAttorney.api.js';
@@ -13,7 +13,7 @@ const PowerOfAttorneyEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const fileInputRef = useRef(null);  // ✅ EKLENDI
+  const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     client_id: '',
@@ -26,8 +26,8 @@ const PowerOfAttorneyEdit = () => {
     authorities: [],
     notes: '',
   });
-  const [file, setFile] = useState(null);  // ✅ EKLENDI
-  const [fileError, setFileError] = useState('');  // ✅ EKLENDI
+  const [file, setFile] = useState(null);
+  const [fileError, setFileError] = useState('');
   const [authorityInput, setAuthorityInput] = useState('');
   const [errors, setErrors] = useState({});
 
@@ -105,7 +105,6 @@ const PowerOfAttorneyEdit = () => {
     }
   };
 
-  // ✅ Dosya seçme - Resim desteği eklendi
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
@@ -136,7 +135,6 @@ const PowerOfAttorneyEdit = () => {
     setFile(selectedFile);
   };
 
-  // ✅ Dosyayı kaldır
   const handleRemoveFile = () => {
     setFile(null);
     setFileError('');
@@ -167,17 +165,18 @@ const PowerOfAttorneyEdit = () => {
 
     const newErrors = {};
     if (!formData.client_id) newErrors.client_id = 'Müvekkil seçimi zorunludur';
-    if (!formData.title) newErrors.title = 'Başlık zorunludur';
+    // ✅ title kontrolü KALDIRILDI (opsiyonel)
+    // if (!formData.title) newErrors.title = 'Başlık zorunludur';
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    const submitData = new FormData();  // ✅ FormData kullan
+    const submitData = new FormData();
     submitData.append('client_id', formData.client_id);
     submitData.append('case_id', formData.case_id || '');
-    submitData.append('title', formData.title);
+    submitData.append('title', formData.title || '');  // ✅ Opsiyonel
     submitData.append('description', formData.description || '');
     submitData.append('start_date', formData.start_date || '');
     submitData.append('end_date', formData.end_date || '');
@@ -185,7 +184,6 @@ const PowerOfAttorneyEdit = () => {
     submitData.append('authorities', JSON.stringify(formData.authorities));
     submitData.append('notes', formData.notes || '');
     
-    // ✅ Dosya varsa ekle
     if (file) {
       submitData.append('file', file);
     }
@@ -283,9 +281,9 @@ const PowerOfAttorneyEdit = () => {
             </select>
           </div>
 
-          {/* Başlık */}
+          {/* Başlık (Opsiyonel) */}
           <Input
-            label="Vekaletname Başlığı *"
+            label="Vekaletname Başlığı (Opsiyonel)"
             name="title"
             value={formData.title}
             onChange={handleChange}
@@ -387,7 +385,7 @@ const PowerOfAttorneyEdit = () => {
             )}
           </div>
 
-          {/* ✅ BELGE YÜKLEME ALANI - Resim desteği eklendi */}
+          {/* Belge Yükleme */}
           <div className="border-2 border-blue-500 p-4 rounded-lg">
             <p className="font-bold text-blue-600 mb-2">📎 Vekaletname Belgesi (PDF/Word/Resim)</p>
             <input
@@ -429,13 +427,13 @@ const PowerOfAttorneyEdit = () => {
 
           <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <Button type="submit" loading={updateMutation.isPending}>
-              💾 Güncelle
+               Güncelle
             </Button>
             <Button type="button" variant="secondary" onClick={() => navigate('/power-of-attorney')}>
               İptal
             </Button>
             <Button type="button" variant="danger" onClick={handleDelete} loading={deleteMutation.isPending}>
-              🗑️ Sil
+               Sil
             </Button>
           </div>
         </form>

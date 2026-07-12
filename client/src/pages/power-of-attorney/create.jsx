@@ -67,7 +67,6 @@ const PowerOfAttorneyCreate = () => {
     }
   };
 
-  // ✅ GÜNCELLENDİ - Resim desteği eklendi
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
@@ -127,7 +126,9 @@ const PowerOfAttorneyCreate = () => {
     e.preventDefault();
     const newErrors = {};
     if (!formData.client_id) newErrors.client_id = 'Müvekkil seçimi zorunludur';
-    if (!formData.title) newErrors.title = 'Başlık zorunludur';
+    // ✅ title kontrolü KALDIRILDI (opsiyonel)
+    // if (!formData.title) newErrors.title = 'Başlık zorunludur';
+    
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -136,7 +137,7 @@ const PowerOfAttorneyCreate = () => {
     const submitData = new FormData();
     submitData.append('client_id', formData.client_id);
     submitData.append('case_id', formData.case_id || '');
-    submitData.append('title', formData.title);
+    submitData.append('title', formData.title || '');  // ✅ Opsiyonel
     submitData.append('description', formData.description || '');
     submitData.append('start_date', formData.start_date || '');
     submitData.append('end_date', formData.end_date || '');
@@ -208,9 +209,9 @@ const PowerOfAttorneyCreate = () => {
             </select>
           </div>
 
-          {/* Başlık */}
+          {/* Başlık (Opsiyonel) */}
           <Input
-            label="Vekaletname Başlığı *"
+            label="Vekaletname Başlığı (Opsiyonel)"
             name="title"
             value={formData.title}
             onChange={handleChange}
@@ -312,7 +313,7 @@ const PowerOfAttorneyCreate = () => {
             )}
           </div>
 
-          {/* ✅ BELGE YÜKLEME ALANI - Resim desteği eklendi */}
+          {/* Belge Yükleme */}
           <div className="border-2 border-blue-500 p-4 rounded-lg">
             <p className="font-bold text-blue-600 mb-2">📎 Vekaletname Belgesi (PDF/Word/Resim)</p>
             <input
