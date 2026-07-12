@@ -104,7 +104,7 @@ export const searchService = {
       ],
       attributes: ['id', 'name', 'original_name', 'file_type', 'file_size', 'category'],
       limit,
-      order: [['createdAt', 'DESC']],
+      order: [['created_at', 'DESC']],
     });
   },
 
