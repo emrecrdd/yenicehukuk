@@ -34,7 +34,6 @@ export const searchService = {
     });
   },
 
-  // ✅ Case - clients (çoğul)
   async searchCases(query, limit) {
     const searchTerm = query.trim();
     return Case.findAll({
@@ -61,7 +60,6 @@ export const searchService = {
     });
   },
 
-  // ✅ Document - client (tekil)
   async searchDocuments(query, limit) {
     const searchTerm = query.trim();
     return Document.findAll({
@@ -90,13 +88,12 @@ export const searchService = {
           attributes: ['id', 'first_name', 'last_name'],
         },
       ],
-      attributes: ['id', 'name', 'original_name', 'file_type', 'file_size', 'category', 'createdAt'],
+      attributes: ['id', 'name', 'original_name', 'file_type', 'file_size', 'category'],
       limit,
       order: [['createdAt', 'DESC']],
     });
   },
 
-  // ✅ Task - client (tekil)
   async searchTasks(query, limit) {
     const searchTerm = query.trim();
     return Task.findAll({
@@ -132,7 +129,6 @@ export const searchService = {
     });
   },
 
-  // ✅ Note - client (tekil)
   async searchNotes(query, limit) {
     const searchTerm = query.trim();
     return Note.findAll({
@@ -158,9 +154,9 @@ export const searchService = {
           attributes: ['id', 'first_name', 'last_name'],
         },
       ],
-      attributes: ['id', 'content', 'note_type', 'createdAt'],
+      attributes: ['id', 'content', 'note_type'],
       limit,
-      order: [['createdAt', 'DESC']],
+      // Note'da timestamps false olduğu için order KALDIRILDI
     });
   },
 
