@@ -65,7 +65,7 @@ export const taskService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'name'], // ✅ DEĞİŞTİ
+          attributes: ['id', 'name'],
         },
       ],
       order: [
@@ -83,61 +83,77 @@ export const taskService = {
     };
   },
 
+  // ✅ DÜZELTİLMİŞ findOne
   async findOne(id) {
     console.log('🔍 findOne çağrıldı. ID:', id);
     
-    const task = await Task.findByPk(id, {
-      include: [
-        {
-          model: User,
-          as: 'assignee',
-          attributes: ['id', 'first_name', 'last_name', 'email'],
-        },
-        {
-          model: User,
-          as: 'creator',
-          attributes: ['id', 'first_name', 'last_name', 'email'],
-        },
-        {
-          model: Case,
-          as: 'case',
-          attributes: ['id', 'title'],
-          include: [
-            {
-              model: Client,
-              as: 'client',
-              attributes: ['id', 'name'], // ✅ DEĞİŞTİ
-            },
-          ],
-        },
-        {
-          model: Client,
-          as: 'client',
-          attributes: ['id', 'name'], // ✅ DEĞİŞTİ
-        },
-        {
-          model: Task,
-          as: 'parentTask',
-          attributes: ['id', 'title', 'status'],
-        },
-        {
-          model: Task,
-          as: 'subtasks',
-          attributes: ['id', 'title', 'status', 'due_date'],
-        },
-      ],
-    });
+    try {
+      // Önce task'ı bul - İLİŞKİLER OLMADAN
+      const task = await Task.findByPk(id);
+      
+      if (!task) {
+        console.log('❌ Task bulunamadı:', id);
+        throw new Error('Task not found');
+      }
 
-    console.log('📄 Task bulundu:', task?.id);
-    console.log('👤 assignee:', task?.assignee?.first_name, task?.assignee?.last_name);
-    console.log('👤 creator:', task?.creator?.first_name, task?.creator?.last_name);
-    console.log('📅 due_date:', task?.due_date);
+      console.log('✅ Task bulundu:', task.id);
 
-    if (!task) {
-      throw new Error('Task not found');
+      // Şimdi ilişkileri AYRI SORGULARLA al
+      const [assignee, creator, caseData, client, parentTask, subtasks] = await Promise.all([
+        User.findByPk(task.assignee_id, {
+          attributes: ['id', 'first_name', 'last_name', 'email']
+        }),
+        User.findByPk(task.created_by, {
+          attributes: ['id', 'first_name', 'last_name', 'email']
+        }),
+        Case.findByPk(task.case_id, {
+          attributes: ['id', 'title', 'caseNumber']
+        }),
+        Client.findByPk(task.client_id, {
+          attributes: ['id', 'name', 'email', 'phone']
+        }),
+        Task.findByPk(task.parent_task_id, {
+          attributes: ['id', 'title', 'status']
+        }),
+        Task.findAll({
+          where: { parent_task_id: task.id },
+          attributes: ['id', 'title', 'status', 'due_date']
+        })
+      ]);
+
+      // Client'ı Case içinde de ara
+      let caseClient = null;
+      if (caseData && caseData.client_id) {
+        caseClient = await Client.findByPk(caseData.client_id, {
+          attributes: ['id', 'name']
+        });
+      }
+
+      // Task'ı zenginleştir
+      const enrichedTask = {
+        ...task.toJSON(),
+        assignee: assignee || null,
+        creator: creator || null,
+        case: caseData ? {
+          ...caseData.toJSON(),
+          client: caseClient
+        } : null,
+        client: client || null,
+        parentTask: parentTask || null,
+        subtasks: subtasks || []
+      };
+
+      console.log('📄 Task zenginleştirildi:', enrichedTask.id);
+      console.log('👤 assignee:', enrichedTask.assignee?.first_name, enrichedTask.assignee?.last_name);
+      console.log('👤 creator:', enrichedTask.creator?.first_name, enrichedTask.creator?.last_name);
+      console.log('📅 due_date:', enrichedTask.due_date);
+
+      return enrichedTask;
+
+    } catch (error) {
+      console.error('❌ findOne hatası:', error);
+      throw error;
     }
-
-    return task;
   },
 
   async update(id, data) {
@@ -224,7 +240,7 @@ export const taskService = {
         {
           model: Client,
           as: 'client',
-          attributes: ['id', 'name'], // ✅ DEĞİŞTİ
+          attributes: ['id', 'name'],
         },
         {
           model: User,

@@ -37,12 +37,33 @@ export const taskController = {
     }
   },
 
+  // ✅ DÜZELTİLMİŞ findOne
   async findOne(req, res) {
     try {
-      const task = await taskService.findOne(req.params.id);
+      const { id } = req.params;
+      
+      console.log(`🔍 Task aranıyor: ${id}`);
+      
+      // Önce task'ı bul
+      const task = await taskService.findOne(id);
+      
+      // Task bulunamadıysa 404 döndür
+      if (!task) {
+        console.log(`❌ Task bulunamadı: ${id}`);
+        return errorResponse(res, 'Task bulunamadı', 404);
+      }
+      
+      console.log(`✅ Task bulundu: ${task.id}`);
       return successResponse(res, task, 'Task fetched successfully');
+      
     } catch (error) {
-      logger.error('Get task error:', error);
+      console.error('Get task error:', error);
+      
+      // Hata mesajını kontrol et
+      if (error.message === 'Task not found' || error.message.includes('bulunamadı')) {
+        return errorResponse(res, 'Task bulunamadı', 404);
+      }
+      
       return errorResponse(res, error.message, 404);
     }
   },
