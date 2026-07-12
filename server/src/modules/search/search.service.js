@@ -57,7 +57,7 @@ export const searchService = {
       ],
       attributes: ['id', 'title', 'case_number', 'court_name', 'status', 'opening_date'],
       limit,
-      order: [['createdAt', 'DESC']],
+      order: [['created_at', 'DESC']],
     });
   },
 
@@ -90,9 +90,9 @@ export const searchService = {
           attributes: ['id', 'first_name', 'last_name'],
         },
       ],
-      attributes: ['id', 'name', 'original_name', 'file_type', 'file_size', 'category', 'createdAt'],
+      attributes: ['id', 'name', 'original_name', 'file_type', 'file_size', 'category', 'created_at'],
       limit,
-      order: [['createdAt', 'DESC']],
+      order: [['created_at', 'DESC']],
     });
   },
 
