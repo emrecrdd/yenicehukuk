@@ -23,7 +23,7 @@ const Topbar = ({ onMenuClick }) => {
 
   // ✅ Unread count
   const { data: unreadData, refetch: refetchUnread } = useUnreadCount();
-  const unreadCount = unreadData?.data?.count || 0;
+  const unreadCount = unreadData?.data?.data?.count || 0;
 
   // ✅ Notifications list
   const { data: notificationsData, refetch: refetchNotifications } = useNotifications({ limit: 5 });

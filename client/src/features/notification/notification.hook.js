@@ -10,7 +10,7 @@ export const useUnreadCount = () => {
       console.log('📡 useUnreadCount queryFn çağrıldı');
       const result = await notificationApi.getUnreadCount();
       console.log('📡 useUnreadCount result:', result?.data);
-      return result;
+       return result?.data?.data?.count || 0;  // ✅ Sadece count döndür
     },
     staleTime: 5 * 1000, // ✅ 5 saniye
     refetchInterval: 10 * 1000, // ✅ 10 saniyede bir yenile
