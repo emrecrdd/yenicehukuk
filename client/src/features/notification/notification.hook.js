@@ -2,13 +2,21 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import notificationApi from './notification.api.js';
 import toast from 'react-hot-toast';
 
-// ✅ Okunmamış bildirim sayısı
+// ✅ Okunmamış bildirim sayısı - GÜNCELLENDİ
 export const useUnreadCount = () => {
   return useQuery({
     queryKey: ['notification-unread-count'],
-    queryFn: () => notificationApi.getUnreadCount(),
-    staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000,
+    queryFn: async () => {
+      console.log('📡 useUnreadCount queryFn çağrıldı');
+      const result = await notificationApi.getUnreadCount();
+      console.log('📡 useUnreadCount result:', result?.data);
+      return result;
+    },
+    staleTime: 5 * 1000, // ✅ 5 saniye
+    refetchInterval: 10 * 1000, // ✅ 10 saniyede bir yenile
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    retry: 2,
   });
 };
 
@@ -17,7 +25,8 @@ export const useNotifications = (params = {}) => {
   return useQuery({
     queryKey: ['notifications', params],
     queryFn: () => notificationApi.getMyNotifications(params),
-    staleTime: 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -30,6 +39,7 @@ export const useMarkAsRead = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['notification-unread-count'] });
+      queryClient.refetchQueries({ queryKey: ['notification-unread-count'] });
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Bildirim güncellenemedi');
@@ -46,6 +56,7 @@ export const useMarkAllAsRead = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['notification-unread-count'] });
+      queryClient.refetchQueries({ queryKey: ['notification-unread-count'] });
       toast.success('Tüm bildirimler okundu');
     },
     onError: (error) => {
@@ -63,6 +74,7 @@ export const useDeleteNotification = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['notification-unread-count'] });
+      queryClient.refetchQueries({ queryKey: ['notification-unread-count'] });
       toast.success('Bildirim silindi');
     },
     onError: (error) => {
@@ -80,6 +92,7 @@ export const useDeleteAllNotifications = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['notification-unread-count'] });
+      queryClient.refetchQueries({ queryKey: ['notification-unread-count'] });
       toast.success('Tüm bildirimler silindi');
     },
     onError: (error) => {

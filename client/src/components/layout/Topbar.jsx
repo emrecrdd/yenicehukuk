@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../app/providers/auth.provider.jsx';
 import { useTheme } from '../../app/providers/theme.provider.jsx';
 import { Link } from 'react-router-dom';
-// ✅ DOĞRU IMPORT
 import { useUnreadCount, useNotifications, useMarkAllAsRead } from '../../features/notification/notification.hook.js';
 import { useSocket } from '../../hooks/useSocket.js';
 import dayjs from 'dayjs';
@@ -33,7 +32,7 @@ const Topbar = ({ onMenuClick }) => {
   // ✅ Mark all as read
   const markAllAsRead = useMarkAllAsRead();
 
-  // ✅ Socket ile bildirim dinle - DÜZELTİLMİŞ
+  // ✅ Socket ile bildirim dinle
   useEffect(() => {
     const handleNotification = (data) => {
       console.log('🔔 Yeni bildirim geldi:', data);
@@ -46,7 +45,6 @@ const Topbar = ({ onMenuClick }) => {
       toast.success(data.title || 'Yeni bildirim');
     };
 
-    // ✅ 'notification' event'ini dinle
     on('notification', handleNotification);
 
     return () => {
@@ -65,15 +63,27 @@ const Topbar = ({ onMenuClick }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // ✅ Her 30 saniyede bir sayıyı yenile (arka planda)
+  // ✅ Her 5 saniyede bir sayıyı yenile (daha sık)
   useEffect(() => {
     const interval = setInterval(() => {
       refetchUnread();
-    }, 30000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [refetchUnread]);
 
+  // ✅ Sayfa görünür olduğunda yenile
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refetchUnread();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [refetchUnread]);
+
   console.log('📊 Unread count:', unreadCount);
+  console.log('📊 Unread data:', unreadData);
   console.log('🔌 Socket connected:', isConnected);
 
   return (
@@ -114,12 +124,11 @@ const Topbar = ({ onMenuClick }) => {
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
 
-          {/* BİLDİRİMLER - DÜZELTİLMİŞ */}
+          {/* BİLDİRİMLER */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => {
                 setShowNotifications(!showNotifications);
-                // ✅ Dropdown açılınca sayıyı yenile
                 refetchUnread();
               }}
               className="p-2 rounded-md text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 relative"
@@ -162,7 +171,6 @@ const Topbar = ({ onMenuClick }) => {
                         to={notification.link || '#'}
                         onClick={() => {
                           setShowNotifications(false);
-                          // ✅ Tıklandığında sayıyı yenile
                           refetchUnread();
                         }}
                         className={`block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 ${

@@ -3,11 +3,13 @@ import axios from '../../app/config/axios.js';
 const notificationApi = {
   // Tüm bildirimleri getir
   getMyNotifications: (params) => {
+    console.log('📡 API getMyNotifications çağrıldı', params);
     return axios.get('/notifications/my', { params });
   },
 
   // Okunmamış bildirim sayısı
   getUnreadCount: () => {
+    console.log('📡 API getUnreadCount çağrıldı');
     return axios.get('/notifications/unread-count');
   },
 
