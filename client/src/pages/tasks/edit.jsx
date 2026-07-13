@@ -4,11 +4,12 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTask, useUpdateTask, useDeleteTask } from "../../features/tasks/task.query.js";
 import { useAuth } from "../../hooks/useAuth.js";
+import userApi from "../../features/users/user.api.js";
+import caseApi from "../../features/cases/case.api.js";
+import clientApi from "../../features/clients/client.api.js";
 import Button from "../../components/ui/Button.jsx";
 import Input from "../../components/ui/Input.jsx";
 import Card from "../../components/ui/Card.jsx";
-import caseApi from '../../cases/case.api.js';
-import clientApi from '../../clients/client.api.js';
 
 
 
