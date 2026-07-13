@@ -1,9 +1,9 @@
 // 📁 client/src/features/tasks/pages/TaskList.jsx
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useTasks, useCompleteTask } from '../task.query.js';
-import { useAuth } from '../../../app/providers/auth.provider.jsx';
-import { useDebounce } from '../../../hooks/useDebounce.js';
+import { useTasks, useCompleteTask } from '../hooks/task.query.js';  // ✅ DOĞRU
+import { useAuth } from '../../../hooks/useAuth.js';  // ✅ DOĞRU
+import { useDebounce } from '../../../hooks/useDebounce.js';  // ✅ DOĞRU
 import Button from '../../../components/ui/Button.jsx';
 import Input from '../../../components/ui/Input.jsx';
 import Table from '../../../components/ui/Table.jsx';

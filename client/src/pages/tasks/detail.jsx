@@ -8,8 +8,8 @@ import {
   useCompleteTask,
   useUpdateProgress,
   useReassignTask,
-} from '../task.query.js';
-import { useAuth } from '../../../app/providers/auth.provider.jsx';
+} from '../hooks/task.query.js';  // ✅ DOĞRU
+import { useAuth } from '../../../hooks/useAuth.js';  // ✅ DOĞRU
 import Badge from '../../../components/ui/Badge.jsx';
 import Card from '../../../components/ui/Card.jsx';
 import Button from '../../../components/ui/Button.jsx';

@@ -2,8 +2,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useCreateTask } from '../task.query.js';
-import { useAuth } from '../../../app/providers/auth.provider.jsx';
+import { useCreateTask } from '../hooks/task.query.js';  // ✅ DOĞRU
+import { useAuth } from '../../../hooks/useAuth.js';  // ✅ DOĞRU
 import userApi from '../../users/user.api.js';
 import caseApi from '../../cases/case.api.js';
 import clientApi from '../../clients/client.api.js';
