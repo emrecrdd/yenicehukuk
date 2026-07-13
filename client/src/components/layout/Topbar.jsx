@@ -21,9 +21,9 @@ const Topbar = ({ onMenuClick }) => {
 
   const { on, off, isConnected } = useSocket();
 
-  // ✅ Unread count
-  const { data: unreadData, refetch: refetchUnread } = useUnreadCount();
-  const unreadCount = unreadData?.data?.data?.count || 0;
+  // ✅ Unread count - DÜZELTİLDİ
+  const { data: unreadCount, refetch: refetchUnread } = useUnreadCount();
+  // unreadCount artık direkt sayı (8)
 
   // ✅ Notifications list
   const { data: notificationsData, refetch: refetchNotifications } = useNotifications({ limit: 5 });
@@ -63,7 +63,7 @@ const Topbar = ({ onMenuClick }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // ✅ Her 5 saniyede bir sayıyı yenile (daha sık)
+  // ✅ Her 5 saniyede bir sayıyı yenile
   useEffect(() => {
     const interval = setInterval(() => {
       refetchUnread();
@@ -83,7 +83,6 @@ const Topbar = ({ onMenuClick }) => {
   }, [refetchUnread]);
 
   console.log('📊 Unread count:', unreadCount);
-  console.log('📊 Unread data:', unreadData);
   console.log('🔌 Socket connected:', isConnected);
 
   return (
