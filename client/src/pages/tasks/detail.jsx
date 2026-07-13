@@ -8,7 +8,8 @@ import {
   useCompleteTask, 
   useApproveTask, 
   useAddNote,
-  useTaskNotes 
+  useTaskNotes,
+  useUpdateProgress  // ✅ YENİ: Progress hook'u import et
 } from '../../features/tasks/task.query.js';
 import { useAuth } from '../../app/providers/auth.provider.jsx';
 import Badge from '../../components/ui/Badge.jsx';
@@ -25,6 +26,7 @@ const TaskDetail = () => {
   const [completionNote, setCompletionNote] = useState('');
   const [actualHours, setActualHours] = useState('');
   const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [progressValue, setProgressValue] = useState(0); // ✅ YENİ: Progress state
 
   // Queries
   const { data, isLoading, error, refetch } = useTask(id);
@@ -35,6 +37,7 @@ const TaskDetail = () => {
   const completeMutation = useCompleteTask();
   const approveMutation = useApproveTask();
   const addNoteMutation = useAddNote();
+  const updateProgressMutation = useUpdateProgress(); // ✅ YENİ
 
   const task = data?.data?.data;
   const notes = notesData?.data?.data || [];
@@ -84,6 +87,31 @@ const TaskDetail = () => {
   const canStart = isAssignee && task?.status === 'pending';
   const canComplete = isAssignee && task?.status === 'in_progress';
   const canApprove = isAdmin && task?.status === 'completed' && !task?.approved_at;
+  const canUpdateProgress = isAssignee && task?.status === 'in_progress'; // ✅ YENİ
+
+  // ✅ Progress'i güncelle
+  const handleUpdateProgress = () => {
+    if (progressValue < 0 || progressValue > 100) {
+      toast.error('İlerleme 0-100 arasında olmalı');
+      return;
+    }
+
+    updateProgressMutation.mutate(
+      { id, progress: progressValue },
+      {
+        onSuccess: () => {
+          refetch();
+          toast.success('İlerleme güncellendi');
+        },
+      }
+    );
+  };
+
+  // ✅ Input değişince progress'i güncelle
+  const handleProgressChange = (e) => {
+    const value = parseInt(e.target.value) || 0;
+    setProgressValue(Math.min(100, Math.max(0, value)));
+  };
 
   // ✅ Görevi Başlat
   const handleStart = () => {
@@ -323,16 +351,50 @@ const TaskDetail = () => {
               </div>
             )}
 
-            {/* İlerleme */}
+            {/* ✅ İLERLEME - GÜNCELLENMİŞ */}
             <div>
-              <p className="text-sm text-gray-500">İlerleme</p>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-500">📊 İlerleme</p>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {task.progress || 0}%
+                </span>
+              </div>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mt-1">
                 <div
-                  className="bg-blue-600 h-2.5 rounded-full transition-all"
+                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
                   style={{ width: `${task.progress || 0}%` }}
                 ></div>
               </div>
-              <p className="text-sm text-gray-500 mt-1">{task.progress || 0}% tamamlandı</p>
+              
+              {/* ✅ Progress Güncelleme (sadece atanan kişi ve in_progress durumunda) */}
+              {canUpdateProgress && (
+                <div className="flex items-center gap-2 mt-3">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={progressValue}
+                    onChange={handleProgressChange}
+                    className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  />
+                  <input
+                    type="number"
+                    value={progressValue}
+                    onChange={handleProgressChange}
+                    min="0"
+                    max="100"
+                    className="w-16 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-1 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <Button 
+                    size="sm" 
+                    onClick={handleUpdateProgress}
+                    loading={updateProgressMutation.isPending}
+                    disabled={updateProgressMutation.isPending}
+                  >
+                    Güncelle
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* İlişkili */}
