@@ -1,69 +1,107 @@
-// 📁 client/src/features/tasks/pages/TaskList.jsx
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useTasks, useCompleteTask } from "../../features/tasks/task.query.js";
-import { useAuth } from "../../hooks/useAuth.js";
-import { useDebounce } from "../../hooks/useDebounce.js";
-import Button from "../../components/ui/Button.jsx";
-import Input from "../../components/ui/Input.jsx";
-import Table from "../../components/ui/Table.jsx";
-import Badge from "../../components/ui/Badge.jsx";
-import { CheckCircle } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import taskApi from '../../features/tasks/task.api.js';
+import Button from '../../components/ui/Button.jsx';
+import Input from '../../components/ui/Input.jsx';
+import Table from '../../components/ui/Table.jsx';
+import Badge from '../../components/ui/Badge.jsx';
 
 const TasksList = () => {
-  const { user } = useAuth();
   const [search, setSearch] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const [page, setPage] = useState(1);
 
-  const debouncedSearch = useDebounce(search, 500);
-  const completeTask = useCompleteTask();
-
-  const { data, isLoading } = useTasks({
-    page,
-    search: debouncedSearch,
-    status: statusFilter,
-    priority: priorityFilter,
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['tasks', { page, search: searchQuery, status: statusFilter, priority: priorityFilter }],
+    queryFn: () => taskApi.getAll({ page, search: searchQuery, status: statusFilter, priority: priorityFilter }),
+    staleTime: 1000,
+    keepPreviousData: true,
   });
 
   const tasks = data?.data?.data || [];
   const pagination = data?.data?.pagination;
 
-  const isAdmin = user?.role === 'admin';
-
-  const getStatusBadge = (status) => {
-    const map = {
-      draft: { label: '📄 Taslak', variant: 'default' },
-      pending: { label: '⏳ Bekliyor', variant: 'warning' },
-      accepted: { label: '✅ Kabul Edildi', variant: 'success' },
-      rejected: { label: '❌ Reddedildi', variant: 'danger' },
-      in_progress: { label: '⚡ Devam Ediyor', variant: 'info' },
-      review: { label: '🔍 İncelemede', variant: 'info' },
-      completed: { label: '🎉 Tamamlandı', variant: 'success' },
-      cancelled: { label: '⛔ İptal', variant: 'danger' },
-      archived: { label: '📦 Arşivlendi', variant: 'default' },
-    };
-    return map[status] || { label: status, variant: 'default' };
+  const handleSearch = () => {
+    setSearchQuery(search);
+    setPage(1);
   };
 
-  const isOverdue = (task) => {
-    if (!task.due_date) return false;
-    if (task.status === 'completed' || task.status === 'cancelled' || task.status === 'archived')
-      return false;
-    return new Date(task.due_date) < new Date();
-  };
-
-  const handleComplete = (taskId) => {
-    if (window.confirm('Görevi tamamladığınıza emin misiniz?')) {
-      completeTask.mutate(taskId);
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
     }
+  };
+
+  const handleStatusChange = (e) => {
+    setStatusFilter(e.target.value);
+    setPage(1);
+  };
+
+  const handlePriorityChange = (e) => {
+    setPriorityFilter(e.target.value);
+    setPage(1);
+  };
+
+  const statuses = [
+    { value: '', label: 'Tümü' },
+    { value: 'pending', label: 'Bekliyor' },
+    { value: 'in_progress', label: 'Devam Ediyor' },
+    { value: 'completed', label: 'Tamamlandı' },
+    { value: 'cancelled', label: 'İptal' },
+  ];
+
+  const priorities = [
+    { value: '', label: 'Tümü' },
+    { value: 'low', label: 'Düşük' },
+    { value: 'normal', label: 'Normal' },
+    { value: 'high', label: 'Yüksek' },
+    { value: 'critical', label: 'Kritik' },
+  ];
+
+  const getStatusVariant = (status) => {
+    switch (status) {
+      case 'pending': return 'warning';
+      case 'in_progress': return 'info';
+      case 'completed': return 'success';
+      case 'cancelled': return 'danger';
+      default: return 'default';
+    }
+  };
+
+  const getPriorityVariant = (priority) => {
+    switch (priority) {
+      case 'critical': return 'danger';
+      case 'high': return 'warning';
+      case 'normal': return 'default';
+      case 'low': return 'default';
+      default: return 'default';
+    }
+  };
+
+  const getPriorityLabel = (priority) => {
+    return priorities.find(p => p.value === priority)?.label || priority;
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-4xl mb-4">⚠️</div>
+        <h2 className="text-xl font-bold text-red-600">Görevler yüklenirken hata oluştu</h2>
+        <p className="text-gray-500">{error.message}</p>
+        <Button className="mt-4" onClick={() => window.location.reload()}>
+          Yeniden Dene
+        </Button>
       </div>
     );
   }
@@ -71,48 +109,59 @@ const TasksList = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold">📋 Görevler</h1>
-        {isAdmin && (
-          <Link to="/tasks/create">
-            <Button>+ Yeni Görev</Button>
-          </Link>
-        )}
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          ✅ Görevler
+        </h1>
+        <Link to="/tasks/create">
+          <Button>+ Yeni Görev</Button>
+        </Link>
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-        <div className="p-4 border-b">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
+            <div className="flex-1 flex gap-2">
               <Input
-                placeholder="Görev ara..."
+                placeholder="Görev ara... (Enter ile ara)"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={handleKeyDown}
                 icon="🔍"
               />
+              <Button 
+                variant="primary" 
+                onClick={handleSearch}
+                className="shrink-0"
+              >
+                Ara
+              </Button>
             </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-md border px-3 py-2"
-            >
-              <option value="">Tüm Durumlar</option>
-              <option value="pending">Bekliyor</option>
-              <option value="accepted">Kabul Edildi</option>
-              <option value="rejected">Reddedildi</option>
-              <option value="in_progress">Devam Ediyor</option>
-              <option value="completed">Tamamlandı</option>
-            </select>
-            <select
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
-              className="rounded-md border px-3 py-2"
-            >
-              <option value="">Tüm Öncelikler</option>
-              <option value="critical">Kritik</option>
-              <option value="high">Yüksek</option>
-              <option value="medium">Orta</option>
-              <option value="low">Düşük</option>
-            </select>
+            <div className="sm:w-40">
+              <select
+                value={statusFilter}
+                onChange={handleStatusChange}
+                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {statuses.map((status) => (
+                  <option key={status.value} value={status.value}>
+                    {status.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="sm:w-40">
+              <select
+                value={priorityFilter}
+                onChange={handlePriorityChange}
+                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {priorities.map((priority) => (
+                  <option key={priority.value} value={priority.value}>
+                    {priority.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -122,10 +171,10 @@ const TasksList = () => {
               <Table.Row>
                 <Table.HeadCell>Görev</Table.HeadCell>
                 <Table.HeadCell>Atanan</Table.HeadCell>
+                <Table.HeadCell>Dava</Table.HeadCell>
                 <Table.HeadCell>Öncelik</Table.HeadCell>
                 <Table.HeadCell>Durum</Table.HeadCell>
                 <Table.HeadCell>Son Tarih</Table.HeadCell>
-                <Table.HeadCell>İlerleme</Table.HeadCell>
                 <Table.HeadCell>İşlem</Table.HeadCell>
               </Table.Row>
             </Table.Head>
@@ -133,96 +182,59 @@ const TasksList = () => {
               {tasks.length === 0 ? (
                 <Table.Row>
                   <Table.Cell colSpan="7" className="text-center py-8 text-gray-500">
-                    {search ? 'Aramanıza uygun görev bulunamadı' : 'Henüz görev bulunmuyor'}
+                    {searchQuery ? 'Aramanıza uygun görev bulunamadı' : 'Henüz görev bulunmuyor'}
                   </Table.Cell>
                 </Table.Row>
               ) : (
-                tasks.map((task) => {
-                  const statusBadge = getStatusBadge(task.status);
-                  const overdue = isOverdue(task);
-                  const canComplete =
-                    task.assigned_to === user?.id &&
-                    ['accepted', 'in_progress'].includes(task.status);
-
-                  return (
-                    <Table.Row
-                      key={task.id}
-                      className={overdue ? 'bg-red-50 dark:bg-red-900/10' : ''}
-                    >
-                      <Table.Cell>
-                        <div className="font-medium">{task.title}</div>
-                        {task.description && (
-                          <div className="text-sm text-gray-500 truncate max-w-xs">
-                            {task.description}
-                          </div>
-                        )}
-                      </Table.Cell>
-                      <Table.Cell>
-                        {task.assignee?.first_name} {task.assignee?.last_name || 'Atanmadı'}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Badge
-                          variant={
-                            task.priority === 'critical'
-                              ? 'danger'
-                              : task.priority === 'high'
-                                ? 'warning'
-                                : 'default'
-                          }
-                        >
-                          {task.priority}
-                        </Badge>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
-                      </Table.Cell>
-                      <Table.Cell className={overdue ? 'text-red-600 font-medium' : ''}>
-                        {task.due_date
-                          ? new Date(task.due_date).toLocaleDateString('tr-TR')
-                          : '-'}
-                        {overdue && ' ⚠️'}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <div className="flex items-center gap-2">
-                          <div className="w-16 bg-gray-200 rounded-full h-2">
-                            <div
-                              className="bg-blue-600 h-2 rounded-full"
-                              style={{ width: `${task.progress || 0}%` }}
-                            />
-                          </div>
-                          <span className="text-xs">{task.progress || 0}%</span>
+                tasks.map((task) => (
+                  <Table.Row key={task.id}>
+                    <Table.Cell>
+                      <div className="font-medium">{task.title}</div>
+                      {task.description && (
+                        <div className="text-sm text-gray-500 truncate max-w-xs">
+                          {task.description}
                         </div>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <div className="flex items-center gap-2">
-                          <Link
-                            to={`/tasks/${task.id}`}
-                            className="text-blue-600 hover:underline"
-                          >
-                            Görüntüle
-                          </Link>
-                          {canComplete && (
-                            <button
-                              onClick={() => handleComplete(task.id)}
-                              className="text-green-600 hover:text-green-800"
-                              title="Tamamla"
-                            >
-                              <CheckCircle className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      </Table.Cell>
-                    </Table.Row>
-                  );
-                })
+                      )}
+                    </Table.Cell>
+                    <Table.Cell>
+                      {task.assignee?.first_name} {task.assignee?.last_name || 'Atanmadı'}
+                    </Table.Cell>
+                    <Table.Cell>
+                      {task.case?.title || '-'}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Badge variant={getPriorityVariant(task.priority)}>
+                        {getPriorityLabel(task.priority)}
+                      </Badge>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Badge variant={getStatusVariant(task.status)}>
+                        {statuses.find(s => s.value === task.status)?.label || task.status}
+                      </Badge>
+                    </Table.Cell>
+                    <Table.Cell>
+                      {task.due_date ? new Date(task.due_date).toLocaleDateString('tr-TR') : '-'}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Link
+                        to={`/tasks/${task.id}`}
+                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                      >
+                        Görüntüle
+                      </Link>
+                    </Table.Cell>
+                  </Table.Row>
+                ))
               )}
             </Table.Body>
           </Table>
         </div>
 
         {pagination && pagination.totalPages > 1 && (
-          <div className="px-6 py-4 border-t flex items-center justify-between">
-            <p className="text-sm text-gray-600">Toplam {pagination.total} görev</p>
+          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Toplam {pagination.total} görev
+            </p>
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -232,7 +244,7 @@ const TasksList = () => {
               >
                 Önceki
               </Button>
-              <span className="px-3 py-1 text-sm">
+              <span className="px-3 py-1 text-sm text-gray-600 dark:text-gray-400">
                 {page} / {pagination.totalPages}
               </span>
               <Button

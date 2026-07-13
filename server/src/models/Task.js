@@ -1,4 +1,3 @@
-// server/src/models/Task.js
 import { Sequelize, DataTypes } from 'sequelize';
 
 class Task extends Sequelize.Model {
@@ -18,131 +17,148 @@ class Task extends Sequelize.Model {
           type: DataTypes.TEXT,
           allowNull: true,
         },
-        
-        // ============ DURUM ============
         status: {
-          type: DataTypes.ENUM(
-            'draft',        // Taslak
-            'pending',      // Bekliyor (atandı ama kabul edilmedi)
-            'accepted',     // Kabul edildi
-            'rejected',     // Reddedildi
-            'in_progress',  // Devam ediyor
-            'review',       // İncelemede
-            'completed',    // Tamamlandı
-            'cancelled',    // İptal
-            'archived'      // Arşivlendi
-          ),
-          defaultValue: 'draft',
+          type: DataTypes.ENUM('pending', 'in_progress', 'completed', 'cancelled'),
+          defaultValue: 'pending',
         },
         priority: {
-          type: DataTypes.ENUM('low', 'medium', 'high', 'critical'),
-          defaultValue: 'medium',
+          type: DataTypes.ENUM('low', 'normal', 'high', 'critical'),
+          defaultValue: 'normal',
         },
-        progress: {
-          type: DataTypes.INTEGER,
-          defaultValue: 0,
-          validate: { min: 0, max: 100 },
+        due_date: {
+          type: DataTypes.DATE,
+          allowNull: true,
         },
-
-        // ============ TARİHLER ============
-        due_date: { type: DataTypes.DATE, allowNull: true },
-        start_date: { type: DataTypes.DATE, allowNull: true },
-        completed_at: { type: DataTypes.DATE, allowNull: true },
-        estimated_hours: { type: DataTypes.FLOAT, defaultValue: 0 },
-        spent_hours: { type: DataTypes.FLOAT, defaultValue: 0 },
-
-        // ============ ATAMA ============
+        completed_at: {
+          type: DataTypes.DATE,
+          allowNull: true,
+        },
         assigned_to: {
           type: DataTypes.UUID,
           allowNull: true,
-          references: { model: 'users', key: 'id' },
-        },
-        assigned_by: {
-          type: DataTypes.UUID,
-          allowNull: true,
-          references: { model: 'users', key: 'id' },
-        },
-        assigned_at: { type: DataTypes.DATE, allowNull: true },
-
-        // ============ KABUL/RED ============
-        accepted_at: { type: DataTypes.DATE, allowNull: true },
-        rejected_at: { type: DataTypes.DATE, allowNull: true },
-        rejection_reason: { type: DataTypes.TEXT, allowNull: true },
-
-        // ============ İLİŞKİLER ============
-        case_id: {
-          type: DataTypes.UUID,
-          allowNull: true,
-          references: { model: 'cases', key: 'id' },
-        },
-        client_id: {
-          type: DataTypes.UUID,
-          allowNull: true,
-          references: { model: 'clients', key: 'id' },
-        },
-        parent_task_id: {
-          type: DataTypes.UUID,
-          allowNull: true,
-          references: { model: 'tasks', key: 'id' },
+          references: {
+            model: 'users',
+            key: 'id',
+          },
         },
         created_by: {
           type: DataTypes.UUID,
           allowNull: false,
-          references: { model: 'users', key: 'id' },
+          references: {
+            model: 'users',
+            key: 'id',
+          },
         },
-
-        // ============ TEKRARLAYAN ============
-        is_recurring: { type: DataTypes.BOOLEAN, defaultValue: false },
-        recurrence_type: {
-          type: DataTypes.ENUM('daily', 'weekly', 'monthly', 'yearly'),
+        case_id: {
+          type: DataTypes.UUID,
+          allowNull: true,
+          references: {
+            model: 'cases',
+            key: 'id',
+          },
+        },
+        client_id: {
+          type: DataTypes.UUID,
+          allowNull: true,
+          references: {
+            model: 'clients',
+            key: 'id',
+          },
+        },
+        parent_task_id: {
+          type: DataTypes.UUID,
+          allowNull: true,
+          references: {
+            model: 'tasks',
+            key: 'id',
+          },
+        },
+        reminder_date: {
+          type: DataTypes.DATE,
           allowNull: true,
         },
-        recurrence_end_date: { type: DataTypes.DATE, allowNull: true },
-
-        // ============ ETİKETLER ============
+        reminder_sent: {
+          type: DataTypes.BOOLEAN,
+          defaultValue: false,
+        },
+        progress: {
+          type: DataTypes.INTEGER,
+          defaultValue: 0,
+          validate: {
+            min: 0,
+            max: 100,
+          },
+        },
         tags: {
           type: DataTypes.ARRAY(DataTypes.STRING),
           defaultValue: [],
         },
+        reminder_sent_1: {
+          type: DataTypes.BOOLEAN,
+          defaultValue: false,
+        },
+        reminder_sent_at_1: {
+          type: DataTypes.DATE,
+          allowNull: true,
+        },
+        reminder_sent_2: {
+          type: DataTypes.BOOLEAN,
+          defaultValue: false,
+        },
+        reminder_sent_at_2: {
+          type: DataTypes.DATE,
+          allowNull: true,
+        },
 
-        // ============ HATIRLATMA ============
-        reminder_date: { type: DataTypes.DATE, allowNull: true },
-        reminder_sent: { type: DataTypes.BOOLEAN, defaultValue: false },
-        reminder_sent_1: { type: DataTypes.BOOLEAN, defaultValue: false },
-        reminder_sent_at_1: { type: DataTypes.DATE, allowNull: true },
-        reminder_sent_2: { type: DataTypes.BOOLEAN, defaultValue: false },
-        reminder_sent_at_2: { type: DataTypes.DATE, allowNull: true },
-
-        // ============ SİSTEM ============
-        deleted_at: { type: DataTypes.DATE, allowNull: true },
+        // ✅ YENİ ALANLAR (Süre Takibi + Onay)
+        started_at: {
+          type: DataTypes.DATE,
+          allowNull: true,
+        },
+        estimated_hours: {
+          type: DataTypes.FLOAT,
+          allowNull: true,
+          validate: { min: 0 },
+        },
+        actual_hours: {
+          type: DataTypes.FLOAT,
+          allowNull: true,
+        },
+        approved_by: {
+          type: DataTypes.UUID,
+          allowNull: true,
+          references: {
+            model: 'users',
+            key: 'id',
+          },
+        },
+        approved_at: {
+          type: DataTypes.DATE,
+          allowNull: true,
+        },
+        attachment_url: {
+          type: DataTypes.STRING,
+          allowNull: true,
+        },
       },
       {
         sequelize,
         tableName: 'tasks',
         paranoid: true,
         timestamps: true,
-        createdAt: 'created_at',
-        updatedAt: 'updated_at',
       }
     );
   }
 
   static associate(models) {
-    // ============ KULLANICI İLİŞKİLERİ ============
     Task.belongsTo(models.User, {
       foreignKey: 'assigned_to',
-      as: 'assignee',      // Atanan kişi
-    });
-    Task.belongsTo(models.User, {
-      foreignKey: 'assigned_by',
-      as: 'assigner',      // Atayan kişi
+      as: 'assignee',
     });
     Task.belongsTo(models.User, {
       foreignKey: 'created_by',
-      as: 'creator',       // Oluşturan kişi
+      as: 'creator',
     });
-
-    // ============ DAVA / MÜVEKKİL ============
     Task.belongsTo(models.Case, {
       foreignKey: 'case_id',
       as: 'case',
@@ -151,8 +167,6 @@ class Task extends Sequelize.Model {
       foreignKey: 'client_id',
       as: 'client',
     });
-
-    // ============ ALT GÖREVLER ============
     Task.belongsTo(Task, {
       foreignKey: 'parent_task_id',
       as: 'parentTask',
@@ -160,6 +174,16 @@ class Task extends Sequelize.Model {
     Task.hasMany(Task, {
       foreignKey: 'parent_task_id',
       as: 'subtasks',
+    });
+    Task.belongsTo(models.User, {
+      foreignKey: 'approved_by',
+      as: 'approver',
+    });
+
+    // ✅ Task - Note ilişkisi (Note modeline task_id eklenecek)
+    Task.hasMany(models.Note, {
+      foreignKey: 'task_id',
+      as: 'taskNotes',
     });
   }
 }

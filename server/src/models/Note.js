@@ -1,4 +1,5 @@
 import { Sequelize, DataTypes } from 'sequelize';
+
 class Note extends Sequelize.Model {
   static initModel(sequelize) {
     Note.init(
@@ -13,7 +14,7 @@ class Note extends Sequelize.Model {
           allowNull: false,
         },
         note_type: {
-          type: DataTypes.ENUM('general', 'meeting', 'phone', 'email', 'reminder'),
+          type: DataTypes.ENUM('general', 'meeting', 'phone', 'email', 'reminder', 'task'),
           defaultValue: 'general',
         },
         is_private: {
@@ -40,6 +41,15 @@ class Note extends Sequelize.Model {
             key: 'id',
           },
         },
+        // ✅ YENİ: Task ile ilişki
+        task_id: {
+          type: DataTypes.UUID,
+          allowNull: true,
+          references: {
+            model: 'tasks',
+            key: 'id',
+          },
+        },
         created_by: {
           type: DataTypes.UUID,
           allowNull: false,
@@ -60,8 +70,31 @@ class Note extends Sequelize.Model {
       {
         sequelize,
         tableName: 'notes',
+        timestamps: true,
+        createdAt: 'created_at',
+        updatedAt: 'updated_at',
       }
     );
+  }
+
+  static associate(models) {
+    Note.belongsTo(models.User, {
+      foreignKey: 'created_by',
+      as: 'creator',
+    });
+    Note.belongsTo(models.Client, {
+      foreignKey: 'client_id',
+      as: 'client',
+    });
+    Note.belongsTo(models.Case, {
+      foreignKey: 'case_id',
+      as: 'case',
+    });
+    // ✅ YENİ: Task ile ilişki
+    Note.belongsTo(models.Task, {
+      foreignKey: 'task_id',
+      as: 'task',
+    });
   }
 }
 

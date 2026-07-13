@@ -1,4 +1,3 @@
-// server/src/models/index.js
 import { User } from './User.js';
 import { Client } from './Client.js';
 import { Case } from './Case.js';
@@ -41,71 +40,42 @@ const initModels = (sequelize) => {
   User.hasMany(Case, { foreignKey: 'assigned_to', as: 'assignedCases' });
   Case.belongsTo(User, { foreignKey: 'assigned_to', as: 'assignee' });
 
-  // ============ TASK ASSOCIATIONS ============
   User.hasMany(Task, { foreignKey: 'assigned_to', as: 'assignedTasks' });
   Task.belongsTo(User, { foreignKey: 'assigned_to', as: 'assignee' });
-
-  User.hasMany(Task, { foreignKey: 'assigned_by', as: 'assignedByTasks' });  // ✅ YENİ
-  Task.belongsTo(User, { foreignKey: 'assigned_by', as: 'assigner' });        // ✅ YENİ
 
   User.hasMany(Task, { foreignKey: 'created_by', as: 'createdTasks' });
   Task.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 
-  // ============ TASK - CLIENT / CASE ============
-  Task.belongsTo(Client, { foreignKey: 'client_id', as: 'client' });
-  Client.hasMany(Task, { foreignKey: 'client_id', as: 'tasks' });
-
-  Task.belongsTo(Case, { foreignKey: 'case_id', as: 'case' });
-  Case.hasMany(Task, { foreignKey: 'case_id', as: 'tasks' });
-
-  // ============ SUBTASKS ============
-  Task.hasMany(Task, { foreignKey: 'parent_task_id', as: 'subtasks' });
-  Task.belongsTo(Task, { foreignKey: 'parent_task_id', as: 'parentTask' });
-
-  // ============ USER - NOTE ============
   User.hasMany(Note, { foreignKey: 'created_by', as: 'createdNotes' });
   Note.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 
-  // ============ USER - AUDIT LOG ============
   User.hasMany(AuditLog, { foreignKey: 'user_id', as: 'auditLogs' });
   AuditLog.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
-  // ============ USER - DOCUMENT ============
   User.hasMany(Document, { foreignKey: 'uploaded_by', as: 'uploadedDocuments' });
   Document.belongsTo(User, { foreignKey: 'uploaded_by', as: 'uploader' });
 
-  // ============ USER - EVENT ============
   User.hasMany(Event, { foreignKey: 'created_by', as: 'createdEvents' });
   Event.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 
   User.hasMany(Event, { foreignKey: 'assigned_to', as: 'assignedEvents' });
   Event.belongsTo(User, { foreignKey: 'assigned_to', as: 'assignedTo' });
 
-  // ============ USER - MEETING ============
   User.hasMany(Meeting, { foreignKey: 'created_by', as: 'createdMeetings' });
   Meeting.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 
   User.hasMany(Meeting, { foreignKey: 'assigned_to', as: 'assignedMeetings' });
   Meeting.belongsTo(User, { foreignKey: 'assigned_to', as: 'assignee' });
 
-  // ============ USER - PAYMENT ============
   User.hasMany(Payment, { foreignKey: 'created_by', as: 'payments' });
   Payment.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 
-  // ============ USER - TEMPLATE ============
+  // ============ TEMPLATE - USER ASSOCIATIONS ============
   User.hasMany(Template, { foreignKey: 'created_by', as: 'templates' });
   Template.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 
   User.hasMany(Template, { foreignKey: 'updated_by', as: 'updatedTemplates' });
   Template.belongsTo(User, { foreignKey: 'updated_by', as: 'updater' });
-
-  // ============ USER - POWER OF ATTORNEY ============
-  User.hasMany(PowerOfAttorney, { foreignKey: 'created_by', as: 'powerOfAttorneys' });
-  PowerOfAttorney.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
-
-  // ============ USER - NOTIFICATION ============
-  User.hasMany(Notification, { foreignKey: 'user_id', as: 'notifications' });
-  Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
   // ============ CLIENT ASSOCIATIONS ============
   Client.belongsToMany(Case, {
@@ -114,6 +84,7 @@ const initModels = (sequelize) => {
     otherKey: 'case_id',
     as: 'cases',
   });
+
   Client.hasMany(Note, { foreignKey: 'client_id', as: 'clientNotes' });
   Note.belongsTo(Client, { foreignKey: 'client_id', as: 'client' });
 
@@ -136,11 +107,15 @@ const initModels = (sequelize) => {
     otherKey: 'client_id',
     as: 'clients',
   });
+
   Case.hasMany(CaseParty, { foreignKey: 'case_id', as: 'parties' });
   CaseParty.belongsTo(Case, { foreignKey: 'case_id', as: 'case' });
 
   Case.hasMany(Document, { foreignKey: 'case_id', as: 'documents' });
   Document.belongsTo(Case, { foreignKey: 'case_id', as: 'case' });
+
+  Case.hasMany(Task, { foreignKey: 'case_id', as: 'tasks' });
+  Task.belongsTo(Case, { foreignKey: 'case_id', as: 'case' });
 
   Case.hasMany(Event, { foreignKey: 'case_id', as: 'events' });
   Event.belongsTo(Case, { foreignKey: 'case_id', as: 'case' });
@@ -169,6 +144,24 @@ const initModels = (sequelize) => {
     foreignKey: 'power_of_attorney_id',
     as: 'powerOfAttorney',
   });
+
+  // ============ TASK ASSOCIATIONS ============
+  Task.hasMany(Task, { foreignKey: 'parent_task_id', as: 'subtasks' });
+  Task.belongsTo(Task, { foreignKey: 'parent_task_id', as: 'parentTask' });
+
+  Task.belongsTo(Client, { foreignKey: 'client_id', as: 'client' });
+  Client.hasMany(Task, { foreignKey: 'client_id', as: 'tasks' });
+
+  // ✅ Task - Note ilişkisi (yeni)
+  Task.hasMany(Note, { foreignKey: 'task_id', as: 'taskNotes' });
+  Note.belongsTo(Task, { foreignKey: 'task_id', as: 'task' });
+
+  // ============ NOTIFICATION ASSOCIATIONS ============
+  User.hasMany(Notification, { foreignKey: 'user_id', as: 'notifications' });
+  Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+  User.hasMany(PowerOfAttorney, { foreignKey: 'created_by', as: 'powerOfAttorneys' });
+  PowerOfAttorney.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 
   return sequelize;
 };

@@ -1,222 +1,302 @@
-// 📁 server/src/modules/tasks/task.controller.js
 import { taskService } from './task.service.js';
 import { successResponse, errorResponse, paginatedResponse } from '../../utils/response.js';
 import { logger } from '../../config/logger.js';
+import { AuditLog } from '../../models/AuditLog.js';
 
 export const taskController = {
-  // =============================================
-  // CREATE
-  // =============================================
   async create(req, res) {
     try {
       const taskData = { ...req.body, created_by: req.user.id };
       const task = await taskService.create(taskData);
-      return successResponse(res, task, 'Görev oluşturuldu', 201);
+
+      await AuditLog.create({
+        action: 'create',
+        entity_type: 'task',
+        entity_id: task.id,
+        user_id: req.user.id,
+        description: `"${task.title}" görevi oluşturuldu`,
+        ip_address: req.ip,
+        user_agent: req.headers['user-agent'],
+      });
+
+      return successResponse(res, task, 'Task created successfully', 201);
     } catch (error) {
       logger.error('Create task error:', error);
       return errorResponse(res, error.message, 400);
     }
   },
 
-  // =============================================
-  // ASSIGN
-  // =============================================
-  async assign(req, res) {
-    try {
-      const { id } = req.params;
-      const { assigned_to } = req.body;
-      const task = await taskService.assign(id, assigned_to, req.user.id);
-      return successResponse(res, task, 'Görev atandı');
-    } catch (error) {
-      logger.error('Assign task error:', error);
-      return errorResponse(res, error.message, 400);
-    }
-  },
-
-  // =============================================
-  // ACCEPT (KABUL ET)
-  // =============================================
-  async accept(req, res) {
-    try {
-      const { id } = req.params;
-      const task = await taskService.accept(id, req.user.id);
-      return successResponse(res, task, 'Görev kabul edildi');
-    } catch (error) {
-      logger.error('Accept task error:', error);
-      return errorResponse(res, error.message, 400);
-    }
-  },
-
-  // =============================================
-  // REJECT (REDDET)
-  // =============================================
-  async reject(req, res) {
-    try {
-      const { id } = req.params;
-      const { reason } = req.body;
-
-      if (!reason || reason.trim() === '') {
-        return errorResponse(res, 'Reddetme sebebi belirtmelisiniz', 400);
-      }
-
-      const task = await taskService.reject(id, req.user.id, reason);
-      return successResponse(res, task, 'Görev reddedildi');
-    } catch (error) {
-      logger.error('Reject task error:', error);
-      return errorResponse(res, error.message, 400);
-    }
-  },
-
-  // =============================================
-  // REASSIGN (YENİDEN ATA)
-  // =============================================
-  async reassign(req, res) {
-    try {
-      const { id } = req.params;
-      const { assigned_to } = req.body;
-      const task = await taskService.reassign(id, assigned_to, req.user.id);
-      return successResponse(res, task, 'Görev yeniden atandı');
-    } catch (error) {
-      logger.error('Reassign task error:', error);
-      return errorResponse(res, error.message, 400);
-    }
-  },
-
-  // =============================================
-  // COMPLETE (TAMAMLA)
-  // =============================================
-  async complete(req, res) {
-    try {
-      const { id } = req.params;
-      const task = await taskService.complete(id, req.user.id);
-      return successResponse(res, task, 'Görev tamamlandı');
-    } catch (error) {
-      logger.error('Complete task error:', error);
-      return errorResponse(res, error.message, 400);
-    }
-  },
-
-  // =============================================
-  // UPDATE PROGRESS
-  // =============================================
-  async updateProgress(req, res) {
-    try {
-      const { id } = req.params;
-      const { progress } = req.body;
-
-      if (progress === undefined || progress === null) {
-        return errorResponse(res, 'Progress değeri gereklidir', 400);
-      }
-
-      if (typeof progress !== 'number' || progress < 0 || progress > 100) {
-        return errorResponse(res, 'Progress 0-100 arasında olmalıdır', 400);
-      }
-
-      const task = await taskService.updateProgress(id, req.user.id, progress);
-      return successResponse(res, task, 'İlerleme güncellendi');
-    } catch (error) {
-      logger.error('Update progress error:', error);
-      return errorResponse(res, error.message, 400);
-    }
-  },
-
-  // =============================================
-  // FIND ONE
-  // =============================================
-  async findOne(req, res) {
-    try {
-      const { id } = req.params;
-      const task = await taskService.findOne(id, req.user.id);
-      return successResponse(res, task, 'Görev getirildi');
-    } catch (error) {
-      logger.error('Get task error:', error);
-      return errorResponse(res, error.message, error.message === 'Task not found' ? 404 : 400);
-    }
-  },
-
-  // =============================================
-  // FIND ALL
-  // =============================================
   async findAll(req, res) {
     try {
-      const {
-        page = 1,
-        limit = 10,
-        search,
-        status,
-        priority,
-        assigned_to,
-        case_id,
-        client_id,
-        due_date_from,
-        due_date_to,
-        sort_by,
-        sort_order,
-      } = req.query;
-
-      const result = await taskService.findAll(
-        {
-          page,
-          limit,
-          search,
-          status,
-          priority,
-          assigned_to,
-          case_id,
-          client_id,
-          due_date_from,
-          due_date_to,
-          sort_by,
-          sort_order,
-        },
-        req.user.id,
-        req.user.role
-      );
-
-      return paginatedResponse(res, result.data, result.pagination, 'Görevler getirildi');
+      const { page = 1, limit = 10, search, status, priority, assigned_to, case_id } = req.query;
+      const result = await taskService.findAll({ page, limit, search, status, priority, assigned_to, case_id });
+      return paginatedResponse(res, result.data, result.pagination, 'Tasks fetched successfully');
     } catch (error) {
       logger.error('Get tasks error:', error);
       return errorResponse(res, error.message, 400);
     }
   },
 
-  // =============================================
-  // STATISTICS
-  // =============================================
-  async getStatistics(req, res) {
+  async findOne(req, res) {
     try {
-      const stats = await taskService.getStatistics(req.user.id, req.user.role);
-      return successResponse(res, stats, 'İstatistikler getirildi');
+      const task = await taskService.findOne(req.params.id);
+      return successResponse(res, task, 'Task fetched successfully');
     } catch (error) {
-      logger.error('Get statistics error:', error);
-      return errorResponse(res, error.message, 400);
+      logger.error('Get task error:', error);
+      return errorResponse(res, error.message, 404);
     }
   },
 
-  // =============================================
-  // UPDATE
-  // =============================================
   async update(req, res) {
     try {
-      const { id } = req.params;
-      const task = await taskService.update(id, req.body, req.user.id);
-      return successResponse(res, task, 'Görev güncellendi');
+      const task = await taskService.update(req.params.id, req.body);
+
+      await AuditLog.create({
+        action: 'update',
+        entity_type: 'task',
+        entity_id: task.id,
+        user_id: req.user.id,
+        description: `"${task.title}" görevi güncellendi`,
+        ip_address: req.ip,
+        user_agent: req.headers['user-agent'],
+      });
+
+      return successResponse(res, task, 'Task updated successfully');
     } catch (error) {
       logger.error('Update task error:', error);
       return errorResponse(res, error.message, 400);
     }
   },
 
-  // =============================================
-  // DELETE
-  // =============================================
-  async delete(req, res) {
+  async remove(req, res) {
     try {
-      const { id } = req.params;
-      await taskService.delete(id, req.user.id);
-      return successResponse(res, null, 'Görev silindi');
+      const task = await taskService.findOne(req.params.id);
+      await taskService.remove(req.params.id);
+
+      await AuditLog.create({
+        action: 'delete',
+        entity_type: 'task',
+        entity_id: req.params.id,
+        user_id: req.user.id,
+        description: `"${task.title}" görevi silindi`,
+        ip_address: req.ip,
+        user_agent: req.headers['user-agent'],
+      });
+
+      return successResponse(res, null, 'Task deleted successfully');
     } catch (error) {
       logger.error('Delete task error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  async updateStatus(req, res) {
+    try {
+      const { status } = req.body;
+      const task = await taskService.updateStatus(req.params.id, status);
+
+      await AuditLog.create({
+        action: 'update',
+        entity_type: 'task',
+        entity_id: task.id,
+        user_id: req.user.id,
+        description: `"${task.title}" görev durumu "${status}" olarak güncellendi`,
+        ip_address: req.ip,
+        user_agent: req.headers['user-agent'],
+      });
+
+      return successResponse(res, task, 'Task status updated successfully');
+    } catch (error) {
+      logger.error('Update task status error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  async assignTask(req, res) {
+    try {
+      const { assigned_to } = req.body;
+      const task = await taskService.assignTask(req.params.id, assigned_to);
+
+      await AuditLog.create({
+        action: 'update',
+        entity_type: 'task',
+        entity_id: task.id,
+        user_id: req.user.id,
+        description: `"${task.title}" görevi kullanıcıya atandı`,
+        ip_address: req.ip,
+        user_agent: req.headers['user-agent'],
+      });
+
+      return successResponse(res, task, 'Task assigned successfully');
+    } catch (error) {
+      logger.error('Assign task error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  async getMyTasks(req, res) {
+    try {
+      const { page = 1, limit = 10, status } = req.query;
+      const result = await taskService.getMyTasks(req.user.id, { page, limit, status });
+      return paginatedResponse(res, result.data, result.pagination, 'My tasks fetched successfully');
+    } catch (error) {
+      logger.error('Get my tasks error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  async getStatistics(req, res) {
+    try {
+      const stats = await taskService.getStatistics(req.user.id);
+      return successResponse(res, stats, 'Task statistics fetched successfully');
+    } catch (error) {
+      logger.error('Get task statistics error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  async getOverdue(req, res) {
+    try {
+      const tasks = await taskService.getOverdue(req.user.id);
+      return successResponse(res, tasks, 'Overdue tasks fetched successfully');
+    } catch (error) {
+      logger.error('Get overdue tasks error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  async getUpcoming(req, res) {
+    try {
+      const tasks = await taskService.getUpcoming(req.user.id);
+      return successResponse(res, tasks, 'Upcoming tasks fetched successfully');
+    } catch (error) {
+      logger.error('Get upcoming tasks error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  // ✅ YENİ: Görevi Başlat
+  async startTask(req, res) {
+    try {
+      const task = await taskService.startTask(req.params.id, req.user.id);
+
+      await AuditLog.create({
+        action: 'update',
+        entity_type: 'task',
+        entity_id: task.id,
+        user_id: req.user.id,
+        description: `"${task.title}" görevi başlatıldı`,
+        ip_address: req.ip,
+        user_agent: req.headers['user-agent'],
+      });
+
+      return successResponse(res, task, 'Task started successfully');
+    } catch (error) {
+      logger.error('Start task error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  // ✅ YENİ: Görevi Tamamla
+  async completeTask(req, res) {
+    try {
+      const { note, actual_hours } = req.body;
+      const task = await taskService.completeTask(
+        req.params.id,
+        req.user.id,
+        { note, actual_hours }
+      );
+
+      await AuditLog.create({
+        action: 'update',
+        entity_type: 'task',
+        entity_id: task.id,
+        user_id: req.user.id,
+        description: `"${task.title}" görevi tamamlandı`,
+        ip_address: req.ip,
+        user_agent: req.headers['user-agent'],
+      });
+
+      return successResponse(res, task, 'Task completed successfully');
+    } catch (error) {
+      logger.error('Complete task error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  // ✅ YENİ: Görevi Onayla (sadece admin)
+  async approveTask(req, res) {
+    try {
+      const task = await taskService.approveTask(req.params.id, req.user.id);
+
+      await AuditLog.create({
+        action: 'update',
+        entity_type: 'task',
+        entity_id: task.id,
+        user_id: req.user.id,
+        description: `"${task.title}" görevi onaylandı`,
+        ip_address: req.ip,
+        user_agent: req.headers['user-agent'],
+      });
+
+      return successResponse(res, task, 'Task approved successfully');
+    } catch (error) {
+      logger.error('Approve task error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  // ✅ YENİ: Not Ekle
+  async addNote(req, res) {
+    try {
+      const { content } = req.body;
+      const note = await taskService.addNote(
+        req.params.id,
+        req.user.id,
+        { content }
+      );
+
+      await AuditLog.create({
+        action: 'update',
+        entity_type: 'note',
+        entity_id: note.id,
+        user_id: req.user.id,
+        description: `"${note.content.substring(0, 50)}..." notu eklendi`,
+        ip_address: req.ip,
+        user_agent: req.headers['user-agent'],
+      });
+
+      return successResponse(res, note, 'Note added successfully', 201);
+    } catch (error) {
+      logger.error('Add note error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  // ✅ YENİ: Notları Getir
+  async getNotes(req, res) {
+    try {
+      const notes = await taskService.getNotes(req.params.id, req.user.id);
+      return successResponse(res, notes, 'Notes fetched successfully');
+    } catch (error) {
+      logger.error('Get notes error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  // ✅ YENİ: İlerleme Güncelle
+  async updateProgress(req, res) {
+    try {
+      const { progress } = req.body;
+      const task = await taskService.updateProgress(
+        req.params.id,
+        req.user.id,
+        progress
+      );
+
+      return successResponse(res, task, 'Progress updated successfully');
+    } catch (error) {
+      logger.error('Update progress error:', error);
       return errorResponse(res, error.message, 400);
     }
   },

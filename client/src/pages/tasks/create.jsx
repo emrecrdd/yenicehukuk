@@ -1,16 +1,15 @@
-// 📁 client/src/features/tasks/pages/TaskCreate.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useCreateTask } from "../../features/tasks/task.query.js";
-import { useAuth } from "../../hooks/useAuth.js";
-import userApi from "../../features/users/user.api.js";
-import caseApi from "../../features/cases/case.api.js";
-import clientApi from "../../features/clients/client.api.js";
-import Button from "../../components/ui/Button.jsx";
-import Input from "../../components/ui/Input.jsx";
-import Card from "../../components/ui/Card.jsx";
-
+import taskApi from '../../features/tasks/task.api.js';
+import caseApi from '../../features/cases/case.api.js';
+import clientApi from '../../features/clients/client.api.js';
+import userApi from '../../features/users/user.api.js';
+import { useCreateTask } from '../../features/tasks/task.hooks.js';
+import { useAuth } from '../../app/providers/auth.provider.jsx';
+import Button from '../../components/ui/Button.jsx';
+import Input from '../../components/ui/Input.jsx';
+import Card from '../../components/ui/Card.jsx';
 
 const TaskCreate = () => {
   const navigate = useNavigate();
@@ -19,22 +18,31 @@ const TaskCreate = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    priority: 'medium',
+    status: 'pending',
+    priority: 'normal',
     due_date: '',
-    assigned_to: user?.role !== 'admin' ? user?.id || '' : '',
+    assigned_to: '',
     case_id: '',
     client_id: '',
-    tags: [],
+    estimated_hours: '',
+    note: '', // ✅ YENİ: Not alanı
   });
-  const [tagInput, setTagInput] = useState('');
   const [errors, setErrors] = useState({});
 
-  const createTask = useCreateTask();
+  // Admin değilse assigned_to'yu otomatik doldur
+  useEffect(() => {
+    if (user?.role !== 'admin' && user?.id) {
+      setFormData(prev => ({
+        ...prev,
+        assigned_to: user.id
+      }));
+    }
+  }, [user]);
 
+  // Tüm kullanıcıları getir
   const { data: usersData } = useQuery({
     queryKey: ['users'],
     queryFn: () => userApi.getAll(),
-    enabled: user?.role === 'admin',
   });
 
   const { data: casesData } = useQuery({
@@ -51,51 +59,42 @@ const TaskCreate = () => {
   const cases = casesData?.data?.data || [];
   const clients = clientsData?.data?.data || [];
 
-  const isAdmin = user?.role === 'admin';
+  const assignableUsers = user?.role === 'admin'
+    ? users
+    : users.filter(u => u.id === user.id);
 
-  const addTag = () => {
-    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
-      setFormData((prev) => ({
-        ...prev,
-        tags: [...prev.tags, tagInput.trim()],
-      }));
-      setTagInput('');
-    }
-  };
-
-  const removeTag = (tag) => {
-    setFormData((prev) => ({
-      ...prev,
-      tags: prev.tags.filter((t) => t !== tag),
-    }));
-  };
+  const createMutation = useCreateTask();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    if (!formData.title.trim()) {
-      setErrors({ title: 'Görev adı gereklidir' });
+    const newErrors = {};
+    if (!formData.title) newErrors.title = 'Görev adı gereklidir';
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
+    const assignedTo = user?.role !== 'admin' ? user?.id : formData.assigned_to;
+
     const submitData = {
-      title: formData.title,
-      description: formData.description,
-      priority: formData.priority,
-      due_date: formData.due_date || null,
-      assigned_to: isAdmin ? formData.assigned_to || null : user?.id || null,
+      ...formData,
+      assigned_to: assignedTo || null,
       case_id: formData.case_id || null,
       client_id: formData.client_id || null,
-      tags: formData.tags,
+      due_date: formData.due_date || null,
+      estimated_hours: formData.estimated_hours ? parseFloat(formData.estimated_hours) : null,
     };
 
-    createTask.mutate(submitData);
+    createMutation.mutate(submitData);
   };
 
   return (
@@ -136,7 +135,42 @@ const TaskCreate = () => {
             />
           </div>
 
+          {/* ✅ YENİ: Not Alanı */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              📝 Başlangıç Notu (isteğe bağlı)
+            </label>
+            <textarea
+              name="note"
+              value={formData.note}
+              onChange={handleChange}
+              rows="2"
+              className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Görevle ilgili başlangıç notu..."
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Bu not göreve eklenecek ve herkes görebilecek
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Durum
+              </label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="pending">Bekliyor</option>
+                <option value="in_progress">Devam Ediyor</option>
+                <option value="completed">Tamamlandı</option>
+                <option value="cancelled">İptal</option>
+              </select>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Öncelik
@@ -148,7 +182,7 @@ const TaskCreate = () => {
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="low">Düşük</option>
-                <option value="medium">Orta</option>
+                <option value="normal">Normal</option>
                 <option value="high">Yüksek</option>
                 <option value="critical">Kritik</option>
               </select>
@@ -166,25 +200,52 @@ const TaskCreate = () => {
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+          </div>
 
-            {isAdmin && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Atanan Kişi
-                </label>
-                <select
-                  name="assigned_to"
-                  value={formData.assigned_to}
-                  onChange={handleChange}
-                  className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Seçiniz</option>
-                  {users.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.first_name} {u.last_name}
-                    </option>
-                  ))}
-                </select>
+          {/* ✅ YENİ: Tahmini Süre */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              ⏱️ Tahmini Süre (Saat)
+            </label>
+            <input
+              type="number"
+              name="estimated_hours"
+              value={formData.estimated_hours}
+              onChange={handleChange}
+              min="0"
+              step="0.5"
+              className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Örn: 2.5"
+            />
+          </div>
+
+          {/* Atanan Kişi */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              👤 Atanan Kişi
+            </label>
+            
+            {user?.role === 'admin' ? (
+              <select
+                name="assigned_to"
+                value={formData.assigned_to}
+                onChange={handleChange}
+                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Atanacak kişi seçin</option>
+                {assignableUsers.map((person) => (
+                  <option key={person.id} value={person.id}>
+                    {person.first_name} {person.last_name}
+                    {person.role === 'admin' && ' (Admin)'}
+                    {person.role === 'lawyer' && ' (Avukat)'}
+                    {person.role === 'intern' && ' (Stajyer)'}
+                    {person.role === 'secretary' && ' (Sekreter)'}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white">
+                {user?.first_name} {user?.last_name} (Kendin)
               </div>
             )}
           </div>
@@ -192,7 +253,7 @@ const TaskCreate = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                İlişkili Dava
+                📁 İlişkili Dava
               </label>
               <select
                 name="case_id"
@@ -200,10 +261,10 @@ const TaskCreate = () => {
                 onChange={handleChange}
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Seçiniz</option>
-                {cases.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.title}
+                <option value="">Dava seçin (isteğe bağlı)</option>
+                {cases.map((caseItem) => (
+                  <option key={caseItem.id} value={caseItem.id}>
+                    {caseItem.title}
                   </option>
                 ))}
               </select>
@@ -211,7 +272,7 @@ const TaskCreate = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                İlişkili Müvekkil
+                👤 İlişkili Müvekkil
               </label>
               <select
                 name="client_id"
@@ -219,54 +280,19 @@ const TaskCreate = () => {
                 onChange={handleChange}
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Seçiniz</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
+                <option value="">Müvekkil seçin (isteğe bağlı)</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                    {client.company_name && ` (${client.company_name})`}
                   </option>
                 ))}
               </select>
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Etiketler
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addTag()}
-                placeholder="Etiket ekle (Enter ile)"
-                className="flex-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <Button type="button" variant="primary" onClick={addTag}>
-                Ekle
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {formData.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full"
-                >
-                  #{tag}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tag)}
-                    className="text-blue-700 hover:text-blue-900"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex gap-3 pt-4 border-t">
-            <Button type="submit" loading={createTask.isPending}>
+          <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <Button type="submit" loading={createMutation.isPending}>
               ✅ Görev Oluştur
             </Button>
             <Button type="button" variant="secondary" onClick={() => navigate('/tasks')}>
