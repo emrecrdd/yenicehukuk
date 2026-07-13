@@ -2,11 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../app/providers/auth.provider.jsx';
 import { useTheme } from '../../app/providers/theme.provider.jsx';
 import { Link } from 'react-router-dom';
+// ✅ DOĞRU IMPORT
 import { useUnreadCount, useNotifications, useMarkAllAsRead } from '../../features/notification/notification.hook.js';
-import { useSocket } from '../../hooks/useSocket.js'; // ✅ YENİ
+import { useSocket } from '../../hooks/useSocket.js';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
+import toast from 'react-hot-toast';
 
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
@@ -18,26 +20,30 @@ const Topbar = ({ onMenuClick }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef(null);
 
-  // ✅ useSocket hook - Socket bağlantısı
   const { on, off, isConnected } = useSocket();
 
-  // ✅ Okunmamış bildirim sayısı
+  // ✅ Unread count
   const { data: unreadData, refetch: refetchUnread } = useUnreadCount();
   const unreadCount = unreadData?.data?.count || 0;
 
-  // ✅ Bildirim listesi
+  // ✅ Notifications list
   const { data: notificationsData, refetch: refetchNotifications } = useNotifications({ limit: 5 });
   const notifications = notificationsData?.data?.data || [];
 
-  // ✅ Tümünü okundu işaretle
+  // ✅ Mark all as read
   const markAllAsRead = useMarkAllAsRead();
 
-  // ✅ Socket ile bildirim dinle
+  // ✅ Socket ile bildirim dinle - DÜZELTİLMİŞ
   useEffect(() => {
     const handleNotification = (data) => {
-      console.log('🔔 Yeni bildirim:', data);
+      console.log('🔔 Yeni bildirim geldi:', data);
+      
+      // ✅ Bildirim sayısını hemen güncelle
       refetchUnread();
       refetchNotifications();
+      
+      // ✅ Toast göster
+      toast.success(data.title || 'Yeni bildirim');
     };
 
     // ✅ 'notification' event'ini dinle
@@ -59,7 +65,15 @@ const Topbar = ({ onMenuClick }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  console.log('🎨 Topbar render, theme:', theme);
+  // ✅ Her 30 saniyede bir sayıyı yenile (arka planda)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetchUnread();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [refetchUnread]);
+
+  console.log('📊 Unread count:', unreadCount);
   console.log('🔌 Socket connected:', isConnected);
 
   return (
@@ -86,7 +100,7 @@ const Topbar = ({ onMenuClick }) => {
             🔍 Ara...
           </Link>
 
-          {/* Socket Status (Debug için) */}
+          {/* Socket Status */}
           <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} title={isConnected ? 'Bağlı' : 'Bağlantı yok'} />
 
           {/* Theme Toggle */}
@@ -100,16 +114,20 @@ const Topbar = ({ onMenuClick }) => {
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
 
-          {/* BİLDİRİMLER */}
+          {/* BİLDİRİMLER - DÜZELTİLMİŞ */}
           <div className="relative" ref={dropdownRef}>
             <button
-              onClick={() => setShowNotifications(!showNotifications)}
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                // ✅ Dropdown açılınca sayıyı yenile
+                refetchUnread();
+              }}
               className="p-2 rounded-md text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 relative"
             >
               🔔
               {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                  {unreadCount > 9 ? '9+' : unreadCount}
+                <span className="absolute -top-0.5 -right-0.5 min-w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center px-1">
+                  {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
             </button>
@@ -142,7 +160,11 @@ const Topbar = ({ onMenuClick }) => {
                       <Link
                         key={notification.id}
                         to={notification.link || '#'}
-                        onClick={() => setShowNotifications(false)}
+                        onClick={() => {
+                          setShowNotifications(false);
+                          // ✅ Tıklandığında sayıyı yenile
+                          refetchUnread();
+                        }}
                         className={`block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 ${
                           !notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                         }`}
