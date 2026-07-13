@@ -1,6 +1,47 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+// frontend/src/features/tasks/hooks/task.query.js
+import { useState } from 'react';  // ✅ EKLENDİ
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';  // ✅ useInfiniteQuery EKLENDİ
 import taskApi from './task.api.js';
 import toast from 'react-hot-toast';
+
+// ============ TASK FILTERS ============
+export const useTaskFilters = () => {
+  const [filters, setFilters] = useState({
+    status: '',
+    priority: '',
+    search: '',
+    assigned_to: '',
+    case_id: '',
+  });
+
+  const updateFilter = (key, value) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      status: '',
+      priority: '',
+      search: '',
+      assigned_to: '',
+      case_id: '',
+    });
+  };
+
+  const getActiveFilters = () => {
+    return Object.entries(filters).filter(([_, value]) => value !== '');
+  };
+
+  const hasActiveFilters = getActiveFilters().length > 0;
+
+  return {
+    filters,
+    updateFilter,
+    resetFilters,
+    getActiveFilters,
+    hasActiveFilters,
+  };
+};
 
 // ============ QUERIES ============
 
@@ -245,6 +286,7 @@ export const useSearchTasks = (query, params = {}) => {
 };
 
 export default {
+  useTaskFilters,
   useTasks,
   useTask,
   useMyTasks,

@@ -1,7 +1,8 @@
+// frontend/src/features/tasks/pages/TaskEdit.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import taskApi from '../../features/tasks/task.api.js';
+import { useQuery } from '@tanstack/react-query';
+import { useTask, useUpdateTask, useDeleteTask } from '../../features/tasks/hooks/task.query.js';
 import caseApi from '../../features/cases/case.api.js';
 import clientApi from '../../features/clients/client.api.js';
 import userApi from '../../features/users/user.api.js';
@@ -15,7 +16,6 @@ const TaskEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -26,8 +26,11 @@ const TaskEdit = () => {
     assigned_to: '',
     case_id: '',
     client_id: '',
+    tags: [],           // ✅ YENİ
+    reminder_date: '',  // ✅ YENİ
   });
   const [errors, setErrors] = useState({});
+  const [tagInput, setTagInput] = useState(''); // ✅ YENİ
 
   // ✅ Admin değilse assigned_to'yu otomatik doldur
   useEffect(() => {
@@ -39,12 +42,8 @@ const TaskEdit = () => {
     }
   }, [user]);
 
-  // ✅ Görevi getir
-  const { data: taskData, isLoading: taskLoading } = useQuery({
-    queryKey: ['task', id],
-    queryFn: () => taskApi.getOne(id),
-    enabled: !!id,
-  });
+  // ✅ useTask hook'u
+  const { data: taskData, isLoading: taskLoading } = useTask(id);
 
   // ✅ Tüm kullanıcıları getir
   const { data: usersData } = useQuery({
@@ -74,6 +73,10 @@ const TaskEdit = () => {
     ? users
     : users.filter(u => u.id === user.id);
 
+  // ✅ useUpdateTask ve useDeleteTask hook'ları
+  const updateTask = useUpdateTask();
+  const deleteTask = useDeleteTask();
+
   // ✅ Formu doldur
   useEffect(() => {
     if (task) {
@@ -86,41 +89,35 @@ const TaskEdit = () => {
         assigned_to: task.assigned_to || '',
         case_id: task.case_id || '',
         client_id: task.client_id || '',
+        tags: task.tags || [],           // ✅ YENİ
+        reminder_date: task.reminder_date ? new Date(task.reminder_date).toISOString().slice(0, 16) : '', // ✅ YENİ
       });
     }
   }, [task]);
 
-  // ✅ Güncelleme Mutation
-  const updateMutation = useMutation({
-    mutationFn: (data) => taskApi.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['task', id] });
-      toast.success('Görev başarıyla güncellendi');
-      navigate('/tasks');
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Görev güncellenemedi');
-    },
-  });
+  // ✅ Tag ekle
+  const addTag = () => {
+    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        tags: [...prev.tags, tagInput.trim()]
+      }));
+      setTagInput('');
+    }
+  };
 
-  // ✅ SİLME MUTATION
-  const deleteMutation = useMutation({
-    mutationFn: () => taskApi.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('Görev silindi');
-      navigate('/tasks');
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Görev silinemedi');
-    },
-  });
+  // ✅ Tag sil
+  const removeTag = (tag) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(t => t !== tag)
+    }));
+  };
 
   // ✅ Silme işlemi - onaylı
   const handleDelete = () => {
     if (window.confirm(`"${task?.title}" görevini silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`)) {
-      deleteMutation.mutate();
+      deleteTask.mutate(id);
     }
   };
 
@@ -145,20 +142,25 @@ const TaskEdit = () => {
     const assignedTo = user?.role !== 'admin' ? user?.id : formData.assigned_to;
 
     const submitData = {
-      ...formData,
+      title: formData.title,
+      description: formData.description,
+      status: formData.status,
+      priority: formData.priority,
+      due_date: formData.due_date || null,
       assigned_to: assignedTo || null,
       case_id: formData.case_id || null,
       client_id: formData.client_id || null,
-      due_date: formData.due_date || null,
+      tags: formData.tags || [],           // ✅ YENİ
+      reminder_date: formData.reminder_date || null, // ✅ YENİ
     };
     
-    updateMutation.mutate(submitData);
+    updateTask.mutate({ id, data: submitData });
   };
 
   if (taskLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
       </div>
     );
   }
@@ -329,7 +331,7 @@ const TaskEdit = () => {
                 <option value="">Müvekkil seçin (isteğe bağlı)</option>
                 {clients.map((client) => (
                   <option key={client.id} value={client.id}>
-                    {client.name}  {/* ✅ SADECE BURASI DEĞİŞTİ */}
+                    {client.name}
                     {client.company_name && ` (${client.company_name})`}
                   </option>
                 ))}
@@ -337,20 +339,74 @@ const TaskEdit = () => {
             </div>
           </div>
 
+          {/* ✅ Tags */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Etiketler
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addTag()}
+                placeholder="Etiket ekle (Enter ile)"
+                className="flex-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={addTag}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              >
+                Ekle
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {formData.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full"
+                >
+                  #{tag}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(tag)}
+                    className="text-blue-700 hover:text-blue-900"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* ✅ Reminder Date */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Hatırlatma Tarihi
+            </label>
+            <input
+              type="datetime-local"
+              name="reminder_date"
+              value={formData.reminder_date}
+              onChange={handleChange}
+              className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
           <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <Button type="submit" loading={updateMutation.isPending}>
+            <Button type="submit" loading={updateTask.isPending}>
               💾 Güncelle
             </Button>
             <Button type="button" variant="secondary" onClick={() => navigate(`/tasks/${id}`)}>
               İptal
             </Button>
-            {/* ✅ SİL BUTONU */}
             <Button 
               type="button"
               variant="danger" 
               onClick={handleDelete}
-              loading={deleteMutation.isPending}
-              disabled={deleteMutation.isPending}
+              loading={deleteTask.isPending}
+              disabled={deleteTask.isPending}
             >
               🗑️ Sil
             </Button>

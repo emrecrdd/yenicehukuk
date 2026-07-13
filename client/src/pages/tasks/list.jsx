@@ -1,7 +1,8 @@
+// frontend/src/features/tasks/pages/TaskList.jsx
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import taskApi from '../../features/tasks/task.api.js';
+import { useTasks } from '../../features/tasks/hooks/task.query.js';
+import { useDebounce } from '../../hooks/useDebounce.js';
 import Button from '../../components/ui/Button.jsx';
 import Input from '../../components/ui/Input.jsx';
 import Table from '../../components/ui/Table.jsx';
@@ -9,36 +10,32 @@ import Badge from '../../components/ui/Badge.jsx';
 
 const TasksList = () => {
   const [search, setSearch] = useState('');
-  const [searchQuery, setSearchQuery] = useState(''); // ✅ Arama için ayrı state
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const [page, setPage] = useState(1);
 
-  // ✅ searchQuery ile query çalışır (sadece butona tıklayınca veya Enter'a basınca değişir)
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['tasks', { page, search: searchQuery, status: statusFilter, priority: priorityFilter }],
-    queryFn: () => taskApi.getAll({ page, search: searchQuery, status: statusFilter, priority: priorityFilter }),
-    staleTime: 1000,
-    keepPreviousData: true,
+  // ✅ Debounce ile arama (500ms gecikme)
+  const debouncedSearch = useDebounce(search, 500);
+
+  // ✅ useTasks hook'u ile veri çekme
+  const { data, isLoading, error } = useTasks({
+    page,
+    search: debouncedSearch,
+    status: statusFilter,
+    priority: priorityFilter
   });
 
   const tasks = data?.data?.data || [];
   const pagination = data?.data?.pagination;
 
-  // ✅ Arama yap
-  const handleSearch = () => {
-    setSearchQuery(search);
-    setPage(1);
+  // ✅ Geciken görev kontrolü
+  const isOverdue = (dueDate, status) => {
+    if (!dueDate) return false;
+    if (status === 'completed' || status === 'cancelled') return false;
+    return new Date(dueDate) < new Date();
   };
 
-  // ✅ Enter tuşuna basınca arama yap
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
-
-  // ✅ Filtre değişince
+  // ✅ Filtre değişince sayfayı sıfırla
   const handleStatusChange = (e) => {
     setStatusFilter(e.target.value);
     setPage(1);
@@ -92,7 +89,7 @@ const TasksList = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
       </div>
     );
   }
@@ -124,21 +121,13 @@ const TasksList = () => {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 flex gap-2">
+            <div className="flex-1">
               <Input
-                placeholder="Görev ara... (Enter ile ara)"
+                placeholder="Görev ara... (otomatik arama)"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={handleKeyDown}
                 icon="🔍"
               />
-              <Button 
-                variant="primary" 
-                onClick={handleSearch}
-                className="shrink-0"
-              >
-                Ara
-              </Button>
             </div>
             <div className="sm:w-40">
               <select
@@ -186,49 +175,73 @@ const TasksList = () => {
               {tasks.length === 0 ? (
                 <Table.Row>
                   <Table.Cell colSpan="7" className="text-center py-8 text-gray-500">
-                    {searchQuery ? 'Aramanıza uygun görev bulunamadı' : 'Henüz görev bulunmuyor'}
+                    {search ? 'Aramanıza uygun görev bulunamadı' : 'Henüz görev bulunmuyor'}
                   </Table.Cell>
                 </Table.Row>
               ) : (
-                tasks.map((task) => (
-                  <Table.Row key={task.id}>
-                    <Table.Cell>
-                      <div className="font-medium">{task.title}</div>
-                      {task.description && (
-                        <div className="text-sm text-gray-500 truncate max-w-xs">
-                          {task.description}
-                        </div>
-                      )}
-                    </Table.Cell>
-                    <Table.Cell>
-                      {task.assignee?.first_name} {task.assignee?.last_name || 'Atanmadı'}
-                    </Table.Cell>
-                    <Table.Cell>
-                      {task.case?.title || '-'}
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Badge variant={getPriorityVariant(task.priority)}>
-                        {getPriorityLabel(task.priority)}
-                      </Badge>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Badge variant={getStatusVariant(task.status)}>
-                        {statuses.find(s => s.value === task.status)?.label || task.status}
-                      </Badge>
-                    </Table.Cell>
-                    <Table.Cell>
-                      {task.due_date ? new Date(task.due_date).toLocaleDateString('tr-TR') : '-'}
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Link
-                        to={`/tasks/${task.id}`}
-                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                      >
-                        Görüntüle
-                      </Link>
-                    </Table.Cell>
-                  </Table.Row>
-                ))
+                tasks.map((task) => {
+                  const overdue = isOverdue(task.due_date, task.status);
+                  return (
+                    <Table.Row 
+                      key={task.id}
+                      className={overdue ? 'bg-red-50 dark:bg-red-900/10' : ''}
+                    >
+                      <Table.Cell>
+                        <div className="font-medium">{task.title}</div>
+                        {task.description && (
+                          <div className="text-sm text-gray-500 truncate max-w-xs">
+                            {task.description}
+                          </div>
+                        )}
+                        {/* ✅ Tags gösterimi */}
+                        {task.tags && task.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {task.tags.slice(0, 3).map((tag) => (
+                              <span key={tag} className="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">
+                                #{tag}
+                              </span>
+                            ))}
+                            {task.tags.length > 3 && (
+                              <span className="text-xs text-gray-500">+{task.tags.length - 3}</span>
+                            )}
+                          </div>
+                        )}
+                      </Table.Cell>
+                      <Table.Cell>
+                        {task.assignee?.first_name} {task.assignee?.last_name || 'Atanmadı'}
+                      </Table.Cell>
+                      <Table.Cell>
+                        {task.case?.title || '-'}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge variant={getPriorityVariant(task.priority)}>
+                          {getPriorityLabel(task.priority)}
+                        </Badge>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Badge variant={getStatusVariant(task.status)}>
+                          {statuses.find(s => s.value === task.status)?.label || task.status}
+                        </Badge>
+                      </Table.Cell>
+                      <Table.Cell>
+                        {task.due_date ? (
+                          <span className={overdue ? 'text-red-600 font-medium' : ''}>
+                            {new Date(task.due_date).toLocaleDateString('tr-TR')}
+                            {overdue && ' ⚠️'}
+                          </span>
+                        ) : '-'}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Link
+                          to={`/tasks/${task.id}`}
+                          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                        >
+                          Görüntüle
+                        </Link>
+                      </Table.Cell>
+                    </Table.Row>
+                  );
+                })
               )}
             </Table.Body>
           </Table>
