@@ -9,7 +9,7 @@ import {
   useApproveTask, 
   useAddNote,
   useTaskNotes 
-} from '../../features/tasks/task.hooks.js';
+} from '../../features/tasks/task.query.js';
 import { useAuth } from '../../app/providers/auth.provider.jsx';
 import Badge from '../../components/ui/Badge.jsx';
 import Card from '../../components/ui/Card.jsx';

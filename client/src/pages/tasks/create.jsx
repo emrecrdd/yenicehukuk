@@ -5,7 +5,7 @@ import taskApi from '../../features/tasks/task.api.js';
 import caseApi from '../../features/cases/case.api.js';
 import clientApi from '../../features/clients/client.api.js';
 import userApi from '../../features/users/user.api.js';
-import { useCreateTask } from '../../features/tasks/task.hooks.js';
+import { useCreateTask } from '../../features/tasks/task.query.js';
 import { useAuth } from '../../app/providers/auth.provider.jsx';
 import Button from '../../components/ui/Button.jsx';
 import Input from '../../components/ui/Input.jsx';
