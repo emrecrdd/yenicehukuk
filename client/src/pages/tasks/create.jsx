@@ -1,5 +1,5 @@
 // frontend/src/features/tasks/pages/TaskCreate.jsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useCreateTask } from '../../features/tasks/hooks/task.query.js';
@@ -10,41 +10,32 @@ import { useAuth } from '../../app/providers/auth.provider.jsx';
 import Button from '../../components/ui/Button.jsx';
 import Input from '../../components/ui/Input.jsx';
 import Card from '../../components/ui/Card.jsx';
-import toast from 'react-hot-toast';
 
 const TaskCreate = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // ✅ assigned_to BAŞLANGIÇTA ATA
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     status: 'pending',
     priority: 'normal',
     due_date: '',
-    assigned_to: '',
+    assigned_to: user?.role !== 'admin' ? user?.id || '' : '',
     case_id: '',
     client_id: '',
-    tags: [],           // ✅ YENİ
-    reminder_date: '',  // ✅ YENİ
+    tags: [],
+    reminder_date: '',
   });
   const [errors, setErrors] = useState({});
-  const [tagInput, setTagInput] = useState(''); // ✅ YENİ
+  const [tagInput, setTagInput] = useState('');
 
-  // ✅ Admin değilse assigned_to'yu otomatik doldur
-  useEffect(() => {
-    if (user?.role !== 'admin' && user?.id) {
-      setFormData(prev => ({
-        ...prev,
-        assigned_to: user.id
-      }));
-    }
-  }, [user]);
-
-  // ✅ Tüm kullanıcıları getir
+  // ✅ SADECE ADMIN users çeksin
   const { data: usersData } = useQuery({
     queryKey: ['users'],
     queryFn: () => userApi.getAll(),
+    enabled: user?.role === 'admin',
   });
 
   const { data: casesData } = useQuery({
@@ -61,15 +52,10 @@ const TaskCreate = () => {
   const cases = casesData?.data?.data || [];
   const clients = clientsData?.data?.data || [];
 
-  // ✅ Admin ise herkesi göster, değilse sadece kendini
-  const assignableUsers = user?.role === 'admin'
-    ? users
-    : users.filter(u => u.id === user.id);
+  const assignableUsers = user?.role === 'admin' ? users : [];
 
-  // ✅ useCreateTask hook'u
   const createTask = useCreateTask();
 
-  // ✅ Tag ekle
   const addTag = () => {
     if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
       setFormData(prev => ({
@@ -80,7 +66,6 @@ const TaskCreate = () => {
     }
   };
 
-  // ✅ Tag sil
   const removeTag = (tag) => {
     setFormData(prev => ({
       ...prev,
@@ -107,8 +92,10 @@ const TaskCreate = () => {
       return;
     }
 
-    // ✅ Admin değilse user.id'yi kullan
-    const assignedTo = user?.role !== 'admin' ? user?.id : formData.assigned_to;
+    // ✅ DOĞRU assigned_to HESAPLAMA
+    const assignedTo = user?.role !== 'admin' 
+      ? user?.id || null
+      : formData.assigned_to || null;
 
     const submitData = {
       title: formData.title,
@@ -116,13 +103,14 @@ const TaskCreate = () => {
       status: formData.status,
       priority: formData.priority,
       due_date: formData.due_date || null,
-      assigned_to: assignedTo || null,
+      assigned_to: assignedTo,
       case_id: formData.case_id || null,
       client_id: formData.client_id || null,
-      tags: formData.tags || [],           // ✅ YENİ
-      reminder_date: formData.reminder_date || null, // ✅ YENİ
+      tags: formData.tags || [],
+      reminder_date: formData.reminder_date || null,
     };
 
+    console.log('📝 Submit Data:', submitData);
     createTask.mutate(submitData);
   };
 
@@ -213,7 +201,7 @@ const TaskCreate = () => {
             </div>
           </div>
 
-          {/* ✅ Atanan Kişi */}
+          {/* Atanan Kişi */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Atanan Kişi
@@ -285,7 +273,7 @@ const TaskCreate = () => {
             </div>
           </div>
 
-          {/* ✅ Tags */}
+          {/* Tags */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Etiketler
@@ -326,7 +314,7 @@ const TaskCreate = () => {
             </div>
           </div>
 
-          {/* ✅ Reminder Date */}
+          {/* Reminder Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Hatırlatma Tarihi

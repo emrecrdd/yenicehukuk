@@ -26,38 +26,26 @@ const TaskEdit = () => {
     assigned_to: '',
     case_id: '',
     client_id: '',
-    tags: [],           // ✅ YENİ
-    reminder_date: '',  // ✅ YENİ
+    tags: [],
+    reminder_date: '',
   });
   const [errors, setErrors] = useState({});
-  const [tagInput, setTagInput] = useState(''); // ✅ YENİ
+  const [tagInput, setTagInput] = useState('');
 
-  // ✅ Admin değilse assigned_to'yu otomatik doldur
-  useEffect(() => {
-    if (user?.role !== 'admin' && user?.id) {
-      setFormData(prev => ({
-        ...prev,
-        assigned_to: user.id
-      }));
-    }
-  }, [user]);
-
-  // ✅ useTask hook'u
   const { data: taskData, isLoading: taskLoading } = useTask(id);
 
-  // ✅ Tüm kullanıcıları getir
+  // ✅ SADECE ADMIN users çeksin
   const { data: usersData } = useQuery({
     queryKey: ['users'],
     queryFn: () => userApi.getAll(),
+    enabled: user?.role === 'admin',
   });
 
-  // ✅ Davaları getir
   const { data: casesData } = useQuery({
     queryKey: ['cases', { limit: 100 }],
     queryFn: () => caseApi.getAll({ limit: 100 }),
   });
 
-  // ✅ Müvekkilleri getir
   const { data: clientsData } = useQuery({
     queryKey: ['clients', { limit: 100 }],
     queryFn: () => clientApi.getAll({ limit: 100 }),
@@ -68,16 +56,12 @@ const TaskEdit = () => {
   const cases = casesData?.data?.data || [];
   const clients = clientsData?.data?.data || [];
 
-  // ✅ Admin ise herkesi göster, değilse sadece kendini
-  const assignableUsers = user?.role === 'admin'
-    ? users
-    : users.filter(u => u.id === user.id);
+  const assignableUsers = user?.role === 'admin' ? users : [];
 
-  // ✅ useUpdateTask ve useDeleteTask hook'ları
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
 
-  // ✅ Formu doldur
+  // ✅ Form doldur
   useEffect(() => {
     if (task) {
       setFormData({
@@ -89,13 +73,12 @@ const TaskEdit = () => {
         assigned_to: task.assigned_to || '',
         case_id: task.case_id || '',
         client_id: task.client_id || '',
-        tags: task.tags || [],           // ✅ YENİ
-        reminder_date: task.reminder_date ? new Date(task.reminder_date).toISOString().slice(0, 16) : '', // ✅ YENİ
+        tags: task.tags || [],
+        reminder_date: task.reminder_date ? new Date(task.reminder_date).toISOString().slice(0, 16) : '',
       });
     }
   }, [task]);
 
-  // ✅ Tag ekle
   const addTag = () => {
     if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
       setFormData(prev => ({
@@ -106,7 +89,6 @@ const TaskEdit = () => {
     }
   };
 
-  // ✅ Tag sil
   const removeTag = (tag) => {
     setFormData(prev => ({
       ...prev,
@@ -114,9 +96,8 @@ const TaskEdit = () => {
     }));
   };
 
-  // ✅ Silme işlemi - onaylı
   const handleDelete = () => {
-    if (window.confirm(`"${task?.title}" görevini silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`)) {
+    if (window.confirm(`"${task?.title}" görevini silmek istediğinize emin misiniz?`)) {
       deleteTask.mutate(id);
     }
   };
@@ -138,8 +119,9 @@ const TaskEdit = () => {
       return;
     }
 
-    // ✅ Admin değilse user.id'yi kullan
-    const assignedTo = user?.role !== 'admin' ? user?.id : formData.assigned_to;
+    const assignedTo = user?.role !== 'admin' 
+      ? user?.id || null
+      : formData.assigned_to || null;
 
     const submitData = {
       title: formData.title,
@@ -147,11 +129,11 @@ const TaskEdit = () => {
       status: formData.status,
       priority: formData.priority,
       due_date: formData.due_date || null,
-      assigned_to: assignedTo || null,
+      assigned_to: assignedTo,
       case_id: formData.case_id || null,
       client_id: formData.client_id || null,
-      tags: formData.tags || [],           // ✅ YENİ
-      reminder_date: formData.reminder_date || null, // ✅ YENİ
+      tags: formData.tags || [],
+      reminder_date: formData.reminder_date || null,
     };
     
     updateTask.mutate({ id, data: submitData });
@@ -267,7 +249,7 @@ const TaskEdit = () => {
             </div>
           </div>
 
-          {/* ✅ Atanan Kişi */}
+          {/* Atanan Kişi */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Atanan Kişi
@@ -339,7 +321,7 @@ const TaskEdit = () => {
             </div>
           </div>
 
-          {/* ✅ Tags */}
+          {/* Tags */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Etiketler
@@ -380,7 +362,7 @@ const TaskEdit = () => {
             </div>
           </div>
 
-          {/* ✅ Reminder Date */}
+          {/* Reminder Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Hatırlatma Tarihi

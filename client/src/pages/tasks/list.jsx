@@ -14,10 +14,8 @@ const TasksList = () => {
   const [priorityFilter, setPriorityFilter] = useState('');
   const [page, setPage] = useState(1);
 
-  // ✅ Debounce ile arama (500ms gecikme)
   const debouncedSearch = useDebounce(search, 500);
 
-  // ✅ useTasks hook'u ile veri çekme
   const { data, isLoading, error } = useTasks({
     page,
     search: debouncedSearch,
@@ -28,14 +26,12 @@ const TasksList = () => {
   const tasks = data?.data?.data || [];
   const pagination = data?.data?.pagination;
 
-  // ✅ Geciken görev kontrolü
   const isOverdue = (dueDate, status) => {
     if (!dueDate) return false;
     if (status === 'completed' || status === 'cancelled') return false;
     return new Date(dueDate) < new Date();
   };
 
-  // ✅ Filtre değişince sayfayı sıfırla
   const handleStatusChange = (e) => {
     setStatusFilter(e.target.value);
     setPage(1);
@@ -193,7 +189,6 @@ const TasksList = () => {
                             {task.description}
                           </div>
                         )}
-                        {/* ✅ Tags gösterimi */}
                         {task.tags && task.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1">
                             {task.tags.slice(0, 3).map((tag) => (

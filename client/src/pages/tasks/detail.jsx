@@ -1,67 +1,23 @@
 // frontend/src/features/tasks/pages/TaskDetail.jsx
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
-import { useTask, useUpdateTaskStatus } from '../../features/tasks/hooks/task.query.js';
-import taskApi from '../../features/tasks/task.api.js';
+import { useTask, useUpdateTaskStatus, useUpdateProgress, useAddSubtask, useDeleteSubtask } from '../../features/tasks/hooks/task.query.js';
 import Badge from '../../components/ui/Badge.jsx';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import { Edit2, Plus, X } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 const TaskDetail = () => {
   const { id } = useParams();
   const [newSubtask, setNewSubtask] = useState('');
 
-  // ✅ useTask hook'u
   const { data, isLoading, error, refetch } = useTask(id);
   const task = data?.data?.data;
 
-  // ✅ useUpdateTaskStatus hook'u
   const updateStatus = useUpdateTaskStatus();
-
-  // ✅ Progress güncelleme
-  const updateProgress = useMutation({
-    mutationFn: (progress) => taskApi.update(id, { progress }),
-    onSuccess: () => {
-      toast.success('İlerleme güncellendi');
-      refetch();
-    },
-    onError: () => {
-      toast.error('İlerleme güncellenemedi');
-    },
-  });
-
-  // ✅ Subtask ekle
-  const addSubtask = useMutation({
-    mutationFn: (title) => taskApi.create({
-      title,
-      parent_task_id: task?.id,
-      status: 'pending',
-      priority: task?.priority || 'normal'
-    }),
-    onSuccess: () => {
-      toast.success('Alt görev eklendi');
-      setNewSubtask('');
-      refetch();
-    },
-    onError: () => {
-      toast.error('Alt görev eklenemedi');
-    },
-  });
-
-  // ✅ Subtask sil
-  const deleteSubtask = useMutation({
-    mutationFn: (subtaskId) => taskApi.delete(subtaskId),
-    onSuccess: () => {
-      toast.success('Alt görev silindi');
-      refetch();
-    },
-    onError: () => {
-      toast.error('Alt görev silinemedi');
-    },
-  });
+  const updateProgress = useUpdateProgress();
+  const addSubtask = useAddSubtask();
+  const deleteSubtask = useDeleteSubtask();
 
   const statuses = [
     { value: 'pending', label: 'Bekliyor' },
@@ -102,9 +58,23 @@ const TaskDetail = () => {
 
   const isOverdue = task?.due_date && new Date(task.due_date) < new Date() && task.status !== 'completed' && task.status !== 'cancelled';
 
-  // ✅ Status değişim handler
   const handleStatusChange = (e) => {
     updateStatus.mutate({ id: task.id, status: e.target.value });
+  };
+
+  const handleProgressChange = (e) => {
+    updateProgress.mutate({ id: task.id, progress: parseInt(e.target.value) });
+  };
+
+  const handleAddSubtask = () => {
+    if (newSubtask.trim()) {
+      addSubtask.mutate({
+        id: task.id,
+        data: { title: newSubtask.trim() }
+      }, {
+        onSuccess: () => setNewSubtask('')
+      });
+    }
   };
 
   if (isLoading) {
@@ -204,7 +174,7 @@ const TaskDetail = () => {
               </p>
             </div>
 
-            {/* ✅ Progress Slider */}
+            {/* Progress */}
             <div>
               <div className="flex items-center justify-between">
                 <p className="text-sm text-gray-500">İlerleme</p>
@@ -223,7 +193,7 @@ const TaskDetail = () => {
                 min="0"
                 max="100"
                 value={task.progress || 0}
-                onChange={(e) => updateProgress.mutate(parseInt(e.target.value))}
+                onChange={handleProgressChange}
                 disabled={updateProgress.isPending}
                 className="w-full mt-2 accent-blue-600 cursor-pointer"
               />
@@ -243,10 +213,7 @@ const TaskDetail = () => {
             {task.case && (
               <div>
                 <p className="text-sm text-gray-500">Dava</p>
-                <Link
-                  to={`/cases/${task.case.id}`}
-                  className="text-blue-600 hover:underline"
-                >
+                <Link to={`/cases/${task.case.id}`} className="text-blue-600 hover:underline">
                   {task.case.title}
                 </Link>
               </div>
@@ -254,10 +221,7 @@ const TaskDetail = () => {
             {task.client && (
               <div>
                 <p className="text-sm text-gray-500">Müvekkil</p>
-                <Link
-                  to={`/clients/${task.client.id}`}
-                  className="text-blue-600 hover:underline"
-                >
+                <Link to={`/clients/${task.client.id}`} className="text-blue-600 hover:underline">
                   {task.client.name}
                 </Link>
               </div>
@@ -273,7 +237,7 @@ const TaskDetail = () => {
               </div>
             )}
 
-            {/* ✅ Subtask'lar */}
+            {/* Subtask'lar */}
             <div>
               <p className="text-sm text-gray-500">Alt Görevler</p>
               {task.subtasks && task.subtasks.length > 0 ? (
@@ -284,10 +248,7 @@ const TaskDetail = () => {
                         <Badge variant={getStatusVariant(subtask.status)}>
                           {statuses.find(s => s.value === subtask.status)?.label || subtask.status}
                         </Badge>
-                        <Link
-                          to={`/tasks/${subtask.id}`}
-                          className="text-blue-600 hover:underline"
-                        >
+                        <Link to={`/tasks/${subtask.id}`} className="text-blue-600 hover:underline">
                           {subtask.title}
                         </Link>
                         {subtask.due_date && (
@@ -297,7 +258,7 @@ const TaskDetail = () => {
                         )}
                       </div>
                       <button
-                        onClick={() => deleteSubtask.mutate(subtask.id)}
+                        onClick={() => deleteSubtask.mutate({ id: task.id, subtaskId: subtask.id })}
                         disabled={deleteSubtask.isPending}
                         className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-700"
                       >
@@ -310,22 +271,18 @@ const TaskDetail = () => {
                 <p className="text-sm text-gray-400 mt-1">Alt görev bulunmuyor</p>
               )}
 
-              {/* ✅ Yeni Subtask Ekle */}
+              {/* Yeni Subtask Ekle */}
               <div className="flex gap-2 mt-3">
                 <input
                   type="text"
                   value={newSubtask}
                   onChange={(e) => setNewSubtask(e.target.value)}
                   placeholder="Yeni alt görev..."
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && newSubtask.trim()) {
-                      addSubtask.mutate(newSubtask);
-                    }
-                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddSubtask()}
                   className="flex-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-1.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button
-                  onClick={() => addSubtask.mutate(newSubtask)}
+                  onClick={handleAddSubtask}
                   disabled={!newSubtask.trim() || addSubtask.isPending}
                   className="px-3 py-1.5 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                 >

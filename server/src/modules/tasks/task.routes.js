@@ -26,16 +26,16 @@ router.patch('/:id/status', authorize(ROLES.ADMIN, ROLES.LAWYER, ROLES.SECRETARY
 router.patch('/:id/assign', authorize(ROLES.ADMIN, ROLES.LAWYER), taskController.assignTask);
 
 // ============ PROGRESS ============
-router.patch('/:id/progress', authorize(ROLES.ADMIN, ROLES.LAWYER, ROLES.SECRETARY), taskController.updateProgress);
+router.patch('/:id/progress', authorize(ROLES.ADMIN, ROLES.LAWYER, ROLES.SECRETARY, ROLES.INTERN), taskController.updateProgress);
 
 // ============ TAGS ============
-router.patch('/:id/tags', authorize(ROLES.ADMIN, ROLES.LAWYER, ROLES.SECRETARY), taskController.updateTags);
+router.patch('/:id/tags', authorize(ROLES.ADMIN, ROLES.LAWYER, ROLES.SECRETARY, ROLES.INTERN), taskController.updateTags);
 
 // ============ REMINDER ============
-router.patch('/:id/reminder', authorize(ROLES.ADMIN, ROLES.LAWYER, ROLES.SECRETARY), taskController.updateReminder);
+router.patch('/:id/reminder', authorize(ROLES.ADMIN, ROLES.LAWYER, ROLES.SECRETARY, ROLES.INTERN), taskController.updateReminder);
 
 // ============ SUBTASKS ============
-router.post('/:id/subtasks', authorize(ROLES.ADMIN, ROLES.LAWYER, ROLES.SECRETARY), taskController.addSubtask);
-router.delete('/:id/subtasks/:subtaskId', authorize(ROLES.ADMIN, ROLES.LAWYER, ROLES.SECRETARY), taskController.deleteSubtask);
+router.post('/:id/subtasks', authorize(ROLES.ADMIN, ROLES.LAWYER, ROLES.SECRETARY, ROLES.INTERN), taskController.addSubtask);
+router.delete('/:id/subtasks/:subtaskId', authorize(ROLES.ADMIN, ROLES.LAWYER, ROLES.SECRETARY, ROLES.INTERN), taskController.deleteSubtask);
 
 export { router as taskRoutes };
