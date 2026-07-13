@@ -65,7 +65,7 @@ export const taskService = {
         },
         {
           model: Client,
-          as: 'client',
+          as: 'clients',
           attributes: ['id', 'name'],
         },
       ],
@@ -104,14 +104,14 @@ export const taskService = {
           include: [
             {
               model: Client,
-              as: 'client',
+              as: 'clients',
               attributes: ['id', 'name'],
             },
           ],
         },
         {
           model: Client,
-          as: 'client',
+          as: 'clients',
           attributes: ['id', 'name'],
         },
         {
@@ -229,7 +229,7 @@ export const taskService = {
         },
         {
           model: Client,
-          as: 'client',
+          as: 'clients',
           attributes: ['id', 'name'],
         },
         {
