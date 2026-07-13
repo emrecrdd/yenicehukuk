@@ -65,7 +65,7 @@ export const taskService = {
         },
         {
           model: Client,
-          as: 'clients',
+          as: 'client',  // ✅ DÜZELTİLDİ: clients → client
           attributes: ['id', 'name'],
         },
       ],
@@ -101,17 +101,11 @@ export const taskService = {
           model: Case,
           as: 'case',
           attributes: ['id', 'title'],
-          include: [
-            {
-              model: Client,
-              as: 'clients',
-              attributes: ['id', 'name'],
-            },
-          ],
+          // ✅ Case içindeki Client KALDIRILDI (hata veriyordu)
         },
         {
           model: Client,
-          as: 'clients',
+          as: 'client',  // ✅ DÜZELTİLDİ: clients → client
           attributes: ['id', 'name'],
         },
         {
@@ -229,7 +223,7 @@ export const taskService = {
         },
         {
           model: Client,
-          as: 'clients',
+          as: 'client',  // ✅ DÜZELTİLDİ: clients → client
           attributes: ['id', 'name'],
         },
         {
