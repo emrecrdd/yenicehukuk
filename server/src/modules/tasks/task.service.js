@@ -38,22 +38,22 @@ export const taskService = {
     });
 
     await Notification.create({
-      user_id: userId,
-      type: 'task_assigned',
-      title: '📋 Yeni Görev Atandı',
-      message: `"${task.title}" görevi size atandı.`,
-      data: { taskId: task.id },
-      action_url: `/tasks/${task.id}`,
-    });
+  user_id: userId,
+  type: 'task',
+  title: '📋 Yeni Görev Atandı',
+  message: `"${task.title}" görevi size atandı.`,
+  metadata: { taskId: task.id },
+  link: `/tasks/${task.id}`,
+});
 
-    await Notification.create({
-      user_id: assignedBy,
-      type: 'task_assigned_success',
-      title: '✅ Görev Atandı',
-      message: `"${task.title}" görevi ${user.first_name} ${user.last_name}'a atandı.`,
-      data: { taskId: task.id },
-      action_url: `/tasks/${task.id}`,
-    });
+await Notification.create({
+  user_id: assignedBy,
+  type: 'task',
+  title: '✅ Görev Atandı',
+  message: `"${task.title}" görevi ${user.first_name} ${user.last_name}'a atandı.`,
+  metadata: { taskId: task.id },
+  link: `/tasks/${task.id}`,
+});
 
     return task;
   },
@@ -84,13 +84,13 @@ export const taskService = {
     });
 
     await Notification.create({
-      user_id: task.assigned_by,
-      type: 'task_accepted',
-      title: '✅ Görev Kabul Edildi',
-      message: `"${task.title}" görevi kabul edildi.`,
-      data: { taskId: task.id },
-      action_url: `/tasks/${task.id}`,
-    });
+  user_id: task.assigned_by,
+  type: 'task',
+  title: '✅ Görev Kabul Edildi',
+  message: `"${task.title}" görevi kabul edildi.`,
+  metadata: { taskId: task.id },
+  link: `/tasks/${task.id}`,
+});
 
     return task;
   },
@@ -117,13 +117,13 @@ export const taskService = {
     });
 
     await Notification.create({
-      user_id: task.assigned_by,
-      type: 'task_rejected',
-      title: '❌ Görev Reddedildi',
-      message: `"${task.title}" görevi reddedildi. Sebep: ${reason}`,
-      data: { taskId: task.id },
-      action_url: `/tasks/${task.id}`,
-    });
+  user_id: task.assigned_by,
+  type: 'task',
+  title: '❌ Görev Reddedildi',
+  message: `"${task.title}" görevi reddedildi. Sebep: ${reason}`,
+  metadata: { taskId: task.id },
+  link: `/tasks/${task.id}`,
+});
 
     return task;
   },
@@ -152,13 +152,13 @@ export const taskService = {
     });
 
     await Notification.create({
-      user_id: userId,
-      type: 'task_reassigned',
-      title: '🔄 Görev Yeniden Atandı',
-      message: `"${task.title}" görevi size yeniden atandı.`,
-      data: { taskId: task.id },
-      action_url: `/tasks/${task.id}`,
-    });
+  user_id: userId,
+  type: 'task',
+  title: '🔄 Görev Yeniden Atandı',
+  message: `"${task.title}" görevi size yeniden atandı.`,
+  metadata: { taskId: task.id },
+  link: `/tasks/${task.id}`,
+});
 
     return task;
   },
@@ -188,13 +188,13 @@ export const taskService = {
     });
 
     await Notification.create({
-      user_id: task.assigned_by || task.created_by,
-      type: 'task_completed',
-      title: '🎉 Görev Tamamlandı',
-      message: `"${task.title}" görevi tamamlandı.`,
-      data: { taskId: task.id },
-      action_url: `/tasks/${task.id}`,
-    });
+  user_id: task.assigned_by || task.created_by,
+  type: 'task',
+  title: '🎉 Görev Tamamlandı',
+  message: `"${task.title}" görevi tamamlandı.`,
+  metadata: { taskId: task.id },
+  link: `/tasks/${task.id}`,
+});
 
     return task;
   },
