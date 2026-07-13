@@ -1,345 +1,402 @@
-import { Task } from '../../models/Task.js';
-import { User } from '../../models/User.js';
-import { Case } from '../../models/Case.js';
-import { Client } from '../../models/Client.js';
+// 📁 server/src/modules/tasks/task.service.js
+import { Task, User, Case, Client, Notification, AuditLog } from '../../models/index.js';
 import { Op } from 'sequelize';
 import { paginate, getPaginationData } from '../../utils/paginate.js';
-import { notificationService } from '../notifications/notification.service.js';
 
 export const taskService = {
+  // =============================================
+  // 1. CREATE
+  // =============================================
   async create(data) {
-    console.log('📝 Create data:', data);
-    console.log('👤 assigned_to:', data.assigned_to);
-    
-    const task = await Task.create(data);
+    const task = await Task.create({
+      ...data,
+      status: data.assigned_to ? 'pending' : 'draft',
+    });
 
-    if (task.assigned_to) {
-      const creator = await User.findByPk(data.created_by);
-      const creatorName = creator ? `${creator.first_name} ${creator.last_name}` : 'Sistem';
-      
-      await notificationService.notifyTaskAssigned(
-        task.assigned_to,
-        task.id,
-        task.title,
-        creatorName
-      );
+    if (data.assigned_to) {
+      await this.assign(task.id, data.assigned_to, data.created_by);
     }
 
     return task;
   },
 
-  async findAll({ page, limit, search, status, priority, assigned_to, case_id }) {
-    const where = {};
+  // =============================================
+  // 2. ASSIGN (ATA)
+  // =============================================
+  async assign(taskId, userId, assignedBy) {
+    const task = await Task.findByPk(taskId);
+    if (!task) throw new Error('Task not found');
 
-    if (search && search.trim() !== '') {
-      where[Op.or] = [
-        { title: { [Op.iLike]: `%${search}%` } },
-        { description: { [Op.iLike]: `%${search}%` } },
-      ];
+    const user = await User.findByPk(userId);
+    if (!user) throw new Error('User not found');
+
+    await task.update({
+      assigned_to: userId,
+      assigned_by: assignedBy,
+      assigned_at: new Date(),
+      status: 'pending',
+    });
+
+    await Notification.create({
+      user_id: userId,
+      type: 'task_assigned',
+      title: '📋 Yeni Görev Atandı',
+      message: `"${task.title}" görevi size atandı.`,
+      data: { taskId: task.id },
+      action_url: `/tasks/${task.id}`,
+    });
+
+    await Notification.create({
+      user_id: assignedBy,
+      type: 'task_assigned_success',
+      title: '✅ Görev Atandı',
+      message: `"${task.title}" görevi ${user.first_name} ${user.last_name}'a atandı.`,
+      data: { taskId: task.id },
+      action_url: `/tasks/${task.id}`,
+    });
+
+    return task;
+  },
+
+  // =============================================
+  // 3. ACCEPT (KABUL ET)
+  // =============================================
+  async accept(taskId, userId) {
+    const task = await Task.findByPk(taskId);
+    if (!task) throw new Error('Task not found');
+
+    if (task.assigned_to !== userId) {
+      throw new Error('Bu görev size atanmamış');
     }
 
-    if (status) where.status = status;
-    if (priority) where.priority = priority;
-    if (assigned_to) where.assigned_to = assigned_to;
-    if (case_id) where.case_id = case_id;
+    if (task.status === 'accepted') {
+      throw new Error('Görev zaten kabul edilmiş');
+    }
 
-    const pageNum = parseInt(page) || 1;
-    const limitNum = parseInt(limit) || 10;
+    if (task.status === 'rejected') {
+      throw new Error('Reddedilmiş görev kabul edilemez');
+    }
 
-    const query = paginate({ where }, pageNum, limitNum);
-    const { count, rows } = await Task.findAndCountAll({
-      ...query,
+    await task.update({
+      status: 'accepted',
+      accepted_at: new Date(),
+      start_date: new Date(),
+    });
+
+    await Notification.create({
+      user_id: task.assigned_by,
+      type: 'task_accepted',
+      title: '✅ Görev Kabul Edildi',
+      message: `"${task.title}" görevi kabul edildi.`,
+      data: { taskId: task.id },
+      action_url: `/tasks/${task.id}`,
+    });
+
+    return task;
+  },
+
+  // =============================================
+  // 4. REJECT (REDDET)
+  // =============================================
+  async reject(taskId, userId, reason) {
+    const task = await Task.findByPk(taskId);
+    if (!task) throw new Error('Task not found');
+
+    if (task.assigned_to !== userId) {
+      throw new Error('Bu görev size atanmamış');
+    }
+
+    if (!reason || reason.trim() === '') {
+      throw new Error('Reddetme sebebi belirtmelisiniz');
+    }
+
+    await task.update({
+      status: 'rejected',
+      rejected_at: new Date(),
+      rejection_reason: reason,
+    });
+
+    await Notification.create({
+      user_id: task.assigned_by,
+      type: 'task_rejected',
+      title: '❌ Görev Reddedildi',
+      message: `"${task.title}" görevi reddedildi. Sebep: ${reason}`,
+      data: { taskId: task.id },
+      action_url: `/tasks/${task.id}`,
+    });
+
+    return task;
+  },
+
+  // =============================================
+  // 5. REASSIGN (YENİDEN ATA)
+  // =============================================
+  async reassign(taskId, userId, assignedBy) {
+    const task = await Task.findByPk(taskId);
+    if (!task) throw new Error('Task not found');
+
+    if (task.status !== 'rejected' && task.status !== 'pending') {
+      throw new Error('Sadece reddedilmiş veya bekleyen görevler yeniden atanabilir');
+    }
+
+    const user = await User.findByPk(userId);
+    if (!user) throw new Error('User not found');
+
+    await task.update({
+      assigned_to: userId,
+      assigned_by: assignedBy,
+      assigned_at: new Date(),
+      status: 'pending',
+      rejected_at: null,
+      rejection_reason: null,
+    });
+
+    await Notification.create({
+      user_id: userId,
+      type: 'task_reassigned',
+      title: '🔄 Görev Yeniden Atandı',
+      message: `"${task.title}" görevi size yeniden atandı.`,
+      data: { taskId: task.id },
+      action_url: `/tasks/${task.id}`,
+    });
+
+    return task;
+  },
+
+  // =============================================
+  // 6. COMPLETE (TAMAMLA)
+  // =============================================
+  async complete(taskId, userId) {
+    const task = await Task.findByPk(taskId);
+    if (!task) throw new Error('Task not found');
+
+    const isAssignee = task.assigned_to === userId;
+    const isAdmin = userId === task.assigned_by || userId === task.created_by;
+
+    if (!isAssignee && !isAdmin) {
+      throw new Error('Bu görevi tamamlama yetkiniz yok');
+    }
+
+    if (task.status === 'completed') {
+      throw new Error('Görev zaten tamamlanmış');
+    }
+
+    await task.update({
+      status: 'completed',
+      completed_at: new Date(),
+      progress: 100,
+    });
+
+    await Notification.create({
+      user_id: task.assigned_by || task.created_by,
+      type: 'task_completed',
+      title: '🎉 Görev Tamamlandı',
+      message: `"${task.title}" görevi tamamlandı.`,
+      data: { taskId: task.id },
+      action_url: `/tasks/${task.id}`,
+    });
+
+    return task;
+  },
+
+  // =============================================
+  // 7. UPDATE PROGRESS
+  // =============================================
+  async updateProgress(taskId, userId, progress) {
+    if (progress < 0 || progress > 100) {
+      throw new Error('İlerleme 0-100 arasında olmalıdır');
+    }
+
+    const task = await Task.findByPk(taskId);
+    if (!task) throw new Error('Task not found');
+
+    const isAssignee = task.assigned_to === userId;
+    const isAdmin = userId === task.assigned_by || userId === task.created_by;
+
+    if (!isAssignee && !isAdmin) {
+      throw new Error('İlerleme güncelleme yetkiniz yok');
+    }
+
+    await task.update({ progress });
+    return task;
+  },
+
+  // =============================================
+  // 8. FIND ONE
+  // =============================================
+  async findOne(taskId, userId) {
+    const task = await Task.findByPk(taskId, {
       include: [
+        { model: User, as: 'assignee', attributes: ['id', 'first_name', 'last_name', 'email'] },
+        { model: User, as: 'assigner', attributes: ['id', 'first_name', 'last_name', 'email'] },
+        { model: User, as: 'creator', attributes: ['id', 'first_name', 'last_name', 'email'] },
+        { model: Case, as: 'case', attributes: ['id', 'title', 'case_number'] },
+        { model: Client, as: 'client', attributes: ['id', 'name'] },
         {
-          model: User,
-          as: 'assignee',
-          attributes: ['id', 'first_name', 'last_name', 'email'],
+          model: Task,
+          as: 'subtasks',
+          attributes: ['id', 'title', 'status', 'due_date', 'progress'],
         },
-        {
-          model: User,
-          as: 'creator',
-          attributes: ['id', 'first_name', 'last_name', 'email'],
-        },
-        {
-          model: Case,
-          as: 'case',
-          attributes: ['id', 'title'],
-        },
-        {
-          model: Client,
-          as: 'client',
-          attributes: ['id', 'name'],
-        },
-      ],
-      order: [
-        ['priority', 'DESC'],
-        ['due_date', 'ASC'],
-        ['created_at', 'DESC'],
       ],
     });
 
-    const pagination = getPaginationData(count, pageNum, limitNum);
+    if (!task) throw new Error('Task not found');
+
+    const isAuthorized =
+      task.assigned_to === userId ||
+      task.assigned_by === userId ||
+      task.created_by === userId;
+
+    if (!isAuthorized) {
+      throw new Error('Bu görevi görme yetkiniz yok');
+    }
+
+    return task;
+  },
+
+  // =============================================
+  // 9. FIND ALL
+  // =============================================
+  async findAll(filters, userId, role) {
+    const where = {};
+
+    if (role !== 'admin') {
+      where[Op.or] = [
+        { assigned_to: userId },
+        { assigned_by: userId },
+        { created_by: userId },
+      ];
+    }
+
+    if (filters.status) where.status = filters.status;
+    if (filters.priority) where.priority = filters.priority;
+    if (filters.assigned_to) where.assigned_to = filters.assigned_to;
+    if (filters.case_id) where.case_id = filters.case_id;
+    if (filters.client_id) where.client_id = filters.client_id;
+    if (filters.search) {
+      where[Op.or] = [
+        { title: { [Op.iLike]: `%${filters.search}%` } },
+        { description: { [Op.iLike]: `%${filters.search}%` } },
+      ];
+    }
+
+    if (filters.due_date_from) {
+      where.due_date = { [Op.gte]: new Date(filters.due_date_from) };
+    }
+    if (filters.due_date_to) {
+      where.due_date = { [Op.lte]: new Date(filters.due_date_to) };
+    }
+
+    const page = parseInt(filters.page) || 1;
+    const limit = parseInt(filters.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    const order = [];
+    if (filters.sort_by) {
+      order.push([filters.sort_by, filters.sort_order || 'DESC']);
+    } else {
+      order.push(['priority', 'DESC']);
+      order.push(['due_date', 'ASC']);
+      order.push(['created_at', 'DESC']);
+    }
+
+    const { count, rows } = await Task.findAndCountAll({
+      where,
+      include: [
+        { model: User, as: 'assignee', attributes: ['id', 'first_name', 'last_name'] },
+        { model: User, as: 'assigner', attributes: ['id', 'first_name', 'last_name'] },
+        { model: Case, as: 'case', attributes: ['id', 'title'] },
+        { model: Client, as: 'client', attributes: ['id', 'name'] },
+      ],
+      order,
+      limit,
+      offset,
+      distinct: true,
+    });
 
     return {
       data: rows,
-      pagination,
+      pagination: {
+        total: count,
+        page,
+        limit,
+        totalPages: Math.ceil(count / limit),
+      },
     };
   },
 
-  // ✅ DÜZELTİLMİŞ findOne - assignee_id → assigned_to
-  async findOne(id) {
-    console.log('🔍 findOne çağrıldı. ID:', id);
-    
-    try {
-      const task = await Task.findByPk(id);
-      
-      if (!task) {
-        console.log('❌ Task bulunamadı:', id);
-        throw new Error('Task not found');
-      }
-
-      console.log('✅ Task bulundu:', task.id);
-      console.log('👤 assigned_to:', task.assigned_to);
-
-      // ✅ DÜZELTİLDİ: assignee_id → assigned_to
-      const [assignee, creator, caseData, client, parentTask, subtasks] = await Promise.all([
-        User.findByPk(task.assigned_to, {
-          attributes: ['id', 'first_name', 'last_name', 'email']
-        }),
-        User.findByPk(task.created_by, {
-          attributes: ['id', 'first_name', 'last_name', 'email']
-        }),
-        Case.findByPk(task.case_id, {
-          attributes: ['id', 'title', 'case_number']
-        }),
-        Client.findByPk(task.client_id, {
-          attributes: ['id', 'name', 'email', 'phone']
-        }),
-        Task.findByPk(task.parent_task_id, {
-          attributes: ['id', 'title', 'status']
-        }),
-        Task.findAll({
-          where: { parent_task_id: task.id },
-          attributes: ['id', 'title', 'status', 'due_date']
-        })
-      ]);
-
-      let caseClient = null;
-      if (caseData && caseData.client_id) {
-        caseClient = await Client.findByPk(caseData.client_id, {
-          attributes: ['id', 'name']
-        });
-      }
-
-      const enrichedTask = {
-        ...task.toJSON(),
-        assignee: assignee || null,
-        creator: creator || null,
-        case: caseData ? {
-          ...caseData.toJSON(),
-          client: caseClient
-        } : null,
-        client: client || null,
-        parentTask: parentTask || null,
-        subtasks: subtasks || []
-      };
-
-      console.log('📄 Task zenginleştirildi:', enrichedTask.id);
-      console.log('👤 assignee:', enrichedTask.assignee?.first_name, enrichedTask.assignee?.last_name);
-      console.log('👤 creator:', enrichedTask.creator?.first_name, enrichedTask.creator?.last_name);
-      console.log('📅 due_date:', enrichedTask.due_date);
-
-      return enrichedTask;
-
-    } catch (error) {
-      console.error('❌ findOne hatası:', error);
-      throw error;
+  // =============================================
+  // 10. STATISTICS
+  // =============================================
+  async getStatistics(userId, role) {
+    const where = {};
+    if (role !== 'admin') {
+      where[Op.or] = [
+        { assigned_to: userId },
+        { assigned_by: userId },
+        { created_by: userId },
+      ];
     }
+
+    const tasks = await Task.findAll({ where });
+
+    return {
+      total: tasks.length,
+      draft: tasks.filter((t) => t.status === 'draft').length,
+      pending: tasks.filter((t) => t.status === 'pending').length,
+      accepted: tasks.filter((t) => t.status === 'accepted').length,
+      rejected: tasks.filter((t) => t.status === 'rejected').length,
+      in_progress: tasks.filter((t) => t.status === 'in_progress').length,
+      review: tasks.filter((t) => t.status === 'review').length,
+      completed: tasks.filter((t) => t.status === 'completed').length,
+      cancelled: tasks.filter((t) => t.status === 'cancelled').length,
+      archived: tasks.filter((t) => t.status === 'archived').length,
+      overdue: tasks.filter(
+        (t) =>
+          t.due_date &&
+          new Date(t.due_date) < new Date() &&
+          !['completed', 'cancelled', 'archived'].includes(t.status)
+      ).length,
+      priority: {
+        low: tasks.filter((t) => t.priority === 'low').length,
+        medium: tasks.filter((t) => t.priority === 'medium').length,
+        high: tasks.filter((t) => t.priority === 'high').length,
+        critical: tasks.filter((t) => t.priority === 'critical').length,
+      },
+      completionRate: tasks.length
+        ? Math.round((tasks.filter((t) => t.status === 'completed').length / tasks.length) * 100)
+        : 0,
+    };
   },
 
-  async update(id, data) {
-    const task = await Task.findByPk(id);
-    if (!task) {
-      throw new Error('Task not found');
+  // =============================================
+  // 11. UPDATE
+  // =============================================
+  async update(taskId, data, userId) {
+    const task = await Task.findByPk(taskId);
+    if (!task) throw new Error('Task not found');
+
+    const isAdmin = userId === task.assigned_by || userId === task.created_by;
+    if (!isAdmin) {
+      throw new Error('Bu görevi güncelleme yetkiniz yok');
     }
 
     await task.update(data);
     return task;
   },
 
-  async remove(id) {
-    const task = await Task.findByPk(id);
-    if (!task) {
-      throw new Error('Task not found');
+  // =============================================
+  // 12. DELETE
+  // =============================================
+  async delete(taskId, userId) {
+    const task = await Task.findByPk(taskId);
+    if (!task) throw new Error('Task not found');
+
+    if (task.created_by !== userId) {
+      throw new Error('Sadece görevi oluşturan kişi silebilir');
     }
 
     await task.destroy();
     return task;
-  },
-
-  async updateStatus(id, status) {
-    const task = await Task.findByPk(id);
-    if (!task) {
-      throw new Error('Task not found');
-    }
-
-    const updateData = { status };
-    if (status === 'completed') {
-      updateData.completed_at = new Date();
-    }
-
-    await task.update(updateData);
-    return task;
-  },
-
-  async assignTask(id, assigned_to, assignedBy = null) {
-    const task = await Task.findByPk(id);
-    if (!task) {
-      throw new Error('Task not found');
-    }
-
-    const user = await User.findByPk(assigned_to);
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    const oldAssignee = task.assigned_to;
-    await task.update({ assigned_to });
-
-    if (oldAssignee !== assigned_to) {
-      const assignerName = assignedBy || 'Sistem';
-      await notificationService.notifyTaskAssigned(
-        assigned_to,
-        task.id,
-        task.title,
-        assignerName
-      );
-    }
-
-    return task;
-  },
-
-  async getMyTasks(userId, { page, limit, status }) {
-    const where = {
-      assigned_to: userId,
-    };
-
-    if (status) where.status = status;
-
-    const pageNum = parseInt(page) || 1;
-    const limitNum = parseInt(limit) || 10;
-
-    const query = paginate({ where }, pageNum, limitNum);
-    const { count, rows } = await Task.findAndCountAll({
-      ...query,
-      include: [
-        {
-          model: Case,
-          as: 'case',
-          attributes: ['id', 'title'],
-        },
-        {
-          model: Client,
-          as: 'client',
-          attributes: ['id', 'name'],
-        },
-        {
-          model: User,
-          as: 'creator',
-          attributes: ['id', 'first_name', 'last_name'],
-        },
-      ],
-      order: [
-        ['priority', 'DESC'],
-        ['due_date', 'ASC'],
-      ],
-    });
-
-    const pagination = getPaginationData(count, pageNum, limitNum);
-
-    return {
-      data: rows,
-      pagination,
-    };
-  },
-
-  async getStatistics(userId) {
-    const totalTasks = await Task.count();
-    const pendingTasks = await Task.count({ where: { status: 'pending' } });
-    const inProgressTasks = await Task.count({ where: { status: 'in_progress' } });
-    const completedTasks = await Task.count({ where: { status: 'completed' } });
-    const overdueTasks = await Task.count({
-      where: {
-        due_date: { [Op.lt]: new Date() },
-        status: { [Op.notIn]: ['completed', 'cancelled'] },
-      },
-    });
-
-    const myTasks = await Task.count({ where: { assigned_to: userId } });
-    const myPending = await Task.count({
-      where: { assigned_to: userId, status: 'pending' },
-    });
-    const myInProgress = await Task.count({
-      where: { assigned_to: userId, status: 'in_progress' },
-    });
-    const myCompleted = await Task.count({
-      where: { assigned_to: userId, status: 'completed' },
-    });
-
-    return {
-      total: {
-        total: totalTasks,
-        pending: pendingTasks,
-        inProgress: inProgressTasks,
-        completed: completedTasks,
-        overdue: overdueTasks,
-      },
-      my: {
-        total: myTasks,
-        pending: myPending,
-        inProgress: myInProgress,
-        completed: myCompleted,
-      },
-    };
-  },
-
-  async getOverdue(userId) {
-    return Task.findAll({
-      where: {
-        assigned_to: userId,
-        due_date: { [Op.lt]: new Date() },
-        status: { [Op.notIn]: ['completed', 'cancelled'] },
-      },
-      include: [
-        {
-          model: Case,
-          as: 'case',
-          attributes: ['id', 'title'],
-        },
-      ],
-      order: [['due_date', 'ASC']],
-    });
-  },
-
-  async getUpcoming(userId) {
-    const now = new Date();
-    const weekLater = new Date(now);
-    weekLater.setDate(weekLater.getDate() + 7);
-
-    return Task.findAll({
-      where: {
-        assigned_to: userId,
-        due_date: { [Op.between]: [now, weekLater] },
-        status: { [Op.notIn]: ['completed', 'cancelled'] },
-      },
-      include: [
-        {
-          model: Case,
-          as: 'case',
-          attributes: ['id', 'title'],
-        },
-      ],
-      order: [['due_date', 'ASC']],
-    });
   },
 };

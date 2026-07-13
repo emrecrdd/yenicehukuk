@@ -1,15 +1,15 @@
-// frontend/src/features/tasks/pages/TaskEdit.jsx
+// 📁 client/src/features/tasks/pages/TaskEdit.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useTask, useUpdateTask, useDeleteTask } from '../../features/tasks/hooks/task.query.js';
-import caseApi from '../../features/cases/case.api.js';
-import clientApi from '../../features/clients/client.api.js';
-import userApi from '../../features/users/user.api.js';
-import { useAuth } from '../../app/providers/auth.provider.jsx';
-import Button from '../../components/ui/Button.jsx';
-import Input from '../../components/ui/Input.jsx';
-import Card from '../../components/ui/Card.jsx';
+import { useTask, useUpdateTask, useDeleteTask } from '../task.query.js';
+import { useAuth } from '../../../app/providers/auth.provider.jsx';
+import userApi from '../../users/user.api.js';
+import caseApi from '../../cases/case.api.js';
+import clientApi from '../../clients/client.api.js';
+import Button from '../../../components/ui/Button.jsx';
+import Input from '../../../components/ui/Input.jsx';
+import Card from '../../../components/ui/Card.jsx';
 import toast from 'react-hot-toast';
 
 const TaskEdit = () => {
@@ -20,21 +20,20 @@ const TaskEdit = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    status: 'pending',
-    priority: 'normal',
+    priority: 'medium',
     due_date: '',
     assigned_to: '',
     case_id: '',
     client_id: '',
     tags: [],
-    reminder_date: '',
   });
-  const [errors, setErrors] = useState({});
   const [tagInput, setTagInput] = useState('');
+  const [errors, setErrors] = useState({});
 
-  const { data: taskData, isLoading: taskLoading } = useTask(id);
+  const { data: taskData, isLoading } = useTask(id);
+  const updateTask = useUpdateTask();
+  const deleteTask = useDeleteTask();
 
-  // ✅ SADECE ADMIN users çeksin
   const { data: usersData } = useQuery({
     queryKey: ['users'],
     queryFn: () => userApi.getAll(),
@@ -56,44 +55,62 @@ const TaskEdit = () => {
   const cases = casesData?.data?.data || [];
   const clients = clientsData?.data?.data || [];
 
-  const assignableUsers = user?.role === 'admin' ? users : [];
+  const isAdmin = user?.role === 'admin';
 
-  const updateTask = useUpdateTask();
-  const deleteTask = useDeleteTask();
-
-  // ✅ Form doldur
   useEffect(() => {
     if (task) {
       setFormData({
         title: task.title || '',
         description: task.description || '',
-        status: task.status || 'pending',
-        priority: task.priority || 'normal',
+        priority: task.priority || 'medium',
         due_date: task.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
         assigned_to: task.assigned_to || '',
         case_id: task.case_id || '',
         client_id: task.client_id || '',
         tags: task.tags || [],
-        reminder_date: task.reminder_date ? new Date(task.reminder_date).toISOString().slice(0, 16) : '',
       });
     }
   }, [task]);
 
   const addTag = () => {
     if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        tags: [...prev.tags, tagInput.trim()]
+        tags: [...prev.tags, tagInput.trim()],
       }));
       setTagInput('');
     }
   };
 
   const removeTag = (tag) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      tags: prev.tags.filter(t => t !== tag)
+      tags: prev.tags.filter((t) => t !== tag),
     }));
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!formData.title.trim()) {
+      setErrors({ title: 'Görev adı gereklidir' });
+      return;
+    }
+
+    updateTask.mutate({
+      id,
+      data: {
+        ...formData,
+        assigned_to: isAdmin ? formData.assigned_to || null : user?.id || null,
+        due_date: formData.due_date || null,
+      },
+    });
   };
 
   const handleDelete = () => {
@@ -102,47 +119,10 @@ const TaskEdit = () => {
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
-    }
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (!formData.title.trim()) {
-      setErrors({ title: 'Görev adı gereklidir' });
-      toast.error('Lütfen görev adını girin');
-      return;
-    }
-
-    const assignedTo = user?.role !== 'admin' 
-      ? user?.id || null
-      : formData.assigned_to || null;
-
-    const submitData = {
-      title: formData.title,
-      description: formData.description,
-      status: formData.status,
-      priority: formData.priority,
-      due_date: formData.due_date || null,
-      assigned_to: assignedTo,
-      case_id: formData.case_id || null,
-      client_id: formData.client_id || null,
-      tags: formData.tags || [],
-      reminder_date: formData.reminder_date || null,
-    };
-    
-    updateTask.mutate({ id, data: submitData });
-  };
-
-  if (taskLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
       </div>
     );
   }
@@ -150,7 +130,6 @@ const TaskEdit = () => {
   if (!task) {
     return (
       <div className="text-center py-12">
-        <div className="text-6xl mb-4">📋</div>
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Görev Bulunamadı</h2>
         <Link to="/tasks" className="text-blue-600 hover:underline mt-4 inline-block">
           ← Görevlere Dön
@@ -169,9 +148,6 @@ const TaskEdit = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
             ✏️ Görev Düzenle
           </h1>
-          <p className="text-sm text-gray-500">
-            {task.title} görevini düzenle
-          </p>
         </div>
       </div>
 
@@ -203,23 +179,6 @@ const TaskEdit = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Durum
-              </label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="pending">Bekliyor</option>
-                <option value="in_progress">Devam Ediyor</option>
-                <option value="completed">Tamamlandı</option>
-                <option value="cancelled">İptal</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Öncelik
               </label>
               <select
@@ -229,7 +188,7 @@ const TaskEdit = () => {
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="low">Düşük</option>
-                <option value="normal">Normal</option>
+                <option value="medium">Orta</option>
                 <option value="high">Yüksek</option>
                 <option value="critical">Kritik</option>
               </select>
@@ -247,35 +206,25 @@ const TaskEdit = () => {
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-          </div>
 
-          {/* Atanan Kişi */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Atanan Kişi
-            </label>
-            
-            {user?.role === 'admin' ? (
-              <select
-                name="assigned_to"
-                value={formData.assigned_to}
-                onChange={handleChange}
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Atanacak kişi seçin</option>
-                {assignableUsers.map((person) => (
-                  <option key={person.id} value={person.id}>
-                    {person.first_name} {person.last_name}
-                    {person.role === 'admin' && ' (Admin)'}
-                    {person.role === 'lawyer' && ' (Avukat)'}
-                    {person.role === 'intern' && ' (Stajyer)'}
-                    {person.role === 'secretary' && ' (Sekreter)'}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <div className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white">
-                {user?.first_name} {user?.last_name} (Kendin)
+            {isAdmin && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Atanan Kişi
+                </label>
+                <select
+                  name="assigned_to"
+                  value={formData.assigned_to}
+                  onChange={handleChange}
+                  className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Seçiniz</option>
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.first_name} {u.last_name}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
           </div>
@@ -291,10 +240,10 @@ const TaskEdit = () => {
                 onChange={handleChange}
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Dava seçin (isteğe bağlı)</option>
-                {cases.map((caseItem) => (
-                  <option key={caseItem.id} value={caseItem.id}>
-                    {caseItem.title}
+                <option value="">Seçiniz</option>
+                {cases.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.title}
                   </option>
                 ))}
               </select>
@@ -310,18 +259,16 @@ const TaskEdit = () => {
                 onChange={handleChange}
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Müvekkil seçin (isteğe bağlı)</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.name}
-                    {client.company_name && ` (${client.company_name})`}
+                <option value="">Seçiniz</option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
                   </option>
                 ))}
               </select>
             </div>
           </div>
 
-          {/* Tags */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Etiketler
@@ -335,13 +282,9 @@ const TaskEdit = () => {
                 placeholder="Etiket ekle (Enter ile)"
                 className="flex-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <button
-                type="button"
-                onClick={addTag}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-              >
+              <Button type="button" variant="primary" onClick={addTag}>
                 Ekle
-              </button>
+              </Button>
             </div>
             <div className="flex flex-wrap gap-2 mt-2">
               {formData.tags.map((tag) => (
@@ -362,33 +305,18 @@ const TaskEdit = () => {
             </div>
           </div>
 
-          {/* Reminder Date */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Hatırlatma Tarihi
-            </label>
-            <input
-              type="datetime-local"
-              name="reminder_date"
-              value={formData.reminder_date}
-              onChange={handleChange}
-              className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex gap-3 pt-4 border-t">
             <Button type="submit" loading={updateTask.isPending}>
               💾 Güncelle
             </Button>
             <Button type="button" variant="secondary" onClick={() => navigate(`/tasks/${id}`)}>
               İptal
             </Button>
-            <Button 
+            <Button
               type="button"
-              variant="danger" 
+              variant="danger"
               onClick={handleDelete}
               loading={deleteTask.isPending}
-              disabled={deleteTask.isPending}
             >
               🗑️ Sil
             </Button>

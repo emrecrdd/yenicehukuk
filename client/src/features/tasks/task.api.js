@@ -1,77 +1,28 @@
+// 📁 client/src/features/tasks/task.api.js
 import axios from '../../app/config/axios.js';
 
 const taskApi = {
   // ============ CRUD ============
-  getAll: (params) => {
-    return axios.get('/tasks', { params });
-  },
+  getAll: (params) => axios.get('/tasks', { params }),
+  getOne: (id) => axios.get(`/tasks/${id}`),
+  create: (data) => axios.post('/tasks', data),
+  update: (id, data) => axios.put(`/tasks/${id}`, data),
+  delete: (id) => axios.delete(`/tasks/${id}`),
 
-  getOne: (id) => {
-    return axios.get(`/tasks/${id}`);
-  },
+  // ============ ATAMA ============
+  assign: (id, assignedTo) => axios.patch(`/tasks/${id}/assign`, { assigned_to: assignedTo }),
+  reassign: (id, assignedTo) => axios.patch(`/tasks/${id}/reassign`, { assigned_to: assignedTo }),
 
-  create: (data) => {
-    return axios.post('/tasks', data);
-  },
+  // ============ KABUL / RED ============
+  accept: (id) => axios.patch(`/tasks/${id}/accept`),
+  reject: (id, reason) => axios.patch(`/tasks/${id}/reject`, { reason }),
 
-  update: (id, data) => {
-    return axios.put(`/tasks/${id}`, data);
-  },
+  // ============ İLERLEME ============
+  complete: (id) => axios.patch(`/tasks/${id}/complete`),
+  updateProgress: (id, progress) => axios.patch(`/tasks/${id}/progress`, { progress }),
 
-  delete: (id) => {
-    return axios.delete(`/tasks/${id}`);
-  },
-
-  // ============ STATUS & ASSIGN ============
-  updateStatus: (id, status) => {
-    return axios.patch(`/tasks/${id}/status`, { status });
-  },
-
-  assignTask: (id, assigned_to) => {
-    return axios.patch(`/tasks/${id}/assign`, { assigned_to });
-  },
-
-  // ============ MY TASKS ============
-  getMyTasks: (params) => {
-    return axios.get('/tasks/my', { params });
-  },
-
-  getMyOverdue: () => {
-    return axios.get('/tasks/my/overdue');
-  },
-
-  getMyUpcoming: () => {
-    return axios.get('/tasks/my/upcoming');
-  },
-
-  // ============ STATISTICS ============
-  getStatistics: () => {
-    return axios.get('/tasks/statistics');
-  },
-
-  // ============ PROGRESS ============
-  updateProgress: (id, progress) => {
-    return axios.patch(`/tasks/${id}/progress`, { progress });
-  },
-
-  // ============ TAGS ============
-  updateTags: (id, tags) => {
-    return axios.patch(`/tasks/${id}/tags`, { tags });
-  },
-
-  // ============ REMINDER ============
-  updateReminder: (id, reminder_date) => {
-    return axios.patch(`/tasks/${id}/reminder`, { reminder_date });
-  },
-
-  // ============ SUBTASKS ============
-  addSubtask: (id, data) => {
-    return axios.post(`/tasks/${id}/subtasks`, data);
-  },
-
-  deleteSubtask: (id, subtaskId) => {
-    return axios.delete(`/tasks/${id}/subtasks/${subtaskId}`);
-  },
+  // ============ İSTATİSTİK ============
+  getStatistics: () => axios.get('/tasks/statistics'),
 };
 
 export default taskApi;
