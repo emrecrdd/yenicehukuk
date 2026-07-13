@@ -3,11 +3,11 @@ import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTask, useAcceptTask, useRejectTask, useCompleteTask, useUpdateProgress, useReassignTask } from "../../features/tasks/task.query.js";
 import { useAuth } from "../../hooks/useAuth.js";
-import Badge from "../../components/ui/Badge.jsx";
-import Card from "../../components/ui/Card.jsx";
-import Button from "../../components/ui/Button.jsx";
-import Modal from "../../components/ui/Modal.jsx";
-import Input from "../../components/ui/Input.jsx";
+import Badge from "../../../components/ui/Badge.jsx";
+import Card from "../../../components/ui/Card.jsx";
+import Button from "../../../components/ui/Button.jsx";
+import Modal from "../../../components/ui/Modal.jsx";
+import Input from "../../../components/ui/Input.jsx";
 import { Edit2, CheckCircle, XCircle, ThumbsUp, ThumbsDown, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 

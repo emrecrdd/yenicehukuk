@@ -7,9 +7,9 @@ import { useAuth } from "../../hooks/useAuth.js";
 import userApi from "../../features/users/user.api.js";
 import caseApi from "../../features/cases/case.api.js";
 import clientApi from "../../features/clients/client.api.js";
-import Button from "../../components/ui/Button.jsx";
-import Input from "../../components/ui/Input.jsx";
-import Card from "../../components/ui/Card.jsx";
+import Button from "../../../components/ui/Button.jsx";
+import Input from "../../../components/ui/Input.jsx";
+import Card from "../../../components/ui/Card.jsx";
 
 
 
