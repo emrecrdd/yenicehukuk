@@ -2,13 +2,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useTask, useUpdateTask, useDeleteTask } from '../..  /task.query.js';  // ✅ DOĞRU
-import { useAuth } from '../../../hooks/useAuth.js';  // ✅ DOĞRU
+import { useTask, useUpdateTask, useDeleteTask } from "../../features/tasks/task.query.js";
+import { useAuth } from "../../hooks/useAuth.js";
+import Button from "../../components/ui/Button.jsx";
+import Input from "../../components/ui/Input.jsx";
+import Card from "../../components/ui/Card.jsx";
 import caseApi from '../../cases/case.api.js';
 import clientApi from '../../clients/client.api.js';
-import Button from '../../../components/ui/Button.jsx';
-import Input from '../../../components/ui/Input.jsx';
-import Card from '../../../components/ui/Card.jsx';
+
 
 
 const TaskEdit = () => {
