@@ -1,6 +1,5 @@
-// frontend/src/features/tasks/hooks/task.query.js
-import { useState } from 'react';  // ✅ EKLENDİ
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';  // ✅ useInfiniteQuery EKLENDİ
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import taskApi from './task.api.js';
 import toast from 'react-hot-toast';
 
@@ -44,7 +43,6 @@ export const useTaskFilters = () => {
 };
 
 // ============ QUERIES ============
-
 export const useTasks = (params = {}) => {
   return useQuery({
     queryKey: ['tasks', params],
@@ -102,15 +100,14 @@ export const useTaskStatistics = () => {
 };
 
 // ============ MUTATIONS ============
-
 export const useCreateTask = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data) => taskApi.create(data),
-    onSuccess: (response) => {
-      queryClient.invalidateQueries(['tasks']);
-      queryClient.invalidateQueries(['my-tasks']);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
       toast.success('Görev başarıyla oluşturuldu');
     },
     onError: (error) => {
@@ -125,9 +122,9 @@ export const useUpdateTask = () => {
   return useMutation({
     mutationFn: ({ id, data }) => taskApi.update(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['tasks']);
-      queryClient.invalidateQueries(['task', variables.id]);
-      queryClient.invalidateQueries(['my-tasks']);
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
       toast.success('Görev başarıyla güncellendi');
     },
     onError: (error) => {
@@ -142,8 +139,8 @@ export const useDeleteTask = () => {
   return useMutation({
     mutationFn: (id) => taskApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['tasks']);
-      queryClient.invalidateQueries(['my-tasks']);
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
       toast.success('Görev başarıyla silindi');
     },
     onError: (error) => {
@@ -158,9 +155,9 @@ export const useUpdateTaskStatus = () => {
   return useMutation({
     mutationFn: ({ id, status }) => taskApi.updateStatus(id, status),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['tasks']);
-      queryClient.invalidateQueries(['task', variables.id]);
-      queryClient.invalidateQueries(['my-tasks']);
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
       toast.success('Görev durumu güncellendi');
     },
     onError: (error) => {
@@ -175,9 +172,9 @@ export const useAssignTask = () => {
   return useMutation({
     mutationFn: ({ id, assigned_to }) => taskApi.assignTask(id, assigned_to),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['tasks']);
-      queryClient.invalidateQueries(['task', variables.id]);
-      queryClient.invalidateQueries(['my-tasks']);
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
       toast.success('Görev başarıyla atandı');
     },
     onError: (error) => {
@@ -186,8 +183,91 @@ export const useAssignTask = () => {
   });
 };
 
-// ============ BULK OPERATIONS ============
+// ============ PROGRESS ============
+export const useUpdateProgress = () => {
+  const queryClient = useQueryClient();
 
+  return useMutation({
+    mutationFn: ({ id, progress }) => taskApi.updateProgress(id, progress),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['task', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.success('İlerleme güncellendi');
+    },
+    onError: () => {
+      toast.error('İlerleme güncellenemedi');
+    },
+  });
+};
+
+// ============ TAGS ============
+export const useUpdateTags = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, tags }) => taskApi.updateTags(id, tags),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['task', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.success('Etiketler güncellendi');
+    },
+    onError: () => {
+      toast.error('Etiketler güncellenemedi');
+    },
+  });
+};
+
+// ============ REMINDER ============
+export const useUpdateReminder = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, reminder_date }) => taskApi.updateReminder(id, reminder_date),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['task', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.success('Hatırlatma tarihi güncellendi');
+    },
+    onError: () => {
+      toast.error('Hatırlatma tarihi güncellenemedi');
+    },
+  });
+};
+
+// ============ SUBTASKS ============
+export const useAddSubtask = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }) => taskApi.addSubtask(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['task', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.success('Alt görev eklendi');
+    },
+    onError: () => {
+      toast.error('Alt görev eklenemedi');
+    },
+  });
+};
+
+export const useDeleteSubtask = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, subtaskId }) => taskApi.deleteSubtask(id, subtaskId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['task', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.success('Alt görev silindi');
+    },
+    onError: () => {
+      toast.error('Alt görev silinemedi');
+    },
+  });
+};
+
+// ============ BULK OPERATIONS ============
 export const useBulkUpdateTaskStatus = () => {
   const queryClient = useQueryClient();
 
@@ -196,18 +276,17 @@ export const useBulkUpdateTaskStatus = () => {
       return Promise.all(ids.map(id => taskApi.updateStatus(id, status)));
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['tasks']);
-      queryClient.invalidateQueries(['my-tasks']);
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
       toast.success(`${variables.ids.length} görevin durumu güncellendi`);
     },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Toplu güncelleme başarısız');
+    onError: () => {
+      toast.error('Toplu güncelleme başarısız');
     },
   });
 };
 
 // ============ INFINITE QUERIES ============
-
 export const useInfiniteTasks = (params = {}) => {
   return useInfiniteQuery({
     queryKey: ['tasks-infinite', params],
@@ -227,7 +306,6 @@ export const useInfiniteTasks = (params = {}) => {
 };
 
 // ============ PREFETCHING ============
-
 export const prefetchTask = (queryClient, id) => {
   return queryClient.prefetchQuery({
     queryKey: ['task', id],
@@ -245,7 +323,6 @@ export const prefetchTasks = (queryClient, params = {}) => {
 };
 
 // ============ CACHE HELPERS ============
-
 export const updateTaskCache = (queryClient, id, updater) => {
   queryClient.setQueryData(['task', id], (oldData) => {
     if (!oldData) return oldData;
@@ -270,11 +347,10 @@ export const updateTasksCache = (queryClient, params, updater) => {
 };
 
 export const removeTaskFromCache = (queryClient, id) => {
-  queryClient.removeQueries(['task', id]);
+  queryClient.removeQueries({ queryKey: ['task', id] });
 };
 
 // ============ SEARCH ============
-
 export const useSearchTasks = (query, params = {}) => {
   return useQuery({
     queryKey: ['tasks-search', query, params],
@@ -298,6 +374,11 @@ export default {
   useDeleteTask,
   useUpdateTaskStatus,
   useAssignTask,
+  useUpdateProgress,
+  useUpdateTags,
+  useUpdateReminder,
+  useAddSubtask,
+  useDeleteSubtask,
   useBulkUpdateTaskStatus,
   useInfiniteTasks,
   useSearchTasks,

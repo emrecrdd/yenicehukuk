@@ -1,6 +1,7 @@
 import axios from '../../app/config/axios.js';
 
 const taskApi = {
+  // ============ CRUD ============
   getAll: (params) => {
     return axios.get('/tasks', { params });
   },
@@ -21,6 +22,7 @@ const taskApi = {
     return axios.delete(`/tasks/${id}`);
   },
 
+  // ============ STATUS & ASSIGN ============
   updateStatus: (id, status) => {
     return axios.patch(`/tasks/${id}/status`, { status });
   },
@@ -29,6 +31,7 @@ const taskApi = {
     return axios.patch(`/tasks/${id}/assign`, { assigned_to });
   },
 
+  // ============ MY TASKS ============
   getMyTasks: (params) => {
     return axios.get('/tasks/my', { params });
   },
@@ -41,8 +44,33 @@ const taskApi = {
     return axios.get('/tasks/my/upcoming');
   },
 
+  // ============ STATISTICS ============
   getStatistics: () => {
     return axios.get('/tasks/statistics');
+  },
+
+  // ============ PROGRESS ============
+  updateProgress: (id, progress) => {
+    return axios.patch(`/tasks/${id}/progress`, { progress });
+  },
+
+  // ============ TAGS ============
+  updateTags: (id, tags) => {
+    return axios.patch(`/tasks/${id}/tags`, { tags });
+  },
+
+  // ============ REMINDER ============
+  updateReminder: (id, reminder_date) => {
+    return axios.patch(`/tasks/${id}/reminder`, { reminder_date });
+  },
+
+  // ============ SUBTASKS ============
+  addSubtask: (id, data) => {
+    return axios.post(`/tasks/${id}/subtasks`, data);
+  },
+
+  deleteSubtask: (id, subtaskId) => {
+    return axios.delete(`/tasks/${id}/subtasks/${subtaskId}`);
   },
 };
 

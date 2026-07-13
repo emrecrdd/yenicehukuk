@@ -4,6 +4,7 @@ import { logger } from '../../config/logger.js';
 import { AuditLog } from '../../models/AuditLog.js';
 
 export const taskController = {
+  // ============ CREATE ============
   async create(req, res) {
     try {
       const taskData = { ...req.body, created_by: req.user.id };
@@ -26,6 +27,7 @@ export const taskController = {
     }
   },
 
+  // ============ FIND ALL ============
   async findAll(req, res) {
     try {
       const { page = 1, limit = 10, search, status, priority, assigned_to, case_id } = req.query;
@@ -37,37 +39,27 @@ export const taskController = {
     }
   },
 
-  // ✅ DÜZELTİLMİŞ findOne
+  // ============ FIND ONE ============
   async findOne(req, res) {
     try {
       const { id } = req.params;
-      
-      console.log(`🔍 Task aranıyor: ${id}`);
-      
-      // Önce task'ı bul
       const task = await taskService.findOne(id);
       
-      // Task bulunamadıysa 404 döndür
       if (!task) {
-        console.log(`❌ Task bulunamadı: ${id}`);
         return errorResponse(res, 'Task bulunamadı', 404);
       }
       
-      console.log(`✅ Task bulundu: ${task.id}`);
       return successResponse(res, task, 'Task fetched successfully');
-      
     } catch (error) {
-      console.error('Get task error:', error);
-      
-      // Hata mesajını kontrol et
-      if (error.message === 'Task not found' || error.message.includes('bulunamadı')) {
+      logger.error('Get task error:', error);
+      if (error.message === 'Task not found') {
         return errorResponse(res, 'Task bulunamadı', 404);
       }
-      
       return errorResponse(res, error.message, 404);
     }
   },
 
+  // ============ UPDATE ============
   async update(req, res) {
     try {
       const task = await taskService.update(req.params.id, req.body);
@@ -89,6 +81,7 @@ export const taskController = {
     }
   },
 
+  // ============ DELETE ============
   async remove(req, res) {
     try {
       const task = await taskService.findOne(req.params.id);
@@ -111,6 +104,7 @@ export const taskController = {
     }
   },
 
+  // ============ UPDATE STATUS ============
   async updateStatus(req, res) {
     try {
       const { status } = req.body;
@@ -133,6 +127,7 @@ export const taskController = {
     }
   },
 
+  // ============ ASSIGN ============
   async assignTask(req, res) {
     try {
       const { assigned_to } = req.body;
@@ -155,6 +150,7 @@ export const taskController = {
     }
   },
 
+  // ============ MY TASKS ============
   async getMyTasks(req, res) {
     try {
       const { page = 1, limit = 10, status } = req.query;
@@ -166,6 +162,7 @@ export const taskController = {
     }
   },
 
+  // ============ STATISTICS ============
   async getStatistics(req, res) {
     try {
       const stats = await taskService.getStatistics(req.user.id);
@@ -176,6 +173,7 @@ export const taskController = {
     }
   },
 
+  // ============ OVERDUE ============
   async getOverdue(req, res) {
     try {
       const tasks = await taskService.getOverdue(req.user.id);
@@ -186,12 +184,172 @@ export const taskController = {
     }
   },
 
+  // ============ UPCOMING ============
   async getUpcoming(req, res) {
     try {
       const tasks = await taskService.getUpcoming(req.user.id);
       return successResponse(res, tasks, 'Upcoming tasks fetched successfully');
     } catch (error) {
       logger.error('Get upcoming tasks error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  // ============ PROGRESS ============
+  async updateProgress(req, res) {
+    try {
+      const { id } = req.params;
+      const { progress } = req.body;
+
+      if (progress === undefined || progress === null) {
+        return errorResponse(res, 'Progress değeri gereklidir', 400);
+      }
+      if (typeof progress !== 'number' || progress < 0 || progress > 100) {
+        return errorResponse(res, 'Progress 0-100 arasında olmalıdır', 400);
+      }
+
+      const task = await taskService.update(id, { progress });
+
+      await AuditLog.create({
+        action: 'update',
+        entity_type: 'task',
+        entity_id: task.id,
+        user_id: req.user.id,
+        description: `"${task.title}" görev ilerlemesi %${progress} olarak güncellendi`,
+        ip_address: req.ip,
+        user_agent: req.headers['user-agent'],
+      });
+
+      return successResponse(res, task, 'Progress güncellendi');
+    } catch (error) {
+      logger.error('Update progress error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  // ============ TAGS ============
+  async updateTags(req, res) {
+    try {
+      const { id } = req.params;
+      const { tags } = req.body;
+
+      if (!Array.isArray(tags)) {
+        return errorResponse(res, 'Tags bir dizi olmalıdır', 400);
+      }
+
+      const task = await taskService.update(id, { tags });
+
+      await AuditLog.create({
+        action: 'update',
+        entity_type: 'task',
+        entity_id: task.id,
+        user_id: req.user.id,
+        description: `"${task.title}" görev etiketleri güncellendi`,
+        ip_address: req.ip,
+        user_agent: req.headers['user-agent'],
+      });
+
+      return successResponse(res, task, 'Tags güncellendi');
+    } catch (error) {
+      logger.error('Update tags error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  // ============ REMINDER ============
+  async updateReminder(req, res) {
+    try {
+      const { id } = req.params;
+      const { reminder_date } = req.body;
+
+      const task = await taskService.update(id, { reminder_date });
+
+      await AuditLog.create({
+        action: 'update',
+        entity_type: 'task',
+        entity_id: task.id,
+        user_id: req.user.id,
+        description: `"${task.title}" görev hatırlatma tarihi güncellendi`,
+        ip_address: req.ip,
+        user_agent: req.headers['user-agent'],
+      });
+
+      return successResponse(res, task, 'Reminder güncellendi');
+    } catch (error) {
+      logger.error('Update reminder error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  // ============ ADD SUBTASK ============
+  async addSubtask(req, res) {
+    try {
+      const { id } = req.params;
+      const { title, description, status, priority, due_date } = req.body;
+
+      if (!title || title.trim() === '') {
+        return errorResponse(res, 'Subtask başlığı gereklidir', 400);
+      }
+
+      const subtaskData = {
+        title: title.trim(),
+        description: description || '',
+        status: status || 'pending',
+        priority: priority || 'normal',
+        due_date: due_date || null,
+        parent_task_id: id,
+        created_by: req.user.id,
+      };
+
+      const subtask = await taskService.create(subtaskData);
+
+      await AuditLog.create({
+        action: 'create',
+        entity_type: 'task',
+        entity_id: subtask.id,
+        user_id: req.user.id,
+        description: `"${subtask.title}" alt görevi eklendi`,
+        ip_address: req.ip,
+        user_agent: req.headers['user-agent'],
+      });
+
+      return successResponse(res, subtask, 'Subtask eklendi', 201);
+    } catch (error) {
+      logger.error('Add subtask error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  // ============ DELETE SUBTASK ============
+  async deleteSubtask(req, res) {
+    try {
+      const { id, subtaskId } = req.params;
+
+      const subtask = await taskService.findOne(subtaskId);
+      
+      if (!subtask) {
+        return errorResponse(res, 'Subtask bulunamadı', 404);
+      }
+      
+      if (subtask.parent_task_id !== id) {
+        return errorResponse(res, 'Bu task\'a ait bir subtask değil', 403);
+      }
+
+      await taskService.remove(subtaskId);
+
+      await AuditLog.create({
+        action: 'delete',
+        entity_type: 'task',
+        entity_id: subtaskId,
+        user_id: req.user.id,
+        description: `"${subtask.title}" alt görevi silindi`,
+        ip_address: req.ip,
+        user_agent: req.headers['user-agent'],
+      });
+
+      return successResponse(res, null, 'Subtask silindi');
+    } catch (error) {
+      logger.error('Delete subtask error:', error);
       return errorResponse(res, error.message, 400);
     }
   },
