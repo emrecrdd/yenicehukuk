@@ -8,7 +8,7 @@ import {
   useCompleteTask,
   useUpdateProgress,
   useReassignTask,
-} from '../hooks/task.query.js';  // ✅ DOĞRU
+} from '../../task.query.js';  // ✅ DOĞRU
 import { useAuth } from '../../../hooks/useAuth.js';  // ✅ DOĞRU
 import Badge from '../../../components/ui/Badge.jsx';
 import Card from '../../../components/ui/Card.jsx';

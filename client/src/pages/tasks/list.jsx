@@ -1,7 +1,7 @@
 // 📁 client/src/features/tasks/pages/TaskList.jsx
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useTasks, useCompleteTask } from '../hooks/task.query.js';  // ✅ DOĞRU
+import { useTasks, useCompleteTask } from '../../task.query.js';  // ✅ DOĞRU
 import { useAuth } from '../../../hooks/useAuth.js';  // ✅ DOĞRU
 import { useDebounce } from '../../../hooks/useDebounce.js';  // ✅ DOĞRU
 import Button from '../../../components/ui/Button.jsx';

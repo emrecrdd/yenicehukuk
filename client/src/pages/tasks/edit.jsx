@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useTask, useUpdateTask, useDeleteTask } from '../hooks/task.query.js';  // ✅ DOĞRU
+import { useTask, useUpdateTask, useDeleteTask } from '../..  /task.query.js';  // ✅ DOĞRU
 import { useAuth } from '../../../hooks/useAuth.js';  // ✅ DOĞRU
 import caseApi from '../../cases/case.api.js';
 import clientApi from '../../clients/client.api.js';
