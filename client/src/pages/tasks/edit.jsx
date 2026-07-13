@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query'; // ✅ useQueryClient eklendi
 import taskApi from '../../features/tasks/task.api.js';
 import caseApi from '../../features/cases/case.api.js';
 import clientApi from '../../features/clients/client.api.js';
@@ -16,7 +16,7 @@ const TaskEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient(); // ✅ EKLENDİ
 
   const [formData, setFormData] = useState({
     title: '',
@@ -92,7 +92,17 @@ const TaskEdit = () => {
 
   const handleDelete = () => {
     if (window.confirm(`"${task?.title}" görevini silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`)) {
-      deleteMutation.mutate(id);
+      deleteMutation.mutate(id, {
+        onSuccess: () => {
+          // ✅ Cache'den temizle
+          queryClient.removeQueries({ queryKey: ['task', id] });
+          queryClient.invalidateQueries({ queryKey: ['tasks'] });
+          queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+          
+          toast.success('Görev silindi');
+          navigate('/tasks');
+        }
+      });
     }
   };
 
@@ -124,7 +134,24 @@ const TaskEdit = () => {
       estimated_hours: formData.estimated_hours ? parseFloat(formData.estimated_hours) : null,
     };
     
-    updateMutation.mutate({ id, data: submitData });
+    // ✅ Mutation'ı manuel çalıştır ve success/error yönet
+    updateMutation.mutate(
+      { id, data: submitData },
+      {
+        onSuccess: () => {
+          // ✅ Tüm listeleri güncelle
+          queryClient.invalidateQueries({ queryKey: ['tasks'] });
+          queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+          queryClient.invalidateQueries({ queryKey: ['task', id] });
+          
+          toast.success('Görev başarıyla güncellendi');
+          navigate('/tasks');
+        },
+        onError: (error) => {
+          toast.error(error.response?.data?.message || 'Görev güncellenemedi');
+        }
+      }
+    );
   };
 
   if (taskLoading) {
@@ -237,7 +264,7 @@ const TaskEdit = () => {
             </div>
           </div>
 
-          {/* ✅ Tahmini Süre */}
+          {/* Tahmini Süre */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               ⏱️ Tahmini Süre (Saat)
