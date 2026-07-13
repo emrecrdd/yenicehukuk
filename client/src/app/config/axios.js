@@ -2,7 +2,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const API_URL =
-  import.meta.env.VITE_API_URL || 'https://yenicehukuk.onrender.com/api';
+  import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
