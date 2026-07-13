@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query'; // ✅ useQueryClient eklendi
 import taskApi from '../../features/tasks/task.api.js';
 import caseApi from '../../features/cases/case.api.js';
 import clientApi from '../../features/clients/client.api.js';
@@ -10,10 +10,12 @@ import { useAuth } from '../../app/providers/auth.provider.jsx';
 import Button from '../../components/ui/Button.jsx';
 import Input from '../../components/ui/Input.jsx';
 import Card from '../../components/ui/Card.jsx';
+import toast from 'react-hot-toast';
 
 const TaskCreate = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient(); // ✅ EKLENDİ
 
   const [formData, setFormData] = useState({
     title: '',
@@ -25,7 +27,7 @@ const TaskCreate = () => {
     case_id: '',
     client_id: '',
     estimated_hours: '',
-    note: '', // ✅ YENİ: Not alanı
+    note: '',
   });
   const [errors, setErrors] = useState({});
 
@@ -94,7 +96,20 @@ const TaskCreate = () => {
       estimated_hours: formData.estimated_hours ? parseFloat(formData.estimated_hours) : null,
     };
 
-    createMutation.mutate(submitData);
+    // ✅ Mutation'ı manuel çalıştır ve success/error yönet
+    createMutation.mutate(submitData, {
+      onSuccess: () => {
+        // ✅ Tüm task listelerini güncelle
+        queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+        
+        toast.success('Görev başarıyla oluşturuldu');
+        navigate('/tasks');
+      },
+      onError: (error) => {
+        toast.error(error.response?.data?.message || 'Görev oluşturulamadı');
+      }
+    });
   };
 
   return (
@@ -135,7 +150,7 @@ const TaskCreate = () => {
             />
           </div>
 
-          {/* ✅ YENİ: Not Alanı */}
+          {/* Not Alanı */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               📝 Başlangıç Notu (isteğe bağlı)
@@ -202,7 +217,7 @@ const TaskCreate = () => {
             </div>
           </div>
 
-          {/* ✅ YENİ: Tahmini Süre */}
+          {/* Tahmini Süre */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               ⏱️ Tahmini Süre (Saat)
