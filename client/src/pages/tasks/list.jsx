@@ -4,10 +4,10 @@ import { Link } from 'react-router-dom';
 import { useTasks, useCompleteTask } from "../../features/tasks/task.query.js";
 import { useAuth } from "../../hooks/useAuth.js";
 import { useDebounce } from "../../hooks/useDebounce.js";
-import Button from "../../../components/ui/Button.jsx";
-import Input from "../../../components/ui/Input.jsx";
-import Table from "../../../components/ui/Table.jsx";
-import Badge from "../../../components/ui/Badge.jsx";
+import Button from "../../components/ui/Button.jsx";
+import Input from "../../components/ui/Input.jsx";
+import Table from "../../components/ui/Table.jsx";
+import Badge from "../../components/ui/Badge.jsx";
 import { CheckCircle } from 'lucide-react';
 
 const TasksList = () => {
