@@ -85,8 +85,8 @@ const Sidebar = ({ open, onClose }) => {
 
         <hr className="border-white/5 mx-4" />
 
-        {/* Menü - SCROLL YOK */}
-        <nav className="flex-1 px-2 py-2">
+        {/* Menü - ortalanmış, flex-1 ile tüm alanı kaplar */}
+        <nav className="flex-1 flex flex-col justify-center px-2 py-2">
           {menuItems.map((item) => renderNavLink(item))}
 
           {isAdmin && (
@@ -143,7 +143,8 @@ const Sidebar = ({ open, onClose }) => {
 
         <hr className="border-white/5 mx-4" />
 
-        <nav className="px-2 py-2 pb-6">
+        {/* Mobile menü - ortalanmış */}
+        <nav className="flex-1 flex flex-col justify-center px-2 py-2">
           {menuItems.map((item) => renderNavLink(item, onClose))}
 
           {isAdmin && (
