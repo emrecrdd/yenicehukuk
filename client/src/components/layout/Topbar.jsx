@@ -176,7 +176,7 @@ const Topbar = ({ onMenuClick }) => {
           </div>
         </div>
 
-        {/* RIGHT - Tarih ve isim kaldırıldı */}
+        {/* RIGHT */}
         <div className="flex items-center gap-3 md:gap-4">
           {/* Search */}
           <div
@@ -239,7 +239,7 @@ const Topbar = ({ onMenuClick }) => {
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-[360px] bg-white dark:bg-[#0a1628] rounded-2xl shadow-2xl border border-white/10 backdrop-blur-xl overflow-hidden z-50">
+              <div className="absolute right-0 mt-2 w-[360px] max-w-[calc(100vw-1rem)] sm:max-w-[360px] bg-white dark:bg-[#0a1628] rounded-2xl shadow-2xl border border-white/10 backdrop-blur-xl overflow-hidden z-50">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
                   <h3 className="font-semibold text-gray-900 dark:text-white">Bildirimler</h3>
                   {unreadCount > 0 && (
