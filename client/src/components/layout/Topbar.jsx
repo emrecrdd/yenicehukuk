@@ -150,42 +150,36 @@ const Topbar = ({ onMenuClick }) => {
 
   return (
     <header className="sticky top-0 z-20 bg-white/70 dark:bg-[#071b36]/70 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
-      <div className="flex items-center justify-between px-4 md:px-8 h-20">
+      <div className="flex items-center justify-between px-3 md:px-8 h-16 md:h-20">
         {/* LEFT */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           <button
             onClick={onMenuClick}
             className="lg:hidden p-2 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
           >
-            <Menu size={22} />
+            <Menu size={20} />
           </button>
 
-          <div className="hidden lg:block">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+          <div className="hidden md:block">
+            <h1 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
               {pageTitle}
             </h1>
-            <p className="text-xs text-gray-400 dark:text-blue-300/40 font-medium">
+            <p className="text-xs text-gray-400 dark:text-blue-300/40 font-medium hidden lg:block">
               {breadcrumb}
             </p>
           </div>
 
-          <div className="lg:hidden">
-            <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+          <div className="md:hidden">
+            <h1 className="text-sm font-bold text-gray-900 dark:text-white truncate max-w-[120px]">
               {pageTitle}
             </h1>
           </div>
         </div>
 
         {/* RIGHT */}
-        <div className="flex items-center gap-3 md:gap-4">
-          {/* Search */}
-          <div
-            className={`hidden md:flex items-center gap-2 px-4 lg:w-80 xl:w-96 h-11 bg-gray-100 dark:bg-[#10294b] rounded-xl border transition-all duration-200 ${
-              searchFocused
-                ? 'border-blue-500/50 shadow-lg shadow-blue-500/10'
-                : 'border-transparent'
-            }`}
-          >
+        <div className="flex items-center gap-1 md:gap-3">
+          {/* Search - Mobilde gizle */}
+          <div className="hidden lg:flex items-center gap-2 px-3 lg:px-4 w-48 lg:w-80 xl:w-96 h-10 lg:h-11 bg-gray-100 dark:bg-[#10294b] rounded-xl border transition-all duration-200">
             <Search size={18} className="text-gray-400 dark:text-blue-300/40" />
             <input
               type="text"
@@ -194,29 +188,38 @@ const Topbar = ({ onMenuClick }) => {
               onFocus={() => setSearchFocused(true)}
               onBlur={() => setSearchFocused(false)}
             />
-            <span className="text-xs text-gray-400 dark:text-blue-300/30 font-mono">⌘K</span>
+            <span className="text-xs text-gray-400 dark:text-blue-300/30 font-mono hidden xl:block">⌘K</span>
           </div>
 
-          {/* Socket Status */}
-          <div className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${isConnected ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+          {/* Search Icon - Mobilde */}
+          <Link
+            to="/search"
+            className="lg:hidden p-2 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+          >
+            <Search size={18} />
+          </Link>
+
+          {/* Socket Status - Mobilde sadece nokta */}
+          <div className={`hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${isConnected ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
-            {isConnected ? 'Sistem Aktif' : 'Bağlantı yok'}
+            <span className="hidden lg:inline">{isConnected ? 'Sistem Aktif' : 'Bağlantı yok'}</span>
           </div>
+          <span className={`sm:hidden w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
 
-          {/* Theme Toggle */}
+          {/* Theme Toggle - Mobilde küçült */}
           <button
             onClick={toggleTheme}
-            className="relative w-12 h-7 rounded-full bg-gray-200 dark:bg-[#10294b] transition-colors duration-300 flex items-center px-1 flex-shrink-0"
+            className="relative w-10 md:w-12 h-6 md:h-7 rounded-full bg-gray-200 dark:bg-[#10294b] transition-colors duration-300 flex items-center px-1 flex-shrink-0"
           >
             <div
-              className={`w-5 h-5 rounded-full bg-white dark:bg-yellow-400 shadow-md transform transition-all duration-300 flex items-center justify-center ${
-                theme === 'dark' ? 'translate-x-5' : 'translate-x-0'
+              className={`w-4 h-4 md:w-5 md:h-5 rounded-full bg-white dark:bg-yellow-400 shadow-md transform transition-all duration-300 flex items-center justify-center ${
+                theme === 'dark' ? 'translate-x-4 md:translate-x-5' : 'translate-x-0'
               }`}
             >
               {theme === 'dark' ? (
-                <Moon size={12} className="text-gray-800" />
+                <Moon size={10} className="text-gray-800" />
               ) : (
-                <Sun size={12} className="text-yellow-500" />
+                <Sun size={10} className="text-yellow-500" />
               )}
             </div>
           </button>
@@ -228,20 +231,20 @@ const Topbar = ({ onMenuClick }) => {
                 setShowNotifications(!showNotifications);
                 refetchUnread();
               }}
-              className="relative p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              className="relative p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
             >
-              <Bell size={20} className="text-gray-600 dark:text-gray-300" />
+              <Bell size={18} className="text-gray-600 dark:text-gray-300" />
               {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1.5">
+                <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center px-1">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-[360px] max-w-[calc(100vw-1rem)] sm:max-w-[360px] bg-white dark:bg-[#0a1628] rounded-2xl shadow-2xl border border-white/10 backdrop-blur-xl overflow-hidden z-50">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Bildirimler</h3>
+              <div className="absolute right-0 mt-2 w-[320px] max-w-[calc(100vw-0.5rem)] sm:max-w-[360px] bg-white dark:bg-[#0a1628] rounded-2xl shadow-2xl border border-white/10 backdrop-blur-xl overflow-hidden z-50">
+                <div className="flex items-center justify-between px-3 py-2.5 border-b border-white/5">
+                  <h3 className="font-semibold text-sm text-gray-900 dark:text-white">Bildirimler</h3>
                   {unreadCount > 0 && (
                     <button
                       onClick={() => markAllAsRead.mutate()}
@@ -268,7 +271,7 @@ const Topbar = ({ onMenuClick }) => {
                           setShowNotifications(false);
                           refetchUnread();
                         }}
-                        className={`block px-4 py-3 hover:bg-white/5 transition-colors border-b border-white/5 ${
+                        className={`block px-3 py-2.5 hover:bg-white/5 transition-colors border-b border-white/5 ${
                           !notification.read ? 'bg-blue-500/5' : ''
                         }`}
                       >
@@ -286,7 +289,7 @@ const Topbar = ({ onMenuClick }) => {
                   )}
                 </div>
 
-                <div className="px-4 py-2 border-t border-white/5">
+                <div className="px-3 py-2 border-t border-white/5">
                   <Link
                     to="/notifications"
                     onClick={() => setShowNotifications(false)}
@@ -303,9 +306,9 @@ const Topbar = ({ onMenuClick }) => {
           <div className="relative" ref={userDropdownRef}>
             <button
               onClick={() => setShowDropdown(!showDropdown)}
-              className="flex items-center gap-2 p-1 pr-3 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              className="flex items-center gap-1 p-1 pr-2 md:pr-3 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
             >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-sm font-semibold shadow-lg shadow-blue-500/25">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xs md:text-sm font-semibold shadow-lg shadow-blue-500/25">
                 {user?.first_name?.[0]}{user?.last_name?.[0]}
               </div>
               <div className="hidden lg:block text-left">
@@ -316,7 +319,7 @@ const Topbar = ({ onMenuClick }) => {
                   {user?.role === 'admin' ? 'Yönetici' : user?.role === 'lawyer' ? 'Avukat' : 'Kullanıcı'}
                 </p>
               </div>
-              <ChevronDown size={16} className="text-gray-400 dark:text-blue-300/40 hidden lg:block" />
+              <ChevronDown size={14} className="text-gray-400 dark:text-blue-300/40 hidden lg:block" />
             </button>
 
             {showDropdown && (
