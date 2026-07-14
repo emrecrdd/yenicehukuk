@@ -50,13 +50,13 @@ const Sidebar = ({ open, onClose }) => {
       <NavLink key={item.path} to={item.path} onClick={onClick}>
         {({ isActive }) => (
           <div
-            className={`flex items-center gap-3 mx-3 my-1 px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
+            className={`flex items-center gap-3 mx-3 my-0.5 px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
               isActive
                 ? 'bg-white/10 text-white shadow-lg'
                 : 'text-blue-100/70 hover:bg-white/5 hover:text-white'
             }`}
           >
-            <Icon size={18} strokeWidth={2} />
+            <Icon size={17} strokeWidth={2} />
             <span className="text-sm font-medium">{item.label}</span>
           </div>
         )}
@@ -67,32 +67,32 @@ const Sidebar = ({ open, onClose }) => {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col bg-gradient-to-b from-[#061942] via-[#08265f] to-[#061942] border-r border-[#1f3c7a] overflow-hidden z-30">
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col bg-gradient-to-b from-[#061942] via-[#08265f] to-[#061942] border-r border-[#1f3c7a] z-30">
         {/* Logo */}
-        <div className="flex-shrink-0 p-4 pb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center">
-              <Gavel className="text-yellow-400" size={24} />
+        <div className="flex-shrink-0 px-4 pt-4 pb-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-yellow-500/20 flex items-center justify-center">
+              <Gavel className="text-yellow-400" size={20} />
             </div>
             <div>
-              <h2 className="font-bold text-lg tracking-tight text-white">Derkenar</h2>
-              <p className="text-[9px] uppercase tracking-wider text-blue-300/50">
-                Hukuk Büro Yönetim Sistemi
+              <h2 className="font-bold text-base tracking-tight text-white">Derkenar</h2>
+              <p className="text-[8px] uppercase tracking-wider text-blue-300/40">
+                Hukuk Büro Yönetim
               </p>
             </div>
           </div>
         </div>
 
-        <hr className="border-white/5 mx-5" />
+        <hr className="border-white/5 mx-4" />
 
-        {/* Menü - Kullanıcı kartı yok, menü yukarıdan başlıyor */}
-        <nav className="flex-1 overflow-hidden px-2 py-3">
+        {/* Menü - SCROLL YOK */}
+        <nav className="flex-1 px-2 py-2">
           {menuItems.map((item) => renderNavLink(item))}
 
           {isAdmin && (
             <>
-              <div className="px-4 mt-4 mb-2">
-                <p className="text-[9px] uppercase tracking-[2px] text-blue-300/30 font-semibold">
+              <div className="px-3 mt-3 mb-1">
+                <p className="text-[8px] uppercase tracking-[2px] text-blue-300/30 font-semibold">
                   Yönetim
                 </p>
               </div>
@@ -119,16 +119,16 @@ const Sidebar = ({ open, onClose }) => {
         }`}
       >
         {/* Mobile Logo */}
-        <div className="p-5 pb-3">
+        <div className="p-4 pb-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center">
-                <Gavel className="text-yellow-400" size={24} />
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-yellow-500/20 flex items-center justify-center">
+                <Gavel className="text-yellow-400" size={20} />
               </div>
               <div>
-                <h2 className="font-bold text-lg tracking-tight text-white">Derkenar</h2>
-                <p className="text-[9px] uppercase tracking-wider text-blue-300/50">
-                  Hukuk Büro Yönetim Sistemi
+                <h2 className="font-bold text-base tracking-tight text-white">Derkenar</h2>
+                <p className="text-[8px] uppercase tracking-wider text-blue-300/40">
+                  Hukuk Büro Yönetim
                 </p>
               </div>
             </div>
@@ -141,16 +141,15 @@ const Sidebar = ({ open, onClose }) => {
           </div>
         </div>
 
-        <hr className="border-white/5 mx-5" />
+        <hr className="border-white/5 mx-4" />
 
-        {/* Menü - Kullanıcı kartı yok */}
-        <nav className="px-2 py-3 pb-6">
+        <nav className="px-2 py-2 pb-6">
           {menuItems.map((item) => renderNavLink(item, onClose))}
 
           {isAdmin && (
             <>
-              <div className="px-4 mt-4 mb-2">
-                <p className="text-[9px] uppercase tracking-[2px] text-blue-300/30 font-semibold">
+              <div className="px-3 mt-3 mb-1">
+                <p className="text-[8px] uppercase tracking-[2px] text-blue-300/30 font-semibold">
                   Yönetim
                 </p>
               </div>
