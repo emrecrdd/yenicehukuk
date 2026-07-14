@@ -6,7 +6,7 @@ const Sidebar = ({ open, onClose }) => {
   const { user } = useAuth();
 
   const menuItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: '📊' },
+    { path: '/dashboard', label: 'Anasayfa', icon: '📊' },
     { path: '/clients', label: 'Müvekkiller', icon: '👤' },
     { path: '/cases', label: 'Davalar', icon: '📁' },
     { path: '/documents', label: 'Belgeler', icon: '📄' },

@@ -19,7 +19,9 @@ const ClientsList = () => {
     keepPreviousData: true,
   });
 
+
   const clients = data?.data?.data?.filter(client => client?.id) || [];
+
   const pagination = data?.data?.pagination;
 
   const handleSearch = () => {
