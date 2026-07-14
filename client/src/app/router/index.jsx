@@ -91,11 +91,13 @@ const AppRouter = () => {
     <Routes>
       {/* Public Routes */}
       <Route element={<PublicRoute />}>
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+        
         <Route element={<AuthLayout />}>
+
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         </Route>
       </Route>
 

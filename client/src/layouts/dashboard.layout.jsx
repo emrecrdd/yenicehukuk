@@ -6,6 +6,7 @@ import MobileNav from '../components/layout/MobileNav.jsx';
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     if (sidebarOpen) {
@@ -18,21 +19,29 @@ const DashboardLayout = () => {
     };
   }, [sidebarOpen]);
 
+  const sidebarWidth = isSidebarCollapsed ? 'w-20' : 'w-64';
+  const marginLeft = isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64';
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
-      <div className="lg:pl-64 flex flex-col min-h-screen">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
+      {/* Sidebar - Collapsible */}
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
+
+      {/* Ana İçerik */}
+      <div className={`flex-1 flex flex-col min-w-0 ${marginLeft}`}>
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
-        
-        {/* ✅ İçerik kayar, alt boşluk bırakır */}
-        <main className="flex-1 p-4 md:p-6 pb-32 lg:pb-6 overflow-y-auto">
+
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-32 lg:pb-6">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>
         </main>
 
-        {/* ✅ MobileNav her zaman en altta */}
         <div className="lg:hidden flex-shrink-0">
           <MobileNav />
         </div>

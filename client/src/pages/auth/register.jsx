@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useRegister } from '../../features/auth/auth.hook.js';
+import { Eye, EyeOff, Mail, Lock, User, Users } from 'lucide-react';
 
 const Register = () => {
   const navigate = useNavigate();
   const register = useRegister();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -55,137 +58,194 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            ⚖️  Derkenar Hukuk Bürosu Yönetim Sistemi
-          </h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Yeni Hesap Oluştur
-          </p>
-        </div>
+    <div className="w-full">
+      {/* Başlık */}
+      <div className="hidden lg:block mb-8">
+        <h2 className="text-2xl font-bold text-white">Hesap Oluştur</h2>
+        <p className="text-sm text-blue-300/50">Yeni hesap oluşturun</p>
+      </div>
 
-        <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Ad *
-              </label>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Ad Soyad */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-blue-200/80 mb-1.5">
+              Ad *
+            </label>
+            <div className="relative">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300/40" />
               <input
                 type="text"
                 name="first_name"
                 value={formData.first_name}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                placeholder="Ad"
+                className="w-full h-12 pl-11 pr-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-blue-300/30 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
               />
-              {errors.first_name && (
-                <p className="mt-1 text-sm text-red-600">{errors.first_name}</p>
-              )}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Soyad *
-              </label>
+            {errors.first_name && (
+              <p className="mt-1.5 text-sm text-red-400">{errors.first_name}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-blue-200/80 mb-1.5">
+              Soyad *
+            </label>
+            <div className="relative">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300/40" />
               <input
                 type="text"
                 name="last_name"
                 value={formData.last_name}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                placeholder="Soyad"
+                className="w-full h-12 pl-11 pr-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-blue-300/30 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
               />
-              {errors.last_name && (
-                <p className="mt-1 text-sm text-red-600">{errors.last_name}</p>
-              )}
             </div>
+            {errors.last_name && (
+              <p className="mt-1.5 text-sm text-red-400">{errors.last_name}</p>
+            )}
           </div>
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              E-posta *
-            </label>
+        {/* Email */}
+        <div>
+          <label className="block text-sm font-medium text-blue-200/80 mb-1.5">
+            E-posta *
+          </label>
+          <div className="relative">
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300/40" />
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-              placeholder="ornek@email.com"
+              placeholder="ornek@firma.com"
+              className="w-full h-12 pl-11 pr-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-blue-300/30 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
             />
-            {errors.email && (
-              <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-            )}
           </div>
+          {errors.email && (
+            <p className="mt-1.5 text-sm text-red-400">{errors.email}</p>
+          )}
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Şifre *
-            </label>
+        {/* Şifre */}
+        <div>
+          <label className="block text-sm font-medium text-blue-200/80 mb-1.5">
+            Şifre *
+          </label>
+          <div className="relative">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300/40" />
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               placeholder="••••••••"
+              className="w-full h-12 pl-11 pr-12 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-blue-300/30 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
             />
-            {errors.password && (
-              <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-            )}
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-300/40 hover:text-blue-300/70 transition-colors"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
+          {errors.password && (
+            <p className="mt-1.5 text-sm text-red-400">{errors.password}</p>
+          )}
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Şifre (Tekrar) *
-            </label>
+        {/* Şifre Tekrar */}
+        <div>
+          <label className="block text-sm font-medium text-blue-200/80 mb-1.5">
+            Şifre Tekrar *
+          </label>
+          <div className="relative">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300/40" />
             <input
-              type="password"
+              type={showConfirmPassword ? 'text' : 'password'}
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               placeholder="••••••••"
+              className="w-full h-12 pl-11 pr-12 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-blue-300/30 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
             />
-            {errors.confirmPassword && (
-              <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
-            )}
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-300/40 hover:text-blue-300/70 transition-colors"
+            >
+              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
+          {errors.confirmPassword && (
+            <p className="mt-1.5 text-sm text-red-400">{errors.confirmPassword}</p>
+          )}
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Rol
-            </label>
+        {/* Rol */}
+        <div>
+          <label className="block text-sm font-medium text-blue-200/80 mb-1.5">
+            Rol
+          </label>
+          <div className="relative">
+            <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300/40" />
             <select
               name="role"
               value={formData.role}
               onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              className="w-full h-12 pl-11 pr-4 bg-white/5 border border-white/10 rounded-xl text-white appearance-none focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 cursor-pointer"
             >
-              <option value="admin">Yönetici</option>
-              <option value="lawyer">Avukat</option>
-              <option value="intern">Stajyer</option>
-              <option value="secretary">Sekreter</option>
+              <option value="admin" className="bg-[#0f2847]">Yönetici</option>
+              <option value="lawyer" className="bg-[#0f2847]">Avukat</option>
+              <option value="intern" className="bg-[#0f2847]">Stajyer</option>
+              <option value="secretary" className="bg-[#0f2847]">Sekreter</option>
             </select>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-300/40 pointer-events-none">
+              ▼
+            </div>
           </div>
-
-          <button
-            type="submit"
-            disabled={register.isPending}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {register.isPending ? 'Kayıt yapılıyor...' : 'Kayıt Ol'}
-          </button>
-        </form>
-
-        <div className="text-center">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Zaten hesabın var mı?{' '}
-            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-              Giriş Yap
-            </Link>
-          </p>
         </div>
-      </div>
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={register.isPending}
+          className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+        >
+          {register.isPending ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Kayıt yapılıyor...
+            </span>
+          ) : (
+            'Kayıt Ol'
+          )}
+        </button>
+
+        {/* Divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-white/5"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-4 bg-[#0f2847] text-blue-300/30">veya</span>
+          </div>
+        </div>
+
+        {/* Login Link */}
+        <p className="text-center text-sm text-blue-300/50">
+          Zaten hesabın var mı?{' '}
+          <Link to="/login" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
+            Giriş Yap
+          </Link>
+        </p>
+      </form>
     </div>
   );
 };

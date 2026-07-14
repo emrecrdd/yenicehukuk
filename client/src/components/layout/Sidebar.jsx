@@ -13,9 +13,9 @@ import {
   Settings,
   Sparkles,
   Wallet,
-  Gavel,
   Shield,
   ClipboardList,
+  Gavel,
 } from 'lucide-react';
 
 const Sidebar = ({ open, onClose }) => {
@@ -42,32 +42,25 @@ const Sidebar = ({ open, onClose }) => {
   ];
 
   const isAdmin = user?.role === ROLES.ADMIN;
-  const userInitials = user?.first_name?.[0] || '' + user?.last_name?.[0] || '';
+  const userInitials = (user?.first_name?.[0] || '') + (user?.last_name?.[0] || '');
 
   const renderNavLink = (item, onClick) => {
     const Icon = item.icon;
 
     return (
-      <NavLink
-        key={item.path}
-        to={item.path}
-        onClick={onClick}
-        className={({ isActive }) =>
-          `flex items-center gap-3 mx-3 my-1 px-4 py-3 rounded-xl transition-all duration-200 ${
-            isActive
-              ? 'bg-[#0d3f9f] text-white shadow-lg'
-              : 'text-blue-100 hover:bg-[#123b88]'
-          }`
-        }
-      >
-        <Icon
-          size={20}
-          strokeWidth={2}
-          className={({ isActive }) =>
-            isActive ? 'text-white' : 'text-blue-200'
-          }
-        />
-        <span>{item.label}</span>
+      <NavLink key={item.path} to={item.path} onClick={onClick}>
+        {({ isActive }) => (
+          <div
+            className={`flex items-center gap-3 mx-3 my-1 px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
+              isActive
+                ? 'bg-white/10 text-white shadow-lg'
+                : 'text-blue-100/70 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <Icon size={18} strokeWidth={2} />
+            <span className="text-sm font-medium">{item.label}</span>
+          </div>
+        )}
       </NavLink>
     );
   };
@@ -75,51 +68,40 @@ const Sidebar = ({ open, onClose }) => {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:block fixed top-0 left-0 w-64 h-full bg-gradient-to-b from-[#061942] via-[#08265f] to-[#061942] text-white border-r border-[#1f3c7a] overflow-y-auto relative z-30">
-        {/* Logo */}
-        <div className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-yellow-500/15 flex items-center justify-center">
-              <Gavel className="text-yellow-400" size={28} />
-            </div>
-            <div>
-              <h2 className="font-bold text-xl tracking-wide">
-                Derkenar
-              </h2>
-              <p className="text-xs text-blue-200">
-                Hukuk Büro Yönetim Sistemi
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Kullanıcı Kartı */}
-        <div className="mt-6 flex items-center gap-3 px-4">
-          <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center font-semibold text-white text-lg">
-            {userInitials || 'U'}
-          </div>
-          <div>
-            <p className="font-medium text-white">
-              {user?.first_name} {user?.last_name}
-            </p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="w-2 h-2 rounded-full bg-green-400"></span>
-              <span className="text-xs text-blue-200">Online</span>
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col bg-gradient-to-b from-[#061942] via-[#08265f] to-[#061942] border-r border-[#1f3c7a] overflow-hidden z-30">
+        {/* Kullanıcı */}
+        <div className="flex-shrink-0 px-4 pt-5 pb-3">
+          <div className="bg-white/5 rounded-xl p-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-blue-500/30 flex items-center justify-center font-semibold text-white text-sm border border-white/10">
+                {userInitials || 'U'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">
+                  {user?.first_name} {user?.last_name}
+                </p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  <span className="text-[10px] text-blue-300/50">Online</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <hr className="border-blue-900 my-6 mx-4" />
+        <hr className="border-white/5 mx-5" />
 
         {/* Menü */}
-        <nav className="pb-8">
+        <nav className="flex-1 overflow-hidden px-2 py-3">
           {menuItems.map((item) => renderNavLink(item))}
 
           {isAdmin && (
             <>
-              <p className="px-6 mt-8 mb-2 text-[11px] uppercase tracking-[2px] text-blue-300 font-semibold">
-                Yönetim
-              </p>
+              <div className="px-4 mt-4 mb-2">
+                <p className="text-[9px] uppercase tracking-[2px] text-blue-300/30 font-semibold">
+                  Yönetim
+                </p>
+              </div>
               {adminMenuItems.map((item) => renderNavLink(item))}
             </>
           )}
@@ -129,52 +111,73 @@ const Sidebar = ({ open, onClose }) => {
         <div className="sidebar-pattern" />
       </aside>
 
-      {/* Mobile Overlay */}
+      {/* Mobile Sidebar */}
       {open && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
           onClick={onClose}
         />
       )}
 
-      {/* Mobile Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-[#061942] via-[#08265f] to-[#061942] text-white z-50 transform transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto ${
+        className={`fixed inset-y-0 left-0 w-72 bg-gradient-to-b from-[#061942] via-[#08265f] to-[#061942] text-white z-50 transform transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto shadow-2xl ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-yellow-500/15 flex items-center justify-center">
-              <Gavel className="text-yellow-400" size={28} />
+        {/* Mobile Logo */}
+        <div className="p-5 pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center">
+                <Gavel className="text-yellow-400" size={24} />
+              </div>
+              <div>
+                <h2 className="font-bold text-lg tracking-tight text-white">Derkenar</h2>
+                <p className="text-[9px] uppercase tracking-wider text-blue-300/50">
+                  Hukuk Büro Yönetim Sistemi
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="font-bold text-xl tracking-wide">
-                Derkenar
-              </h2>
-              <p className="text-xs text-blue-200">
-                Hukuk Büro Yönetim Sistemi
-              </p>
-            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg text-white/40 hover:bg-white/5 hover:text-white transition-colors"
+            >
+              ✕
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-white"
-          >
-            ✕
-          </button>
         </div>
 
-        <hr className="border-blue-900 my-6 mx-4" />
+        <div className="px-4 pb-3">
+          <div className="bg-white/5 rounded-xl p-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-blue-500/30 flex items-center justify-center font-semibold text-white text-sm border border-white/10">
+                {userInitials || 'U'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">
+                  {user?.first_name} {user?.last_name}
+                </p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  <span className="text-[10px] text-blue-300/50">Online</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <nav className="pb-8">
+        <hr className="border-white/5 mx-5" />
+
+        <nav className="px-2 py-3 pb-6">
           {menuItems.map((item) => renderNavLink(item, onClose))}
 
           {isAdmin && (
             <>
-              <p className="px-6 mt-8 mb-2 text-[11px] uppercase tracking-[2px] text-blue-300 font-semibold">
-                Yönetim
-              </p>
+              <div className="px-4 mt-4 mb-2">
+                <p className="text-[9px] uppercase tracking-[2px] text-blue-300/30 font-semibold">
+                  Yönetim
+                </p>
+              </div>
               {adminMenuItems.map((item) => renderNavLink(item, onClose))}
             </>
           )}
