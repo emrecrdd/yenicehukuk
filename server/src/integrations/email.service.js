@@ -32,7 +32,7 @@ class EmailService {
 
     try {
       const info = await this.transporter.sendMail({
-        from: `"LegalSystem" <${config.SMTP_USER}>`,
+        from: `" Derkenar Hukuk Bürosu Yönetim Sistemi" <${config.SMTP_USER}>`,
         to,
         subject,
         html,
@@ -50,7 +50,7 @@ class EmailService {
   async sendWelcomeEmail(user) {
     const html = `
       <h1>Hoş Geldiniz ${user.first_name}!</h1>
-      <p>LegalSystem'e kayıt olduğunuz için teşekkür ederiz.</p>
+      <p> Derkenar Hukuk Bürosu Yönetim Sistemi'e kayıt olduğunuz için teşekkür ederiz.</p>
       <p>Hesabınızı aktifleştirmek için aşağıdaki linke tıklayın:</p>
       <a href="${config.CLIENT_URL}/verify-email?token=${user.email_verification_token}">
         Hesabı Aktifleştir
@@ -59,7 +59,7 @@ class EmailService {
 
     return this.sendEmail({
       to: user.email,
-      subject: 'Hoş Geldiniz - LegalSystem',
+      subject: 'Hoş Geldiniz -  Derkenar Hukuk Bürosu Yönetim Sistemi',
       html,
     });
   }
@@ -78,7 +78,7 @@ class EmailService {
 
     return this.sendEmail({
       to: user.email,
-      subject: 'Şifre Sıfırlama - LegalSystem',
+      subject: 'Şifre Sıfırlama -  Derkenar Hukuk Bürosu Yönetim Sistemi',
       html,
     });
   }
@@ -96,7 +96,7 @@ class EmailService {
 
     return this.sendEmail({
       to: user.email,
-      subject: 'Görev Hatırlatması - LegalSystem',
+      subject: 'Görev Hatırlatması -  Derkenar Hukuk Bürosu Yönetim Sistemi',
       html,
     });
   }
@@ -115,7 +115,7 @@ class EmailService {
 
     return this.sendEmail({
       to: user.email,
-      subject: 'Etkinlik Hatırlatması - LegalSystem',
+      subject: 'Etkinlik Hatırlatması -  Derkenar Hukuk Bürosu Yönetim Sistemi',
       html,
     });
   }

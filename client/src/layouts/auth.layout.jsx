@@ -8,7 +8,7 @@ const AuthLayout = () => {
         <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
           <div className="max-w-md text-center">
             <div className="text-6xl mb-6">⚖️</div>
-            <h1 className="text-4xl font-bold mb-4">LegalSystem</h1>
+            <h1 className="text-4xl font-bold mb-4"> Derkenar Hukuk Bürosu Yönetim Sistemi</h1>
             <p className="text-xl text-blue-100 mb-8">
               Hukuk Büro Yönetim Sistemi
             </p>
@@ -32,7 +32,7 @@ const AuthLayout = () => {
             <div className="lg:hidden text-center mb-8">
               <div className="text-4xl mb-2">⚖️</div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                LegalSystem
+                 Derkenar Hukuk Bürosu Yönetim Sistemi
               </h2>
             </div>
             <Outlet />

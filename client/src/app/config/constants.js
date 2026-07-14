@@ -1,4 +1,4 @@
-export const APP_NAME = 'LegalSystem';
+export const APP_NAME = ' Derkenar Hukuk Bürosu Yönetim Sistemi';
 export const APP_VERSION = '1.0.0';
 
 export const DATE_FORMATS = {

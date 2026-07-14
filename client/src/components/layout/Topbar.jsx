@@ -99,7 +99,7 @@ const Topbar = ({ onMenuClick }) => {
             ☰
           </button>
           <h2 className="ml-2 text-lg font-semibold text-gray-900 dark:text-white lg:hidden">
-            LegalSystem
+             Derkenar Hukuk Bürosu Yönetim Sistemi
           </h2>
         </div>
 

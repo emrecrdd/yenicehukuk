@@ -32,7 +32,7 @@ const Sidebar = ({ open, onClose }) => {
       {/* Desktop Sidebar */}
       <aside className="hidden lg:block fixed top-0 left-0 w-64 h-full bg-gray-800 dark:bg-gray-900 text-white overflow-y-auto">
         <div className="p-4">
-          <h1 className="text-xl font-bold">⚖️ LegalSystem</h1>
+          <h1 className="text-xl font-bold">⚖️  Derkenar Hukuk Bürosu Yönetim Sistemi</h1>
           <p className="text-sm text-gray-400">{user?.first_name} {user?.last_name}</p>
         </div>
         <nav className="mt-8 pb-8">
@@ -94,7 +94,7 @@ const Sidebar = ({ open, onClose }) => {
         }`}
       >
         <div className="p-4">
-          <h1 className="text-xl font-bold">⚖️ LegalSystem</h1>
+          <h1 className="text-xl font-bold">⚖️  Derkenar Hukuk Bürosu Yönetim Sistemi</h1>
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-400 hover:text-white"

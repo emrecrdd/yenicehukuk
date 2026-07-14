@@ -32,7 +32,7 @@ const MobileLayout = () => {
               ☰
             </button>
             <h1 className="ml-2 text-lg font-semibold text-gray-900 dark:text-white">
-              ⚖️ LegalSystem
+              ⚖️  Derkenar Hukuk Bürosu Yönetim Sistemi
             </h1>
           </div>
           <div className="flex items-center space-x-2">
@@ -54,7 +54,7 @@ const MobileLayout = () => {
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  ⚖️ LegalSystem
+                  ⚖️  Derkenar Hukuk Bürosu Yönetim Sistemi
                 </h2>
                 <button
                   onClick={() => setShowMenu(false)}

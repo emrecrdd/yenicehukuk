@@ -43,7 +43,7 @@ const Login = () => {
       <div className="w-full max-w-md p-8 space-y-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            ⚖️ LegalSystem
+            ⚖️  Derkenar Hukuk Bürosu Yönetim Sistemi
           </h1>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
             Hukuk Büro Yönetim Sistemi
