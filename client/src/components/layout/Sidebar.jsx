@@ -50,13 +50,13 @@ const Sidebar = ({ open, onClose }) => {
       <NavLink key={item.path} to={item.path} onClick={onClick}>
         {({ isActive }) => (
           <div
-            className={`flex items-center gap-3 mx-3 my-0.5 px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
+            className={`flex items-center gap-3 mx-3 my-0.5 px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
               isActive
                 ? 'bg-white/10 text-white shadow-lg'
                 : 'text-blue-100/70 hover:bg-white/5 hover:text-white'
             }`}
           >
-            <Icon size={17} strokeWidth={2} />
+            <Icon size={18} strokeWidth={2} />
             <span className="text-sm font-medium">{item.label}</span>
           </div>
         )}
@@ -68,31 +68,32 @@ const Sidebar = ({ open, onClose }) => {
     <>
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col bg-gradient-to-b from-[#061942] via-[#08265f] to-[#061942] border-r border-[#1f3c7a] z-30">
-        {/* Logo - küçük */}
-        <div className="flex-shrink-0 px-4 pt-3 pb-2">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-yellow-500/20 flex items-center justify-center">
-              <Gavel className="text-yellow-400" size={18} />
+        {/* Logo - Büyütüldü */}
+        <div className="flex-shrink-0 px-4 pt-6 pb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center">
+              <Gavel className="text-yellow-400" size={22} />
             </div>
             <div>
-              <h2 className="font-bold text-sm tracking-tight text-white">Derkenar</h2>
-              <p className="text-[8px] uppercase tracking-wider text-blue-300/40">
+              <h2 className="font-bold text-lg tracking-tight text-white">Derkenar</h2>
+              <p className="text-[10px] uppercase tracking-wider text-blue-300/40">
                 Hukuk Büro Yönetim
               </p>
             </div>
           </div>
         </div>
 
-        <hr className="border-white/5 mx-4" />
+        {/* Çizgi - biraz aşağıda */}
+        <hr className="border-white/5 mx-4 mt-1" />
 
-        {/* Menü - scroll yok, tüm öğeler sığsın */}
-        <nav className="flex-1 px-2 py-1">
+        {/* Menü */}
+        <nav className="flex-1 flex flex-col justify-center px-2 py-2">
           {menuItems.map((item) => renderNavLink(item))}
 
           {isAdmin && (
             <>
-              <div className="px-3 mt-2 mb-0.5">
-                <p className="text-[8px] uppercase tracking-[2px] text-blue-300/30 font-semibold">
+              <div className="px-3 mt-4 mb-1">
+                <p className="text-[9px] uppercase tracking-[2px] text-blue-300/30 font-semibold">
                   Yönetim
                 </p>
               </div>
@@ -117,15 +118,16 @@ const Sidebar = ({ open, onClose }) => {
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="p-4 pb-2">
+        {/* Mobile Logo */}
+        <div className="p-5 pb-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-yellow-500/20 flex items-center justify-center">
-                <Gavel className="text-yellow-400" size={18} />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center">
+                <Gavel className="text-yellow-400" size={22} />
               </div>
               <div>
-                <h2 className="font-bold text-sm tracking-tight text-white">Derkenar</h2>
-                <p className="text-[8px] uppercase tracking-wider text-blue-300/40">
+                <h2 className="font-bold text-lg tracking-tight text-white">Derkenar</h2>
+                <p className="text-[10px] uppercase tracking-wider text-blue-300/40">
                   Hukuk Büro Yönetim
                 </p>
               </div>
@@ -139,15 +141,15 @@ const Sidebar = ({ open, onClose }) => {
           </div>
         </div>
 
-        <hr className="border-white/5 mx-4" />
+        <hr className="border-white/5 mx-4 mt-1" />
 
-        <nav className="px-2 py-1">
+        <nav className="flex-1 flex flex-col justify-center px-2 py-2">
           {menuItems.map((item) => renderNavLink(item, onClose))}
 
           {isAdmin && (
             <>
-              <div className="px-3 mt-2 mb-0.5">
-                <p className="text-[8px] uppercase tracking-[2px] text-blue-300/30 font-semibold">
+              <div className="px-3 mt-4 mb-1">
+                <p className="text-[9px] uppercase tracking-[2px] text-blue-300/30 font-semibold">
                   Yönetim
                 </p>
               </div>
