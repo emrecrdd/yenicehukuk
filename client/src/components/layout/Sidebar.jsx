@@ -69,7 +69,7 @@ const Sidebar = ({ open, onClose }) => {
     <>
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col bg-gradient-to-b from-[#061942] via-[#08265f] to-[#061942] border-r border-[#1f3c7a] overflow-hidden z-30">
-        {/* Kullanıcı */}
+        {/* Kullanıcı - Online badge KALDIRILDI */}
         <div className="flex-shrink-0 px-4 pt-5 pb-3">
           <div className="bg-white/5 rounded-xl p-3">
             <div className="flex items-center gap-3">
@@ -80,10 +80,7 @@ const Sidebar = ({ open, onClose }) => {
                 <p className="text-sm font-medium text-white truncate">
                   {user?.first_name} {user?.last_name}
                 </p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  <span className="text-[10px] text-blue-300/50">Online</span>
-                </div>
+                {/* ✅ Online badge KALDIRILDI */}
               </div>
             </div>
           </div>
@@ -157,10 +154,7 @@ const Sidebar = ({ open, onClose }) => {
                 <p className="text-sm font-medium text-white truncate">
                   {user?.first_name} {user?.last_name}
                 </p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  <span className="text-[10px] text-blue-300/50">Online</span>
-                </div>
+                {/* ✅ Online badge KALDIRILDI */}
               </div>
             </div>
           </div>
