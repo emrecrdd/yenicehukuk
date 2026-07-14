@@ -42,7 +42,6 @@ const Sidebar = ({ open, onClose }) => {
   ];
 
   const isAdmin = user?.role === ROLES.ADMIN;
-  const userInitials = (user?.first_name?.[0] || '') + (user?.last_name?.[0] || '');
 
   const renderNavLink = (item, onClick) => {
     const Icon = item.icon;
@@ -69,26 +68,24 @@ const Sidebar = ({ open, onClose }) => {
     <>
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col bg-gradient-to-b from-[#061942] via-[#08265f] to-[#061942] border-r border-[#1f3c7a] overflow-hidden z-30">
-        {/* Kullanıcı - Online badge KALDIRILDI */}
-        <div className="flex-shrink-0 px-4 pt-5 pb-3">
-          <div className="bg-white/5 rounded-xl p-3">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-blue-500/30 flex items-center justify-center font-semibold text-white text-sm border border-white/10">
-                {userInitials || 'U'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">
-                  {user?.first_name} {user?.last_name}
-                </p>
-                {/* ✅ Online badge KALDIRILDI */}
-              </div>
+        {/* Logo */}
+        <div className="flex-shrink-0 p-4 pb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center">
+              <Gavel className="text-yellow-400" size={24} />
+            </div>
+            <div>
+              <h2 className="font-bold text-lg tracking-tight text-white">Derkenar</h2>
+              <p className="text-[9px] uppercase tracking-wider text-blue-300/50">
+                Hukuk Büro Yönetim Sistemi
+              </p>
             </div>
           </div>
         </div>
 
         <hr className="border-white/5 mx-5" />
 
-        {/* Menü */}
+        {/* Menü - Kullanıcı kartı yok, menü yukarıdan başlıyor */}
         <nav className="flex-1 overflow-hidden px-2 py-3">
           {menuItems.map((item) => renderNavLink(item))}
 
@@ -144,24 +141,9 @@ const Sidebar = ({ open, onClose }) => {
           </div>
         </div>
 
-        <div className="px-4 pb-3">
-          <div className="bg-white/5 rounded-xl p-3">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-blue-500/30 flex items-center justify-center font-semibold text-white text-sm border border-white/10">
-                {userInitials || 'U'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">
-                  {user?.first_name} {user?.last_name}
-                </p>
-                {/* ✅ Online badge KALDIRILDI */}
-              </div>
-            </div>
-          </div>
-        </div>
-
         <hr className="border-white/5 mx-5" />
 
+        {/* Menü - Kullanıcı kartı yok */}
         <nav className="px-2 py-3 pb-6">
           {menuItems.map((item) => renderNavLink(item, onClose))}
 
