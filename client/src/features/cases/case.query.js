@@ -1,101 +1,132 @@
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';  // ✅ useInfiniteQuery EKLENDI
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import caseApi from './case.api.js';
 import toast from 'react-hot-toast';
 
-// ============ QUERIES ============
+// ======================================================
+// QUERY KEYS
+// ======================================================
+
+export const CASE_QUERY_KEYS = {
+  all: ['cases'],
+  list: (params = {}) => ['cases', params],
+  detail: (id) => ['case', id],
+  statistics: () => ['case-statistics'],
+  parties: (caseId) => ['case-parties', caseId],
+  documents: (caseId) => ['case-documents', caseId],
+  tasks: (caseId) => ['case-tasks', caseId],
+  events: (caseId) => ['case-events', caseId],
+  payments: (caseId) => ['case-payments', caseId],
+  notes: (caseId) => ['case-notes', caseId],
+  infinite: (params = {}) => ['cases-infinite', params],
+  search: (query, params = {}) => ['cases-search', query, params],
+};
+
+// ======================================================
+// CACHE
+// ======================================================
+
+const CACHE = {
+  NORMAL: 5 * 60 * 1000,
+  LONG: 10 * 60 * 1000,
+  GC: 10 * 60 * 1000,
+  GC_LONG: 30 * 60 * 1000,
+};
+
+// ======================================================
+// QUERIES
+// ======================================================
 
 export const useCases = (params = {}) => {
   return useQuery({
-    queryKey: ['cases', params],
+    queryKey: CASE_QUERY_KEYS.list(params),
     queryFn: () => caseApi.getAll(params),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (cacheTime → gcTime)
+    staleTime: CACHE.NORMAL,
     keepPreviousData: true,
   });
 };
 
 export const useCase = (id) => {
   return useQuery({
-    queryKey: ['case', id],
+    queryKey: CASE_QUERY_KEYS.detail(id),
     queryFn: () => caseApi.getOne(id),
     enabled: !!id,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
 };
 
 export const useCaseStatistics = () => {
   return useQuery({
-    queryKey: ['case-statistics'],
+    queryKey: CASE_QUERY_KEYS.statistics(),
     queryFn: () => caseApi.getStatistics(),
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: CACHE.LONG,
   });
 };
 
 export const useCaseParties = (caseId) => {
   return useQuery({
-    queryKey: ['case-parties', caseId],
+    queryKey: CASE_QUERY_KEYS.parties(caseId),
     queryFn: () => caseApi.getParties(caseId),
     enabled: !!caseId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
 };
 
 export const useCaseDocuments = (caseId) => {
   return useQuery({
-    queryKey: ['case-documents', caseId],
+    queryKey: CASE_QUERY_KEYS.documents(caseId),
     queryFn: () => caseApi.getDocuments(caseId),
     enabled: !!caseId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
 };
 
 export const useCaseTasks = (caseId) => {
   return useQuery({
-    queryKey: ['case-tasks', caseId],
+    queryKey: CASE_QUERY_KEYS.tasks(caseId),
     queryFn: () => caseApi.getTasks(caseId),
     enabled: !!caseId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
 };
 
 export const useCaseEvents = (caseId) => {
   return useQuery({
-    queryKey: ['case-events', caseId],
+    queryKey: CASE_QUERY_KEYS.events(caseId),
     queryFn: () => caseApi.getEvents(caseId),
     enabled: !!caseId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
 };
 
 export const useCasePayments = (caseId) => {
   return useQuery({
-    queryKey: ['case-payments', caseId],
+    queryKey: CASE_QUERY_KEYS.payments(caseId),
     queryFn: () => caseApi.getPayments(caseId),
     enabled: !!caseId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
 };
 
 export const useCaseNotes = (caseId) => {
   return useQuery({
-    queryKey: ['case-notes', caseId],
+    queryKey: CASE_QUERY_KEYS.notes(caseId),
     queryFn: () => caseApi.getNotes(caseId),
     enabled: !!caseId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
 };
 
-// ============ MUTATIONS ============
+// ======================================================
+// MUTATIONS
+// ======================================================
 
 export const useCreateCase = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data) => caseApi.create(data),
-    onSuccess: (response) => {
-      queryClient.invalidateQueries(['cases']);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cases'] });
       toast.success('Dava başarıyla oluşturuldu');
     },
     onError: (error) => {
@@ -110,8 +141,8 @@ export const useUpdateCase = () => {
   return useMutation({
     mutationFn: ({ id, data }) => caseApi.update(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['cases']);
-      queryClient.invalidateQueries(['case', variables.id]);
+      queryClient.invalidateQueries({ queryKey: ['cases'] });
+      queryClient.invalidateQueries({ queryKey: ['case', variables.id] });
       toast.success('Dava başarıyla güncellendi');
     },
     onError: (error) => {
@@ -126,7 +157,7 @@ export const useDeleteCase = () => {
   return useMutation({
     mutationFn: (id) => caseApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['cases']);
+      queryClient.invalidateQueries({ queryKey: ['cases'] });
       toast.success('Dava başarıyla silindi');
     },
     onError: (error) => {
@@ -141,8 +172,8 @@ export const useUpdateCaseStatus = () => {
   return useMutation({
     mutationFn: ({ id, status }) => caseApi.updateStatus(id, status),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['cases']);
-      queryClient.invalidateQueries(['case', variables.id]);
+      queryClient.invalidateQueries({ queryKey: ['cases'] });
+      queryClient.invalidateQueries({ queryKey: ['case', variables.id] });
       toast.success('Dava durumu güncellendi');
     },
     onError: (error) => {
@@ -151,7 +182,9 @@ export const useUpdateCaseStatus = () => {
   });
 };
 
-// ============ PARTY MUTATIONS ============
+// ======================================================
+// PARTY MUTATIONS
+// ======================================================
 
 export const useAddCaseParty = () => {
   const queryClient = useQueryClient();
@@ -159,8 +192,8 @@ export const useAddCaseParty = () => {
   return useMutation({
     mutationFn: ({ caseId, data }) => caseApi.addParty(caseId, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['case-parties', variables.caseId]);
-      queryClient.invalidateQueries(['case', variables.caseId]);
+      queryClient.invalidateQueries({ queryKey: ['case-parties', variables.caseId] });
+      queryClient.invalidateQueries({ queryKey: ['case', variables.caseId] });
       toast.success('Taraf başarıyla eklendi');
     },
     onError: (error) => {
@@ -175,8 +208,8 @@ export const useRemoveCaseParty = () => {
   return useMutation({
     mutationFn: ({ caseId, partyId }) => caseApi.removeParty(caseId, partyId),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['case-parties', variables.caseId]);
-      queryClient.invalidateQueries(['case', variables.caseId]);
+      queryClient.invalidateQueries({ queryKey: ['case-parties', variables.caseId] });
+      queryClient.invalidateQueries({ queryKey: ['case', variables.caseId] });
       toast.success('Taraf başarıyla kaldırıldı');
     },
     onError: (error) => {
@@ -185,7 +218,9 @@ export const useRemoveCaseParty = () => {
   });
 };
 
-// ============ BULK OPERATIONS ============
+// ======================================================
+// BULK OPERATIONS
+// ======================================================
 
 export const useBulkUpdateCaseStatus = () => {
   const queryClient = useQueryClient();
@@ -195,9 +230,9 @@ export const useBulkUpdateCaseStatus = () => {
       return Promise.all(ids.map(id => caseApi.updateStatus(id, status)));
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['cases']);
+      queryClient.invalidateQueries({ queryKey: ['cases'] });
       variables.ids.forEach(id => {
-        queryClient.invalidateQueries(['case', id]);
+        queryClient.invalidateQueries({ queryKey: ['case', id] });
       });
       toast.success(`${variables.ids.length} davanın durumu güncellendi`);
     },
@@ -207,11 +242,13 @@ export const useBulkUpdateCaseStatus = () => {
   });
 };
 
-// ============ INFINITE QUERIES ============
+// ======================================================
+// INFINITE QUERIES
+// ======================================================
 
 export const useInfiniteCases = (params = {}) => {
   return useInfiniteQuery({
-    queryKey: ['cases-infinite', params],
+    queryKey: CASE_QUERY_KEYS.infinite(params),
     queryFn: ({ pageParam = 1 }) => {
       return caseApi.getAll({ ...params, page: pageParam });
     },
@@ -222,34 +259,38 @@ export const useInfiniteCases = (params = {}) => {
       }
       return undefined;
     },
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
+    gcTime: CACHE.GC,
     initialPageParam: 1,
   });
 };
 
-// ============ PREFETCHING ============
+// ======================================================
+// PREFETCHING
+// ======================================================
 
 export const prefetchCase = (queryClient, id) => {
   return queryClient.prefetchQuery({
-    queryKey: ['case', id],
+    queryKey: CASE_QUERY_KEYS.detail(id),
     queryFn: () => caseApi.getOne(id),
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
 };
 
 export const prefetchCases = (queryClient, params = {}) => {
   return queryClient.prefetchQuery({
-    queryKey: ['cases', params],
+    queryKey: CASE_QUERY_KEYS.list(params),
     queryFn: () => caseApi.getAll(params),
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
 };
 
-// ============ CACHE HELPERS ============
+// ======================================================
+// CACHE HELPERS
+// ======================================================
 
 export const updateCaseCache = (queryClient, id, updater) => {
-  queryClient.setQueryData(['case', id], (oldData) => {
+  queryClient.setQueryData(CASE_QUERY_KEYS.detail(id), (oldData) => {
     if (!oldData) return oldData;
     return {
       ...oldData,
@@ -259,7 +300,7 @@ export const updateCaseCache = (queryClient, id, updater) => {
 };
 
 export const updateCasesCache = (queryClient, params, updater) => {
-  queryClient.setQueryData(['cases', params], (oldData) => {
+  queryClient.setQueryData(CASE_QUERY_KEYS.list(params), (oldData) => {
     if (!oldData) return oldData;
     return {
       ...oldData,
@@ -272,20 +313,28 @@ export const updateCasesCache = (queryClient, params, updater) => {
 };
 
 export const removeCaseFromCache = (queryClient, id) => {
-  queryClient.removeQueries(['case', id]);
+  queryClient.removeQueries({
+    queryKey: CASE_QUERY_KEYS.detail(id),
+  });
 };
 
-// ============ SEARCH ============
+// ======================================================
+// SEARCH
+// ======================================================
 
 export const useSearchCases = (query, params = {}) => {
   return useQuery({
-    queryKey: ['cases-search', query, params],
+    queryKey: CASE_QUERY_KEYS.search(query, params),
     queryFn: () => caseApi.getAll({ ...params, search: query }),
-    enabled: query && query.length >= 2,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    enabled: !!query && query.length >= 2,
+    staleTime: CACHE.NORMAL,
+    gcTime: CACHE.GC,
   });
 };
+
+// ======================================================
+// EXPORT
+// ======================================================
 
 export default {
   // Queries

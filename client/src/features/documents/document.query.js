@@ -1,66 +1,96 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import documentApi from './document.api.js';
 import toast from 'react-hot-toast';
 
-// ============ QUERIES ============
+// ======================================================
+// QUERY KEYS
+// ======================================================
+
+export const DOCUMENT_QUERY_KEYS = {
+  all: ['documents'],
+  list: (params = {}) => ['documents', params],
+  detail: (id) => ['document', id],
+  categories: () => ['document-categories'],
+  statistics: () => ['document-statistics'],
+  versions: (documentId) => ['document-versions', documentId],
+  infinite: (params = {}) => ['documents-infinite', params],
+  search: (query, params = {}) => ['documents-search', query, params],
+};
+
+// ======================================================
+// CACHE
+// ======================================================
+
+const CACHE = {
+  NORMAL: 5 * 60 * 1000,
+  LONG: 10 * 60 * 1000,
+  GC: 10 * 60 * 1000,
+};
+
+// ======================================================
+// QUERIES
+// ======================================================
 
 export const useDocuments = (params = {}) => {
   return useQuery({
-    queryKey: ['documents', params],
+    queryKey: DOCUMENT_QUERY_KEYS.list(params),
     queryFn: () => documentApi.getAll(params),
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
-    keepPreviousData: true,
+    staleTime: CACHE.NORMAL,
+    gcTime: CACHE.GC,
+    placeholderData: (previousData) => previousData,
   });
 };
 
 export const useDocument = (id) => {
   return useQuery({
-    queryKey: ['document', id],
+    queryKey: DOCUMENT_QUERY_KEYS.detail(id),
     queryFn: () => documentApi.getOne(id),
     enabled: !!id,
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
+    gcTime: CACHE.GC,
   });
 };
 
 export const useDocumentCategories = () => {
   return useQuery({
-    queryKey: ['document-categories'],
+    queryKey: DOCUMENT_QUERY_KEYS.categories(),
     queryFn: () => documentApi.getCategories(),
-    staleTime: 30 * 60 * 1000, // 30 minutes
-    cacheTime: 60 * 60 * 1000, // 60 minutes
+    staleTime: CACHE.LONG,
+    gcTime: CACHE.GC,
   });
 };
 
 export const useDocumentStatistics = () => {
   return useQuery({
-    queryKey: ['document-statistics'],
+    queryKey: DOCUMENT_QUERY_KEYS.statistics(),
     queryFn: () => documentApi.getStatistics(),
-    staleTime: 10 * 60 * 1000,
-    cacheTime: 30 * 60 * 1000,
+    staleTime: CACHE.LONG,
+    gcTime: CACHE.GC,
   });
 };
 
 export const useDocumentVersions = (documentId) => {
   return useQuery({
-    queryKey: ['document-versions', documentId],
+    queryKey: DOCUMENT_QUERY_KEYS.versions(documentId),
     queryFn: () => documentApi.getVersions(documentId),
     enabled: !!documentId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
+    gcTime: CACHE.GC,
   });
 };
 
-// ============ MUTATIONS ============
+// ======================================================
+// MUTATIONS
+// ======================================================
 
 export const useUploadDocument = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data) => documentApi.upload(data),
-    onSuccess: (response) => {
-      queryClient.invalidateQueries(['documents']);
-      queryClient.invalidateQueries(['document-statistics']);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: DOCUMENT_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: DOCUMENT_QUERY_KEYS.statistics() });
       toast.success('Belge başarıyla yüklendi');
     },
     onError: (error) => {
@@ -75,8 +105,8 @@ export const useUpdateDocument = () => {
   return useMutation({
     mutationFn: ({ id, data }) => documentApi.update(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['documents']);
-      queryClient.invalidateQueries(['document', variables.id]);
+      queryClient.invalidateQueries({ queryKey: DOCUMENT_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: DOCUMENT_QUERY_KEYS.detail(variables.id) });
       toast.success('Belge başarıyla güncellendi');
     },
     onError: (error) => {
@@ -91,8 +121,8 @@ export const useDeleteDocument = () => {
   return useMutation({
     mutationFn: (id) => documentApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['documents']);
-      queryClient.invalidateQueries(['document-statistics']);
+      queryClient.invalidateQueries({ queryKey: DOCUMENT_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: DOCUMENT_QUERY_KEYS.statistics() });
       toast.success('Belge başarıyla silindi');
     },
     onError: (error) => {
@@ -101,7 +131,9 @@ export const useDeleteDocument = () => {
   });
 };
 
-// ============ BULK OPERATIONS ============
+// ======================================================
+// BULK OPERATIONS
+// ======================================================
 
 export const useBulkDeleteDocuments = () => {
   const queryClient = useQueryClient();
@@ -111,8 +143,8 @@ export const useBulkDeleteDocuments = () => {
       return Promise.all(ids.map(id => documentApi.delete(id)));
     },
     onSuccess: (_, ids) => {
-      queryClient.invalidateQueries(['documents']);
-      queryClient.invalidateQueries(['document-statistics']);
+      queryClient.invalidateQueries({ queryKey: DOCUMENT_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: DOCUMENT_QUERY_KEYS.statistics() });
       toast.success(`${ids.length} belge başarıyla silindi`);
     },
     onError: (error) => {
@@ -121,11 +153,13 @@ export const useBulkDeleteDocuments = () => {
   });
 };
 
-// ============ INFINITE QUERIES ============
+// ======================================================
+// INFINITE QUERIES
+// ======================================================
 
 export const useInfiniteDocuments = (params = {}) => {
   return useInfiniteQuery({
-    queryKey: ['documents-infinite', params],
+    queryKey: DOCUMENT_QUERY_KEYS.infinite(params),
     queryFn: ({ pageParam = 1 }) => {
       return documentApi.getAll({ ...params, page: pageParam });
     },
@@ -136,33 +170,38 @@ export const useInfiniteDocuments = (params = {}) => {
       }
       return undefined;
     },
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
+    gcTime: CACHE.GC,
+    initialPageParam: 1,
   });
 };
 
-// ============ PREFETCHING ============
+// ======================================================
+// PREFETCHING
+// ======================================================
 
 export const prefetchDocument = (queryClient, id) => {
   return queryClient.prefetchQuery({
-    queryKey: ['document', id],
+    queryKey: DOCUMENT_QUERY_KEYS.detail(id),
     queryFn: () => documentApi.getOne(id),
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
 };
 
 export const prefetchDocuments = (queryClient, params = {}) => {
   return queryClient.prefetchQuery({
-    queryKey: ['documents', params],
+    queryKey: DOCUMENT_QUERY_KEYS.list(params),
     queryFn: () => documentApi.getAll(params),
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
 };
 
-// ============ CACHE HELPERS ============
+// ======================================================
+// CACHE HELPERS
+// ======================================================
 
 export const updateDocumentCache = (queryClient, id, updater) => {
-  queryClient.setQueryData(['document', id], (oldData) => {
+  queryClient.setQueryData(DOCUMENT_QUERY_KEYS.detail(id), (oldData) => {
     if (!oldData) return oldData;
     return {
       ...oldData,
@@ -172,7 +211,7 @@ export const updateDocumentCache = (queryClient, id, updater) => {
 };
 
 export const updateDocumentsCache = (queryClient, params, updater) => {
-  queryClient.setQueryData(['documents', params], (oldData) => {
+  queryClient.setQueryData(DOCUMENT_QUERY_KEYS.list(params), (oldData) => {
     if (!oldData) return oldData;
     return {
       ...oldData,
@@ -185,36 +224,21 @@ export const updateDocumentsCache = (queryClient, params, updater) => {
 };
 
 export const removeDocumentFromCache = (queryClient, id) => {
-  queryClient.removeQueries(['document', id]);
-};
-
-// ============ SEARCH ============
-
-export const useSearchDocuments = (query, params = {}) => {
-  return useQuery({
-    queryKey: ['documents-search', query, params],
-    queryFn: () => documentApi.getAll({ ...params, search: query }),
-    enabled: query && query.length >= 2,
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+  queryClient.removeQueries({
+    queryKey: DOCUMENT_QUERY_KEYS.detail(id),
   });
 };
 
-export default {
-  useDocuments,
-  useDocument,
-  useDocumentCategories,
-  useDocumentStatistics,
-  useDocumentVersions,
-  useUploadDocument,
-  useUpdateDocument,
-  useDeleteDocument,
-  useBulkDeleteDocuments,
-  useInfiniteDocuments,
-  useSearchDocuments,
-  prefetchDocument,
-  prefetchDocuments,
-  updateDocumentCache,
-  updateDocumentsCache,
-  removeDocumentFromCache,
+// ======================================================
+// SEARCH
+// ======================================================
+
+export const useSearchDocuments = (query, params = {}) => {
+  return useQuery({
+    queryKey: DOCUMENT_QUERY_KEYS.search(query, params),
+    queryFn: () => documentApi.getAll({ ...params, search: query }),
+    enabled: !!query && query.length >= 2,
+    staleTime: CACHE.NORMAL,
+    gcTime: CACHE.GC,
+  });
 };

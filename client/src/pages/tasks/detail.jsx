@@ -1,15 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import taskApi from '../../features/tasks/task.api.js';
-import { 
-  useTask, 
-  useStartTask, 
-  useCompleteTask, 
-  useApproveTask, 
+import {
+  useTask,
+  useStartTask,
+  useCompleteTask,
+  useApproveTask,
   useAddNote,
   useTaskNotes,
-  useUpdateProgress  // ✅ YENİ: Progress hook'u import et
+  useUpdateProgress,
 } from '../../features/tasks/task.query.js';
 import { useAuth } from '../../app/providers/auth.provider.jsx';
 import Badge from '../../components/ui/Badge.jsx';
@@ -17,6 +15,50 @@ import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import { Edit2, Play, CheckCircle, ShieldCheck, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+// ======================================================
+// SABİTLER
+// ======================================================
+
+const STATUS_OPTIONS = [
+  { value: 'pending', label: 'Bekliyor' },
+  { value: 'in_progress', label: 'Devam Ediyor' },
+  { value: 'completed', label: 'Tamamlandı' },
+  { value: 'cancelled', label: 'İptal' },
+];
+
+const PRIORITY_LABELS = {
+  low: 'Düşük',
+  normal: 'Normal',
+  high: 'Yüksek',
+  critical: 'Kritik',
+};
+
+const getStatusVariant = (status) => {
+  switch (status) {
+    case 'pending': return 'warning';
+    case 'in_progress': return 'info';
+    case 'completed': return 'success';
+    case 'cancelled': return 'danger';
+    default: return 'default';
+  }
+};
+
+const getPriorityVariant = (priority) => {
+  switch (priority) {
+    case 'critical': return 'danger';
+    case 'high': return 'warning';
+    case 'normal': return 'default';
+    case 'low': return 'default';
+    default: return 'default';
+  }
+};
+
+const getPriorityLabel = (priority) => PRIORITY_LABELS[priority] || 'Normal';
+
+// ======================================================
+// COMPONENT
+// ======================================================
 
 const TaskDetail = () => {
   const { id } = useParams();
@@ -26,160 +68,116 @@ const TaskDetail = () => {
   const [completionNote, setCompletionNote] = useState('');
   const [actualHours, setActualHours] = useState('');
   const [showCompleteModal, setShowCompleteModal] = useState(false);
-  const [progressValue, setProgressValue] = useState(0); // ✅ YENİ: Progress state
+  const [progressValue, setProgressValue] = useState(0);
 
-  // Queries
-  const { data, isLoading, error, refetch } = useTask(id);
-  const { data: notesData, refetch: refetchNotes } = useTaskNotes(id);
+  // ✅ HOOK'lar
+  const { data, isLoading, error } = useTask(id);
+  const { data: notesData } = useTaskNotes(id);
 
-  // Mutations
   const startMutation = useStartTask();
   const completeMutation = useCompleteTask();
   const approveMutation = useApproveTask();
   const addNoteMutation = useAddNote();
-  const updateProgressMutation = useUpdateProgress(); // ✅ YENİ
+  const updateProgressMutation = useUpdateProgress();
 
   const task = data?.data?.data;
   const notes = notesData?.data?.data || [];
-
-  const statuses = [
-    { value: 'pending', label: 'Bekliyor' },
-    { value: 'in_progress', label: 'Devam Ediyor' },
-    { value: 'completed', label: 'Tamamlandı' },
-    { value: 'cancelled', label: 'İptal' },
-  ];
-
-  const getStatusVariant = (status) => {
-    switch (status) {
-      case 'pending': return 'warning';
-      case 'in_progress': return 'info';
-      case 'completed': return 'success';
-      case 'cancelled': return 'danger';
-      default: return 'default';
-    }
-  };
-
-  const getPriorityVariant = (priority) => {
-    switch (priority) {
-      case 'critical': return 'danger';
-      case 'high': return 'warning';
-      case 'normal': return 'default';
-      case 'low': return 'default';
-      default: return 'default';
-    }
-  };
-
-  const getPriorityLabel = (priority) => {
-    const labels = {
-      low: 'Düşük',
-      normal: 'Normal',
-      high: 'Yüksek',
-      critical: 'Kritik',
-    };
-    return labels[priority] || 'Normal';
-  };
-
-  const isOverdue = task?.due_date && new Date(task.due_date) < new Date() && 
-    task.status !== 'completed' && task.status !== 'cancelled';
 
   const isAssignee = task?.assigned_to === user?.id;
   const isAdmin = user?.role === 'admin';
   const canStart = isAssignee && task?.status === 'pending';
   const canComplete = isAssignee && task?.status === 'in_progress';
   const canApprove = isAdmin && task?.status === 'completed' && !task?.approved_at;
-  const canUpdateProgress = isAssignee && task?.status === 'in_progress'; // ✅ YENİ
+  const canUpdateProgress = isAssignee && task?.status === 'in_progress';
 
-  // ✅ Progress'i güncelle
+  const isOverdue =
+    task?.due_date &&
+    new Date(task.due_date) < new Date() &&
+    task.status !== 'completed' &&
+    task.status !== 'cancelled';
+
+  // ✅ Mevcut progress'i state'e ata
+  useEffect(() => {
+    if (task) {
+      setProgressValue(task.progress || 0);
+    }
+  }, [task]);
+
+  // ======================================================
+  // HANDLERS
+  // ======================================================
+
   const handleUpdateProgress = () => {
     if (progressValue < 0 || progressValue > 100) {
       toast.error('İlerleme 0-100 arasında olmalı');
       return;
     }
-
-    updateProgressMutation.mutate(
-      { id, progress: progressValue },
-      {
-        onSuccess: () => {
-          refetch();
-          toast.success('İlerleme güncellendi');
-        },
-      }
-    );
+    updateProgressMutation.mutate({ id, progress: progressValue });
   };
 
-  // ✅ Input değişince progress'i güncelle
   const handleProgressChange = (e) => {
     const value = parseInt(e.target.value) || 0;
     setProgressValue(Math.min(100, Math.max(0, value)));
   };
 
-  // ✅ Görevi Başlat
   const handleStart = () => {
     if (window.confirm(`"${task?.title}" görevini başlatmak istediğinize emin misiniz?`)) {
-      startMutation.mutate(id, {
-        onSuccess: () => {
-          refetch();
-        }
-      });
+      startMutation.mutate(id);
     }
   };
 
-  // ✅ Görevi Tamamla
   const handleComplete = () => {
     if (!completionNote.trim()) {
       toast.error('Tamamlama notu girmelisiniz!');
       return;
     }
 
-    completeMutation.mutate({
-      id,
-      note: completionNote,
-      actual_hours: actualHours ? parseFloat(actualHours) : undefined
-    }, {
-      onSuccess: () => {
-        setShowCompleteModal(false);
-        setCompletionNote('');
-        setActualHours('');
-        refetch();
-        refetchNotes();
+    completeMutation.mutate(
+      {
+        id,
+        note: completionNote,
+        actual_hours: actualHours ? parseFloat(actualHours) : undefined,
+      },
+      {
+        onSuccess: () => {
+          setShowCompleteModal(false);
+          setCompletionNote('');
+          setActualHours('');
+        },
       }
-    });
+    );
   };
 
-  // ✅ Görevi Onayla
   const handleApprove = () => {
     if (window.confirm(`"${task?.title}" görevini onaylamak istediğinize emin misiniz?`)) {
-      approveMutation.mutate(id, {
-        onSuccess: () => {
-          refetch();
-          refetchNotes();
-        }
-      });
+      approveMutation.mutate(id);
     }
   };
 
-  // ✅ Not Ekle
   const handleAddNote = () => {
     if (!noteContent.trim()) {
       toast.error('Not içeriği boş olamaz');
       return;
     }
 
-    addNoteMutation.mutate({
-      id,
-      content: noteContent
-    }, {
-      onSuccess: () => {
-        setNoteContent('');
-        refetchNotes();
+    addNoteMutation.mutate(
+      { id, content: noteContent },
+      {
+        onSuccess: () => {
+          setNoteContent('');
+        },
       }
-    });
+    );
   };
+
+  // ======================================================
+  // LOADING / ERROR
+  // ======================================================
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
       </div>
     );
   }
@@ -195,9 +193,13 @@ const TaskDetail = () => {
     );
   }
 
+  // ======================================================
+  // RENDER
+  // ======================================================
+
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* HEADER */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <Link to="/tasks" className="text-blue-600 hover:underline">
@@ -208,25 +210,21 @@ const TaskDetail = () => {
           </h1>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <Badge variant={getStatusVariant(task.status)}>
-              {statuses.find(s => s.value === task.status)?.label || task.status}
+              {STATUS_OPTIONS.find((s) => s.value === task.status)?.label || task.status}
             </Badge>
             <Badge variant={getPriorityVariant(task.priority)}>
               {getPriorityLabel(task.priority)}
             </Badge>
-            {isOverdue && (
-              <Badge variant="danger">⚠️ Gecikti</Badge>
-            )}
-            {task.approved_at && (
-              <Badge variant="success">✅ Onaylandı</Badge>
-            )}
+            {isOverdue && <Badge variant="danger">⚠️ Gecikti</Badge>}
+            {task.approved_at && <Badge variant="success">✅ Onaylandı</Badge>}
           </div>
         </div>
+
         <div className="flex items-center gap-2 flex-wrap">
-          {/* ✅ Başlat Butonu */}
           {canStart && (
-            <Button 
-              variant="primary" 
-              size="sm" 
+            <Button
+              variant="primary"
+              size="sm"
               onClick={handleStart}
               loading={startMutation.isPending}
               className="flex items-center gap-1"
@@ -236,11 +234,10 @@ const TaskDetail = () => {
             </Button>
           )}
 
-          {/* ✅ Tamamla Butonu */}
           {canComplete && (
-            <Button 
-              variant="success" 
-              size="sm" 
+            <Button
+              variant="success"
+              size="sm"
               onClick={() => setShowCompleteModal(true)}
               loading={completeMutation.isPending}
               className="flex items-center gap-1"
@@ -250,11 +247,10 @@ const TaskDetail = () => {
             </Button>
           )}
 
-          {/* ✅ Onayla Butonu (sadece admin) */}
           {canApprove && (
-            <Button 
-              variant="primary" 
-              size="sm" 
+            <Button
+              variant="primary"
+              size="sm"
               onClick={handleApprove}
               loading={approveMutation.isPending}
               className="flex items-center gap-1"
@@ -273,8 +269,9 @@ const TaskDetail = () => {
         </div>
       </div>
 
-      {/* Ana Bilgiler */}
+      {/* BODY */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* BİLGİLER */}
         <Card className="lg:col-span-2">
           <Card.Header>
             <h2 className="font-semibold text-gray-900 dark:text-white">📋 Bilgiler</h2>
@@ -286,7 +283,7 @@ const TaskDetail = () => {
                 <p className="text-gray-900 dark:text-white">{task.description}</p>
               </div>
             )}
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-500">👤 Atanan Kişi</p>
@@ -318,10 +315,11 @@ const TaskDetail = () => {
               </div>
             </div>
 
-            {/* ✅ Süre Takibi */}
             {(task.started_at || task.completed_at || task.actual_hours) && (
               <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-2">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">⏱️ Süre Takibi</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  ⏱️ Süre Takibi
+                </p>
                 <div className="grid grid-cols-3 gap-4">
                   {task.started_at && (
                     <div>
@@ -351,7 +349,7 @@ const TaskDetail = () => {
               </div>
             )}
 
-            {/* ✅ İLERLEME - GÜNCELLENMİŞ */}
+            {/* PROGRESS */}
             <div>
               <div className="flex items-center justify-between">
                 <p className="text-sm text-gray-500">📊 İlerleme</p>
@@ -363,10 +361,9 @@ const TaskDetail = () => {
                 <div
                   className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
                   style={{ width: `${task.progress || 0}%` }}
-                ></div>
+                />
               </div>
-              
-              {/* ✅ Progress Güncelleme (sadece atanan kişi ve in_progress durumunda) */}
+
               {canUpdateProgress && (
                 <div className="flex items-center gap-2 mt-3">
                   <input
@@ -385,8 +382,8 @@ const TaskDetail = () => {
                     max="100"
                     className="w-16 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 py-1 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     onClick={handleUpdateProgress}
                     loading={updateProgressMutation.isPending}
                     disabled={updateProgressMutation.isPending}
@@ -397,10 +394,11 @@ const TaskDetail = () => {
               )}
             </div>
 
-            {/* İlişkili */}
             {(task.case || task.client) && (
               <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-2">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🔗 İlişkili</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  🔗 İlişkili
+                </p>
                 <div className="space-y-1">
                   {task.case && (
                     <div>
@@ -424,13 +422,12 @@ const TaskDetail = () => {
           </Card.Body>
         </Card>
 
-        {/* ✅ Notlar Bölümü */}
+        {/* NOTLAR */}
         <Card>
           <Card.Header>
             <h2 className="font-semibold text-gray-900 dark:text-white">📝 Notlar</h2>
           </Card.Header>
           <Card.Body className="space-y-4">
-            {/* Not Ekleme (sadece atanan kişi) */}
             {isAssignee && (
               <div className="space-y-2">
                 <textarea
@@ -440,8 +437,8 @@ const TaskDetail = () => {
                   rows="2"
                   className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   onClick={handleAddNote}
                   loading={addNoteMutation.isPending}
                   className="flex items-center gap-1"
@@ -452,7 +449,6 @@ const TaskDetail = () => {
               </div>
             )}
 
-            {/* Not Listesi */}
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {notes.length === 0 ? (
                 <p className="text-gray-500 text-sm text-center py-4">Henüz not yok</p>
@@ -483,7 +479,7 @@ const TaskDetail = () => {
         </Card>
       </div>
 
-      {/* ✅ Tamamlama Modalı */}
+      {/* TAMAMLAMA MODALI */}
       {showCompleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
@@ -493,7 +489,7 @@ const TaskDetail = () => {
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
               "{task.title}" görevini tamamlıyorsun. Lütfen bir tamamlama notu girin.
             </p>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -507,7 +503,7 @@ const TaskDetail = () => {
                   className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Gerçek Süre (Saat) - isteğe bağlı
@@ -525,16 +521,16 @@ const TaskDetail = () => {
             </div>
 
             <div className="flex gap-3 mt-6">
-              <Button 
-                variant="success" 
+              <Button
+                variant="success"
                 onClick={handleComplete}
                 loading={completeMutation.isPending}
                 className="flex-1"
               >
                 Tamamla
               </Button>
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 onClick={() => {
                   setShowCompleteModal(false);
                   setCompletionNote('');

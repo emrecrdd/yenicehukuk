@@ -1,31 +1,16 @@
 import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
 import documentApi from './document.api.js';
 import toast from 'react-hot-toast';
 
-// ============ FILE HANDLING HOOKS ============
+// ======================================================
+// FILE HANDLING HOOKS (UI Helper'lar)
+// ======================================================
 
 export const useFileUpload = () => {
-  const uploadMutation = useMutation({
-    mutationFn: async ({ file, metadata = {} }) => {
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      Object.keys(metadata).forEach((key) => {
-        formData.append(key, metadata[key]);
-      });
-      
-      return documentApi.upload(formData);
-    },
-    onSuccess: () => {
-      toast.success('Dosya başarıyla yüklendi');
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Dosya yüklenemedi');
-    },
-  });
-
   const validateFile = (file, options = {}) => {
+    // ✅ file kontrolü
+    if (!file) return false;
+
     const { maxSize = 10, allowedTypes = null } = options;
     const maxSizeBytes = maxSize * 1024 * 1024;
 
@@ -43,6 +28,9 @@ export const useFileUpload = () => {
   };
 
   const getFileIcon = (mimeType) => {
+    // ✅ null/undefined kontrolü
+    if (!mimeType) return '📎';
+
     if (mimeType.includes('pdf')) return '📄';
     if (mimeType.includes('word') || mimeType.includes('document')) return '📝';
     if (mimeType.includes('excel') || mimeType.includes('sheet')) return '📊';
@@ -61,17 +49,11 @@ export const useFileUpload = () => {
   };
 
   return {
-    upload: uploadMutation,
     validateFile,
     getFileIcon,
     formatFileSize,
-    isUploading: uploadMutation.isPending,
-    error: uploadMutation.error,
   };
 };
-
-// ❌ PREVIEW HOOK'U KALDIRILDI
-// export const useDocumentPreview = (documentId) => { ... }
 
 export const useDocumentDownload = () => {
   const [isDownloading, setIsDownloading] = useState(false);
@@ -100,57 +82,11 @@ export const useDocumentDownload = () => {
   return { download, isDownloading };
 };
 
-export const useDocumentCategories = () => {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['document-categories'],
-    queryFn: () => documentApi.getCategories(),
-    staleTime: 30 * 60 * 1000,
-  });
-
-  const categories = data?.data || [];
-
-  const getCategoryColor = (category) => {
-    const colors = {
-      petition: 'bg-blue-100 text-blue-800',
-      expert_report: 'bg-purple-100 text-purple-800',
-      court_decision: 'bg-green-100 text-green-800',
-      notification: 'bg-yellow-100 text-yellow-800',
-      evidence: 'bg-red-100 text-red-800',
-      correspondence: 'bg-gray-100 text-gray-800',
-      general: 'bg-gray-100 text-gray-800',
-      other: 'bg-gray-100 text-gray-800',
-    };
-    return colors[category] || colors.general;
-  };
-
-  const getCategoryLabel = (category) => {
-    const labels = {
-      petition: 'Dilekçe',
-      expert_report: 'Bilirkişi Raporu',
-      court_decision: 'Mahkeme Kararı',
-      notification: 'Tebligat',
-      evidence: 'Delil',
-      correspondence: 'Yazışma',
-      general: 'Genel',
-      other: 'Diğer',
-    };
-    return labels[category] || category;
-  };
-
-  return {
-    categories,
-    isLoading,
-    error,
-    getCategoryColor,
-    getCategoryLabel,
-  };
-};
-
 export const useBulkUpload = () => {
   const [progress, setProgress] = useState({});
   const [isUploading, setIsUploading] = useState(false);
 
-  const uploadMultiple = async (files, metadata = {}) => {
+  const uploadMultiple = async (files, uploadFn) => {
     setIsUploading(true);
     const results = [];
     const totalFiles = files.length;
@@ -158,14 +94,7 @@ export const useBulkUpload = () => {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       try {
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        Object.keys(metadata).forEach((key) => {
-          formData.append(key, metadata[key]);
-        });
-
-        const response = await documentApi.upload(formData);
+        const response = await uploadFn(file);
         results.push({ success: true, file: file.name, data: response.data });
         setProgress((prev) => ({
           ...prev,
@@ -201,11 +130,4 @@ export const useBulkUpload = () => {
     isUploading,
     resetProgress,
   };
-};
-
-export default {
-  useFileUpload,
-  useDocumentDownload,
-  useDocumentCategories,
-  useBulkUpload,
 };

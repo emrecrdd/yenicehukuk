@@ -1,76 +1,70 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query'; // ✅ useQueryClient eklendi
-import taskApi from '../../features/tasks/task.api.js';
-import caseApi from '../../features/cases/case.api.js';
-import clientApi from '../../features/clients/client.api.js';
-import userApi from '../../features/users/user.api.js';
-import { useUpdateTask, useDeleteTask } from '../../features/tasks/task.query.js';
+import {
+  useTask,
+  useUpdateTask,
+  useDeleteTask,
+} from '../../features/tasks/task.query.js';
+import { useUsers } from '../../features/users/user.query.js';
+import { useCases } from '../../features/cases/case.query.js';
+import { useClients } from '../../features/clients/client.query.js';
 import { useAuth } from '../../app/providers/auth.provider.jsx';
 import Button from '../../components/ui/Button.jsx';
 import Input from '../../components/ui/Input.jsx';
 import Card from '../../components/ui/Card.jsx';
-import toast from 'react-hot-toast';
+
+// ======================================================
+// SABİTLER
+// ======================================================
+
+const INITIAL_FORM = {
+  title: '',
+  description: '',
+  status: 'pending',
+  priority: 'normal',
+  due_date: '',
+  assigned_to: '',
+  case_id: '',
+  client_id: '',
+  estimated_hours: '',
+};
+
+// ======================================================
+// COMPONENT
+// ======================================================
 
 const TaskEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const queryClient = useQueryClient(); // ✅ EKLENDİ
 
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    status: 'pending',
-    priority: 'normal',
-    due_date: '',
-    assigned_to: '',
-    case_id: '',
-    client_id: '',
-    estimated_hours: '',
-  });
+  const [formData, setFormData] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    if (user?.role !== 'admin' && user?.id) {
-      setFormData(prev => ({
-        ...prev,
-        assigned_to: user.id
-      }));
-    }
-  }, [user]);
+  // ✅ HOOK'lar
+  const { data, isLoading: taskLoading } = useTask(id);
+  const { data: usersData } = useUsers();
+  const { data: casesData } = useCases({ limit: 100 });
+  const { data: clientsData } = useClients({ limit: 100 });
+  const updateMutation = useUpdateTask();
+  const deleteMutation = useDeleteTask();
 
-  // ✅ Görevi getir
-  const { data: taskData, isLoading: taskLoading } = useQuery({
-    queryKey: ['task', id],
-    queryFn: () => taskApi.getOne(id),
-    enabled: !!id,
-  });
-
-  const { data: usersData } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => userApi.getAll(),
-  });
-
-  const { data: casesData } = useQuery({
-    queryKey: ['cases', { limit: 100 }],
-    queryFn: () => caseApi.getAll({ limit: 100 }),
-  });
-
-  const { data: clientsData } = useQuery({
-    queryKey: ['clients', { limit: 100 }],
-    queryFn: () => clientApi.getAll({ limit: 100 }),
-  });
-
-  const task = taskData?.data?.data;
+  const task = data?.data?.data;
   const users = usersData?.data?.data || [];
   const cases = casesData?.data?.data || [];
   const clients = clientsData?.data?.data || [];
 
-  const assignableUsers = user?.role === 'admin'
-    ? users
-    : users.filter(u => u.id === user.id);
+  // ✅ Admin değilse kendine ata
+  useEffect(() => {
+    if (user?.role !== 'admin' && user?.id) {
+      setFormData((prev) => ({
+        ...prev,
+        assigned_to: user.id,
+      }));
+    }
+  }, [user]);
 
+  // ✅ Task geldiğinde form'u doldur
   useEffect(() => {
     if (task) {
       setFormData({
@@ -78,7 +72,9 @@ const TaskEdit = () => {
         description: task.description || '',
         status: task.status || 'pending',
         priority: task.priority || 'normal',
-        due_date: task.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
+        due_date: task.due_date
+          ? new Date(task.due_date).toISOString().slice(0, 16)
+          : '',
         assigned_to: task.assigned_to || '',
         case_id: task.case_id || '',
         client_id: task.client_id || '',
@@ -87,24 +83,15 @@ const TaskEdit = () => {
     }
   }, [task]);
 
-  const updateMutation = useUpdateTask();
-  const deleteMutation = useDeleteTask();
+  // ✅ useMemo ile optimize et
+  const assignableUsers = useMemo(() => {
+    if (user?.role === 'admin') return users;
+    return users.filter((u) => u.id === user?.id);
+  }, [users, user]);
 
-  const handleDelete = () => {
-    if (window.confirm(`"${task?.title}" görevini silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`)) {
-      deleteMutation.mutate(id, {
-        onSuccess: () => {
-          // ✅ Cache'den temizle
-          queryClient.removeQueries({ queryKey: ['task', id] });
-          queryClient.invalidateQueries({ queryKey: ['tasks'] });
-          queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
-          
-          toast.success('Görev silindi');
-          navigate('/tasks');
-        }
-      });
-    }
-  };
+  // ======================================================
+  // HANDLERS
+  // ======================================================
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -116,14 +103,14 @@ const TaskEdit = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim()) {
       setErrors({ title: 'Görev adı gereklidir' });
-      toast.error('Lütfen görev adını girin');
       return;
     }
 
-    const assignedTo = user?.role !== 'admin' ? user?.id : formData.assigned_to;
+    const assignedTo =
+      user?.role !== 'admin' ? user?.id : formData.assigned_to;
 
     const submitData = {
       ...formData,
@@ -131,33 +118,39 @@ const TaskEdit = () => {
       case_id: formData.case_id || null,
       client_id: formData.client_id || null,
       due_date: formData.due_date || null,
-      estimated_hours: formData.estimated_hours ? parseFloat(formData.estimated_hours) : null,
+      estimated_hours: formData.estimated_hours
+        ? parseFloat(formData.estimated_hours)
+        : null,
     };
-    
-    // ✅ Mutation'ı manuel çalıştır ve success/error yönet
+
     updateMutation.mutate(
       { id, data: submitData },
       {
-        onSuccess: () => {
-          // ✅ Tüm listeleri güncelle
-          queryClient.invalidateQueries({ queryKey: ['tasks'] });
-          queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
-          queryClient.invalidateQueries({ queryKey: ['task', id] });
-          
-          toast.success('Görev başarıyla güncellendi');
-          navigate('/tasks');
-        },
-        onError: (error) => {
-          toast.error(error.response?.data?.message || 'Görev güncellenemedi');
-        }
+        onSuccess: () => navigate('/tasks'),
       }
     );
   };
 
+  const handleDelete = () => {
+    if (
+      window.confirm(
+        `"${task?.title}" görevini silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`
+      )
+    ) {
+      deleteMutation.mutate(id, {
+        onSuccess: () => navigate('/tasks'),
+      });
+    }
+  };
+
+  // ======================================================
+  // LOADING / ERROR
+  // ======================================================
+
   if (taskLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
       </div>
     );
   }
@@ -166,13 +159,22 @@ const TaskEdit = () => {
     return (
       <div className="text-center py-12">
         <div className="text-6xl mb-4">📋</div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Görev Bulunamadı</h2>
-        <Link to="/tasks" className="text-blue-600 hover:underline mt-4 inline-block">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Görev Bulunamadı
+        </h2>
+        <Link
+          to="/tasks"
+          className="text-blue-600 hover:underline mt-4 inline-block"
+        >
           ← Görevlere Dön
         </Link>
       </div>
     );
   }
+
+  // ======================================================
+  // RENDER
+  // ======================================================
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -184,9 +186,7 @@ const TaskEdit = () => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
             ✏️ Görev Düzenle
           </h1>
-          <p className="text-sm text-gray-500">
-            {task.title} görevini düzenle
-          </p>
+          <p className="text-sm text-gray-500">{task.title} görevini düzenle</p>
         </div>
       </div>
 
@@ -264,7 +264,6 @@ const TaskEdit = () => {
             </div>
           </div>
 
-          {/* Tahmini Süre */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               ⏱️ Tahmini Süre (Saat)
@@ -281,12 +280,11 @@ const TaskEdit = () => {
             />
           </div>
 
-          {/* Atanan Kişi */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               👤 Atanan Kişi
             </label>
-            
+
             {user?.role === 'admin' ? (
               <select
                 name="assigned_to"
@@ -357,12 +355,16 @@ const TaskEdit = () => {
             <Button type="submit" loading={updateMutation.isPending}>
               💾 Güncelle
             </Button>
-            <Button type="button" variant="secondary" onClick={() => navigate(`/tasks/${id}`)}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => navigate(`/tasks/${id}`)}
+            >
               İptal
             </Button>
-            <Button 
+            <Button
               type="button"
-              variant="danger" 
+              variant="danger"
               onClick={handleDelete}
               loading={deleteMutation.isPending}
               disabled={deleteMutation.isPending}

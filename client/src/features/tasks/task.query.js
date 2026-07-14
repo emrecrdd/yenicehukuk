@@ -2,89 +2,139 @@ import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tansta
 import taskApi from './task.api.js';
 import toast from 'react-hot-toast';
 
-// ============ QUERIES ============
+// ======================================================
+// QUERY KEYS
+// ======================================================
+
+export const TASK_QUERY_KEYS = {
+  all: ['tasks'],
+  list: (params = {}) => ['tasks', params],
+  detail: (id) => ['task', id],
+  myTasks: (params = {}) => ['my-tasks', params],
+  overdue: () => ['my-overdue-tasks'],
+  upcoming: () => ['my-upcoming-tasks'],
+  statistics: () => ['task-statistics'],
+  notes: (id) => ['task-notes', id],
+  infinite: (params = {}) => ['tasks-infinite', params],
+  search: (query, params = {}) => ['tasks-search', query, params],
+};
+
+// ======================================================
+// CACHE
+// ======================================================
+
+const CACHE = {
+  SHORT: 2 * 60 * 1000, // 2 dakika
+  NORMAL: 5 * 60 * 1000, // 5 dakika
+  LONG: 10 * 60 * 1000, // 10 dakika
+  GC: 10 * 60 * 1000, // 10 dakika
+  GC_LONG: 30 * 60 * 1000, // 30 dakika
+};
+
+// ======================================================
+// INVALIDATE HELPERS
+// ======================================================
+
+const invalidateTaskLists = (queryClient) => {
+  queryClient.invalidateQueries({ queryKey: ['tasks'] });
+  queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+};
+
+const invalidateTask = (queryClient, id) => {
+  queryClient.invalidateQueries({ queryKey: ['task', id] });
+};
+
+const invalidateTaskNotes = (queryClient, id) => {
+  queryClient.invalidateQueries({ queryKey: ['task-notes', id] });
+};
+
+// ======================================================
+// TOAST HELPERS
+// ======================================================
+
+const success = (message) => toast.success(message);
+const failure = (error, fallback) => {
+  toast.error(error.response?.data?.message || fallback);
+};
+
+// ======================================================
+// QUERIES
+// ======================================================
 
 export const useTasks = (params = {}) => {
   return useQuery({
-    queryKey: ['tasks', params],
+    queryKey: TASK_QUERY_KEYS.list(params),
     queryFn: () => taskApi.getAll(params),
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
     keepPreviousData: true,
   });
 };
 
 export const useTask = (id) => {
   return useQuery({
-    queryKey: ['task', id],
+    queryKey: TASK_QUERY_KEYS.detail(id),
     queryFn: () => taskApi.getOne(id),
     enabled: !!id,
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
 };
 
 export const useMyTasks = (params = {}) => {
   return useQuery({
-    queryKey: ['my-tasks', params],
+    queryKey: TASK_QUERY_KEYS.myTasks(params),
     queryFn: () => taskApi.getMyTasks(params),
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
 };
 
 export const useMyOverdueTasks = () => {
   return useQuery({
-    queryKey: ['my-overdue-tasks'],
+    queryKey: TASK_QUERY_KEYS.overdue(),
     queryFn: () => taskApi.getMyOverdue(),
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
 };
 
 export const useMyUpcomingTasks = () => {
   return useQuery({
-    queryKey: ['my-upcoming-tasks'],
+    queryKey: TASK_QUERY_KEYS.upcoming(),
     queryFn: () => taskApi.getMyUpcoming(),
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
 };
 
 export const useTaskStatistics = () => {
   return useQuery({
-    queryKey: ['task-statistics'],
+    queryKey: TASK_QUERY_KEYS.statistics(),
     queryFn: () => taskApi.getStatistics(),
-    staleTime: 10 * 60 * 1000,
-    cacheTime: 30 * 60 * 1000,
+    staleTime: CACHE.LONG,
   });
 };
 
-// ✅ YENİ: Notları Getir
 export const useTaskNotes = (taskId) => {
   return useQuery({
-    queryKey: ['task-notes', taskId],
+    queryKey: TASK_QUERY_KEYS.notes(taskId),
     queryFn: () => taskApi.getNotes(taskId),
     enabled: !!taskId,
-    staleTime: 2 * 60 * 1000,
-    cacheTime: 5 * 60 * 1000,
+    staleTime: CACHE.SHORT,
   });
 };
 
-// ============ MUTATIONS ============
+// ======================================================
+// MUTATIONS
+// ======================================================
 
 export const useCreateTask = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data) => taskApi.create(data),
+    mutationFn: taskApi.create,
     onSuccess: () => {
-      queryClient.invalidateQueries(['tasks']);
-      queryClient.invalidateQueries(['my-tasks']);
-      toast.success('Görev başarıyla oluşturuldu');
+      invalidateTaskLists(queryClient);
+      success('Görev başarıyla oluşturuldu');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Görev oluşturulamadı');
+      failure(error, 'Görev oluşturulamadı');
     },
   });
 };
@@ -94,14 +144,13 @@ export const useUpdateTask = () => {
 
   return useMutation({
     mutationFn: ({ id, data }) => taskApi.update(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['tasks']);
-      queryClient.invalidateQueries(['task', variables.id]);
-      queryClient.invalidateQueries(['my-tasks']);
-      toast.success('Görev başarıyla güncellendi');
+    onSuccess: (_, { id }) => {
+      invalidateTaskLists(queryClient);
+      invalidateTask(queryClient, id);
+      success('Görev başarıyla güncellendi');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Görev güncellenemedi');
+      failure(error, 'Görev güncellenemedi');
     },
   });
 };
@@ -110,14 +159,13 @@ export const useDeleteTask = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id) => taskApi.delete(id),
+    mutationFn: taskApi.delete,
     onSuccess: () => {
-      queryClient.invalidateQueries(['tasks']);
-      queryClient.invalidateQueries(['my-tasks']);
-      toast.success('Görev başarıyla silindi');
+      invalidateTaskLists(queryClient);
+      success('Görev başarıyla silindi');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Görev silinemedi');
+      failure(error, 'Görev silinemedi');
     },
   });
 };
@@ -127,14 +175,13 @@ export const useUpdateTaskStatus = () => {
 
   return useMutation({
     mutationFn: ({ id, status }) => taskApi.updateStatus(id, status),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['tasks']);
-      queryClient.invalidateQueries(['task', variables.id]);
-      queryClient.invalidateQueries(['my-tasks']);
-      toast.success('Görev durumu güncellendi');
+    onSuccess: (_, { id }) => {
+      invalidateTaskLists(queryClient);
+      invalidateTask(queryClient, id);
+      success('Görev durumu güncellendi');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Durum güncellenemedi');
+      failure(error, 'Durum güncellenemedi');
     },
   });
 };
@@ -144,170 +191,164 @@ export const useAssignTask = () => {
 
   return useMutation({
     mutationFn: ({ id, assigned_to }) => taskApi.assignTask(id, assigned_to),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['tasks']);
-      queryClient.invalidateQueries(['task', variables.id]);
-      queryClient.invalidateQueries(['my-tasks']);
-      toast.success('Görev başarıyla atandı');
+    onSuccess: (_, { id }) => {
+      invalidateTaskLists(queryClient);
+      invalidateTask(queryClient, id);
+      success('Görev başarıyla atandı');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Görev atanamadı');
+      failure(error, 'Görev atanamadı');
     },
   });
 };
 
-// ✅ YENİ: Görevi Başlat
 export const useStartTask = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id) => taskApi.startTask(id),
+    mutationFn: taskApi.startTask,
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries(['tasks']);
-      queryClient.invalidateQueries(['task', id]);
-      queryClient.invalidateQueries(['my-tasks']);
-      toast.success('Görev başlatıldı!');
+      invalidateTaskLists(queryClient);
+      invalidateTask(queryClient, id);
+      success('Görev başlatıldı!');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Görev başlatılamadı');
+      failure(error, 'Görev başlatılamadı');
     },
   });
 };
 
-// ✅ YENİ: Görevi Tamamla
 export const useCompleteTask = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, note, actual_hours }) => 
+    mutationFn: ({ id, note, actual_hours }) =>
       taskApi.completeTask(id, { note, actual_hours }),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['tasks']);
-      queryClient.invalidateQueries(['task', variables.id]);
-      queryClient.invalidateQueries(['my-tasks']);
-      queryClient.invalidateQueries(['task-notes', variables.id]);
-      toast.success('Görev tamamlandı! Onay bekleniyor.');
+    onSuccess: (_, { id }) => {
+      invalidateTaskLists(queryClient);
+      invalidateTask(queryClient, id);
+      invalidateTaskNotes(queryClient, id);
+      success('Görev tamamlandı! Onay bekleniyor.');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Görev tamamlanamadı');
+      failure(error, 'Görev tamamlanamadı');
     },
   });
 };
 
-// ✅ YENİ: Görevi Onayla (admin)
 export const useApproveTask = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id) => taskApi.approveTask(id),
+    mutationFn: taskApi.approveTask,
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries(['tasks']);
-      queryClient.invalidateQueries(['task', id]);
-      queryClient.invalidateQueries(['my-tasks']);
-      queryClient.invalidateQueries(['task-notes', id]);
-      toast.success('Görev onaylandı! 🎉');
+      invalidateTaskLists(queryClient);
+      invalidateTask(queryClient, id);
+      invalidateTaskNotes(queryClient, id);
+      success('Görev onaylandı! 🎉');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Görev onaylanamadı');
+      failure(error, 'Görev onaylanamadı');
     },
   });
 };
 
-// ✅ YENİ: Not Ekle
 export const useAddNote = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, content }) => taskApi.addNote(id, content),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['task-notes', variables.id]);
-      toast.success('Not eklendi');
+    onSuccess: (_, { id }) => {
+      invalidateTaskNotes(queryClient, id);
+      success('Not eklendi');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Not eklenemedi');
+      failure(error, 'Not eklenemedi');
     },
   });
 };
 
-// ✅ YENİ: İlerleme Güncelle
 export const useUpdateProgress = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, progress }) => taskApi.updateProgress(id, progress),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['task', variables.id]);
-      queryClient.invalidateQueries(['tasks']);
-      toast.success('İlerleme güncellendi');
+    onSuccess: (_, { id }) => {
+      invalidateTask(queryClient, id);
+      invalidateTaskLists(queryClient);
+      success('İlerleme güncellendi');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'İlerleme güncellenemedi');
+      failure(error, 'İlerleme güncellenemedi');
     },
   });
 };
-
-// ============ BULK OPERATIONS ============
 
 export const useBulkUpdateTaskStatus = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ ids, status }) => {
-      return Promise.all(ids.map(id => taskApi.updateStatus(id, status)));
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['tasks']);
-      queryClient.invalidateQueries(['my-tasks']);
-      toast.success(`${variables.ids.length} görevin durumu güncellendi`);
+    mutationFn: ({ ids, status }) =>
+      Promise.all(ids.map((id) => taskApi.updateStatus(id, status))),
+    onSuccess: (_, { ids }) => {
+      invalidateTaskLists(queryClient);
+      success(`${ids.length} görevin durumu güncellendi`);
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Toplu güncelleme başarısız');
+      failure(error, 'Toplu güncelleme başarısız');
     },
   });
 };
 
-// ============ INFINITE QUERIES ============
+// ======================================================
+// INFINITE QUERY
+// ======================================================
 
 export const useInfiniteTasks = (params = {}) => {
   return useInfiniteQuery({
-    queryKey: ['tasks-infinite', params],
-    queryFn: ({ pageParam = 1 }) => {
-      return taskApi.getAll({ ...params, page: pageParam });
-    },
+    queryKey: TASK_QUERY_KEYS.infinite(params),
+    queryFn: ({ pageParam = 1 }) =>
+      taskApi.getAll({
+        ...params,
+        page: pageParam,
+      }),
+    initialPageParam: 1,
     getNextPageParam: (lastPage) => {
-      const { pagination } = lastPage.data;
-      if (pagination.page < pagination.totalPages) {
-        return pagination.page + 1;
-      }
-      return undefined;
+      const pagination = lastPage?.data?.pagination;
+      if (!pagination) return undefined;
+      return pagination.page < pagination.totalPages
+        ? pagination.page + 1
+        : undefined;
     },
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
+    gcTime: CACHE.GC,
   });
 };
 
-// ============ PREFETCHING ============
+// ======================================================
+// PREFETCH
+// ======================================================
 
-export const prefetchTask = (queryClient, id) => {
-  return queryClient.prefetchQuery({
-    queryKey: ['task', id],
+export const prefetchTask = (queryClient, id) =>
+  queryClient.prefetchQuery({
+    queryKey: TASK_QUERY_KEYS.detail(id),
     queryFn: () => taskApi.getOne(id),
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
-};
 
-export const prefetchTasks = (queryClient, params = {}) => {
-  return queryClient.prefetchQuery({
-    queryKey: ['tasks', params],
+export const prefetchTasks = (queryClient, params = {}) =>
+  queryClient.prefetchQuery({
+    queryKey: TASK_QUERY_KEYS.list(params),
     queryFn: () => taskApi.getAll(params),
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
-};
 
-// ============ CACHE HELPERS ============
+// ======================================================
+// CACHE HELPERS
+// ======================================================
 
 export const updateTaskCache = (queryClient, id, updater) => {
-  queryClient.setQueryData(['task', id], (oldData) => {
+  queryClient.setQueryData(TASK_QUERY_KEYS.detail(id), (oldData) => {
     if (!oldData) return oldData;
     return {
       ...oldData,
@@ -317,7 +358,7 @@ export const updateTaskCache = (queryClient, id, updater) => {
 };
 
 export const updateTasksCache = (queryClient, params, updater) => {
-  queryClient.setQueryData(['tasks', params], (oldData) => {
+  queryClient.setQueryData(TASK_QUERY_KEYS.list(params), (oldData) => {
     if (!oldData) return oldData;
     return {
       ...oldData,
@@ -330,20 +371,32 @@ export const updateTasksCache = (queryClient, params, updater) => {
 };
 
 export const removeTaskFromCache = (queryClient, id) => {
-  queryClient.removeQueries(['task', id]);
+  queryClient.removeQueries({
+    queryKey: TASK_QUERY_KEYS.detail(id),
+  });
 };
 
-// ============ SEARCH ============
+// ======================================================
+// SEARCH
+// ======================================================
 
 export const useSearchTasks = (query, params = {}) => {
   return useQuery({
-    queryKey: ['tasks-search', query, params],
-    queryFn: () => taskApi.getAll({ ...params, search: query }),
-    enabled: query && query.length >= 2,
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    queryKey: TASK_QUERY_KEYS.search(query, params),
+    queryFn: () =>
+      taskApi.getAll({
+        ...params,
+        search: query,
+      }),
+    enabled: !!query && query.length >= 2,
+    staleTime: CACHE.NORMAL,
+    gcTime: CACHE.GC,
   });
 };
+
+// ======================================================
+// EXPORT
+// ======================================================
 
 export default {
   useTasks,
@@ -353,6 +406,7 @@ export default {
   useMyUpcomingTasks,
   useTaskStatistics,
   useTaskNotes,
+
   useCreateTask,
   useUpdateTask,
   useDeleteTask,
@@ -364,10 +418,13 @@ export default {
   useAddNote,
   useUpdateProgress,
   useBulkUpdateTaskStatus,
+
   useInfiniteTasks,
   useSearchTasks,
+
   prefetchTask,
   prefetchTasks,
+
   updateTaskCache,
   updateTasksCache,
   removeTaskFromCache,

@@ -1,84 +1,119 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import clientApi from './client.api.js';
 import toast from 'react-hot-toast';
 
-// ============ QUERIES ============
+// ======================================================
+// QUERY KEYS
+// ======================================================
+
+export const CLIENT_QUERY_KEYS = {
+  all: ['clients'],
+  list: (params = {}) => ['clients', params],
+  detail: (id) => ['client', id],
+  statistics: () => ['client-statistics'],
+  caseHistory: (clientId) => ['client-case-history', clientId],
+  payments: (clientId) => ['client-payments', clientId],
+  notes: (clientId) => ['client-notes', clientId],
+  financialSummary: (clientId) => ['client-financial-summary', clientId],
+  infinite: (params = {}) => ['clients-infinite', params],
+  search: (query, params = {}) => ['clients-search', query, params],
+};
+
+// ======================================================
+// CACHE
+// ======================================================
+
+const CACHE = {
+  NORMAL: 5 * 60 * 1000,
+  LONG: 10 * 60 * 1000,
+  GC: 10 * 60 * 1000,
+};
+
+// ======================================================
+// QUERIES
+// ======================================================
 
 export const useClients = (params = {}) => {
   return useQuery({
-    queryKey: ['clients', params],
+    queryKey: CLIENT_QUERY_KEYS.list(params),
     queryFn: () => clientApi.getAll(params),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
-    keepPreviousData: true,
+    staleTime: CACHE.NORMAL,
+    gcTime: CACHE.GC,
+    placeholderData: (previousData) => previousData,
   });
 };
 
 export const useClient = (id) => {
   return useQuery({
-    queryKey: ['client', id],
+    queryKey: CLIENT_QUERY_KEYS.detail(id),
     queryFn: () => clientApi.getOne(id),
     enabled: !!id,
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
+    gcTime: CACHE.GC,
   });
 };
 
 export const useClientStatistics = () => {
   return useQuery({
-    queryKey: ['client-statistics'],
+    queryKey: CLIENT_QUERY_KEYS.statistics(),
     queryFn: () => clientApi.getStatistics(),
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    cacheTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: CACHE.LONG,
+    gcTime: CACHE.GC,
   });
 };
 
 export const useClientCaseHistory = (clientId) => {
   return useQuery({
-    queryKey: ['client-case-history', clientId],
+    queryKey: CLIENT_QUERY_KEYS.caseHistory(clientId),
     queryFn: () => clientApi.getCaseHistory(clientId),
     enabled: !!clientId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
+    gcTime: CACHE.GC,
   });
 };
 
 export const useClientPayments = (clientId) => {
   return useQuery({
-    queryKey: ['client-payments', clientId],
+    queryKey: CLIENT_QUERY_KEYS.payments(clientId),
     queryFn: () => clientApi.getPayments(clientId),
     enabled: !!clientId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
+    gcTime: CACHE.GC,
   });
 };
 
 export const useClientNotes = (clientId) => {
   return useQuery({
-    queryKey: ['client-notes', clientId],
+    queryKey: CLIENT_QUERY_KEYS.notes(clientId),
     queryFn: () => clientApi.getNotes(clientId),
     enabled: !!clientId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
+    gcTime: CACHE.GC,
   });
 };
 
 export const useClientFinancialSummary = (clientId) => {
   return useQuery({
-    queryKey: ['client-financial-summary', clientId],
+    queryKey: CLIENT_QUERY_KEYS.financialSummary(clientId),
     queryFn: () => clientApi.getFinancialSummary(clientId),
     enabled: !!clientId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.LONG,
+    gcTime: CACHE.GC,
   });
 };
 
-// ============ MUTATIONS ============
+// ======================================================
+// MUTATIONS
+// ======================================================
 
 export const useCreateClient = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data) => clientApi.create(data),
-    onSuccess: (response) => {
-      queryClient.invalidateQueries(['clients']);
-      queryClient.invalidateQueries(['client-statistics']);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: CLIENT_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: CLIENT_QUERY_KEYS.statistics() });
       toast.success('Müvekkil başarıyla oluşturuldu');
     },
     onError: (error) => {
@@ -93,9 +128,9 @@ export const useUpdateClient = () => {
   return useMutation({
     mutationFn: ({ id, data }) => clientApi.update(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['clients']);
-      queryClient.invalidateQueries(['client', variables.id]);
-      queryClient.invalidateQueries(['client-statistics']);
+      queryClient.invalidateQueries({ queryKey: CLIENT_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: CLIENT_QUERY_KEYS.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: CLIENT_QUERY_KEYS.statistics() });
       toast.success('Müvekkil başarıyla güncellendi');
     },
     onError: (error) => {
@@ -110,8 +145,8 @@ export const useDeleteClient = () => {
   return useMutation({
     mutationFn: (id) => clientApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['clients']);
-      queryClient.invalidateQueries(['client-statistics']);
+      queryClient.invalidateQueries({ queryKey: CLIENT_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: CLIENT_QUERY_KEYS.statistics() });
       toast.success('Müvekkil başarıyla silindi');
     },
     onError: (error) => {
@@ -126,8 +161,8 @@ export const useUpdateClientStatus = () => {
   return useMutation({
     mutationFn: ({ id, status }) => clientApi.updateStatus(id, status),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['clients']);
-      queryClient.invalidateQueries(['client', variables.id]);
+      queryClient.invalidateQueries({ queryKey: CLIENT_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: CLIENT_QUERY_KEYS.detail(variables.id) });
       toast.success('Müvekkil durumu güncellendi');
     },
     onError: (error) => {
@@ -136,7 +171,9 @@ export const useUpdateClientStatus = () => {
   });
 };
 
-// ============ BULK OPERATIONS ============
+// ======================================================
+// BULK OPERATIONS
+// ======================================================
 
 export const useBulkDeleteClients = () => {
   const queryClient = useQueryClient();
@@ -146,8 +183,8 @@ export const useBulkDeleteClients = () => {
       return Promise.all(ids.map(id => clientApi.delete(id)));
     },
     onSuccess: (_, ids) => {
-      queryClient.invalidateQueries(['clients']);
-      queryClient.invalidateQueries(['client-statistics']);
+      queryClient.invalidateQueries({ queryKey: CLIENT_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: CLIENT_QUERY_KEYS.statistics() });
       toast.success(`${ids.length} müvekkil başarıyla silindi`);
     },
     onError: (error) => {
@@ -164,7 +201,7 @@ export const useBulkUpdateClientStatus = () => {
       return Promise.all(ids.map(id => clientApi.updateStatus(id, status)));
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['clients']);
+      queryClient.invalidateQueries({ queryKey: CLIENT_QUERY_KEYS.all });
       toast.success(`${variables.ids.length} müvekkilin durumu güncellendi`);
     },
     onError: (error) => {
@@ -173,11 +210,13 @@ export const useBulkUpdateClientStatus = () => {
   });
 };
 
-// ============ INFINITE QUERIES ============
+// ======================================================
+// INFINITE QUERIES
+// ======================================================
 
 export const useInfiniteClients = (params = {}) => {
   return useInfiniteQuery({
-    queryKey: ['clients-infinite', params],
+    queryKey: CLIENT_QUERY_KEYS.infinite(params),
     queryFn: ({ pageParam = 1 }) => {
       return clientApi.getAll({ ...params, page: pageParam });
     },
@@ -188,33 +227,38 @@ export const useInfiniteClients = (params = {}) => {
       }
       return undefined;
     },
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
+    gcTime: CACHE.GC,
+    initialPageParam: 1,
   });
 };
 
-// ============ PREFETCHING ============
+// ======================================================
+// PREFETCHING
+// ======================================================
 
 export const prefetchClient = (queryClient, id) => {
   return queryClient.prefetchQuery({
-    queryKey: ['client', id],
+    queryKey: CLIENT_QUERY_KEYS.detail(id),
     queryFn: () => clientApi.getOne(id),
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
 };
 
 export const prefetchClients = (queryClient, params = {}) => {
   return queryClient.prefetchQuery({
-    queryKey: ['clients', params],
+    queryKey: CLIENT_QUERY_KEYS.list(params),
     queryFn: () => clientApi.getAll(params),
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE.NORMAL,
   });
 };
 
-// ============ CACHE HELPERS ============
+// ======================================================
+// CACHE HELPERS
+// ======================================================
 
 export const updateClientCache = (queryClient, id, updater) => {
-  queryClient.setQueryData(['client', id], (oldData) => {
+  queryClient.setQueryData(CLIENT_QUERY_KEYS.detail(id), (oldData) => {
     if (!oldData) return oldData;
     return {
       ...oldData,
@@ -224,7 +268,7 @@ export const updateClientCache = (queryClient, id, updater) => {
 };
 
 export const updateClientsCache = (queryClient, params, updater) => {
-  queryClient.setQueryData(['clients', params], (oldData) => {
+  queryClient.setQueryData(CLIENT_QUERY_KEYS.list(params), (oldData) => {
     if (!oldData) return oldData;
     return {
       ...oldData,
@@ -237,47 +281,21 @@ export const updateClientsCache = (queryClient, params, updater) => {
 };
 
 export const removeClientFromCache = (queryClient, id) => {
-  queryClient.removeQueries(['client', id]);
-};
-
-// ============ SEARCH ============
-
-export const useSearchClients = (query, params = {}) => {
-  return useQuery({
-    queryKey: ['clients-search', query, params],
-    queryFn: () => clientApi.getAll({ ...params, search: query }),
-    enabled: query && query.length >= 2,
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+  queryClient.removeQueries({
+    queryKey: CLIENT_QUERY_KEYS.detail(id),
   });
 };
 
-// ============ EXPORT ============
+// ======================================================
+// SEARCH
+// ======================================================
 
-export default {
-  // Queries
-  useClients,
-  useClient,
-  useClientStatistics,
-  useClientCaseHistory,
-  useClientPayments,
-  useClientNotes,
-  useClientFinancialSummary,
-  useSearchClients,
-  useInfiniteClients,
-
-  // Mutations
-  useCreateClient,
-  useUpdateClient,
-  useDeleteClient,
-  useUpdateClientStatus,
-  useBulkDeleteClients,
-  useBulkUpdateClientStatus,
-
-  // Helpers
-  prefetchClient,
-  prefetchClients,
-  updateClientCache,
-  updateClientsCache,
-  removeClientFromCache,
+export const useSearchClients = (query, params = {}) => {
+  return useQuery({
+    queryKey: CLIENT_QUERY_KEYS.search(query, params),
+    queryFn: () => clientApi.getAll({ ...params, search: query }),
+    enabled: !!query && query.length >= 2,
+    staleTime: CACHE.NORMAL,
+    gcTime: CACHE.GC,
+  });
 };

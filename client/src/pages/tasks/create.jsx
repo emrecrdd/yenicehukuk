@@ -1,71 +1,71 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query'; // ✅ useQueryClient eklendi
-import taskApi from '../../features/tasks/task.api.js';
-import caseApi from '../../features/cases/case.api.js';
-import clientApi from '../../features/clients/client.api.js';
-import userApi from '../../features/users/user.api.js';
+import { useUsers } from '../../features/users/user.query.js';
+import { useCases } from '../../features/cases/case.query.js';
+import { useClients } from '../../features/clients/client.query.js';
 import { useCreateTask } from '../../features/tasks/task.query.js';
 import { useAuth } from '../../app/providers/auth.provider.jsx';
 import Button from '../../components/ui/Button.jsx';
 import Input from '../../components/ui/Input.jsx';
 import Card from '../../components/ui/Card.jsx';
-import toast from 'react-hot-toast';
+
+// ======================================================
+// SABİTLER
+// ======================================================
+
+const INITIAL_FORM = {
+  title: '',
+  description: '',
+  status: 'pending',
+  priority: 'normal',
+  due_date: '',
+  assigned_to: '',
+  case_id: '',
+  client_id: '',
+  estimated_hours: '',
+  note: '',
+};
+
+// ======================================================
+// COMPONENT
+// ======================================================
 
 const TaskCreate = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const queryClient = useQueryClient(); // ✅ EKLENDİ
 
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    status: 'pending',
-    priority: 'normal',
-    due_date: '',
-    assigned_to: '',
-    case_id: '',
-    client_id: '',
-    estimated_hours: '',
-    note: '',
-  });
+  const [formData, setFormData] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
 
-  // Admin değilse assigned_to'yu otomatik doldur
-  useEffect(() => {
-    if (user?.role !== 'admin' && user?.id) {
-      setFormData(prev => ({
-        ...prev,
-        assigned_to: user.id
-      }));
-    }
-  }, [user]);
-
-  // Tüm kullanıcıları getir
-  const { data: usersData } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => userApi.getAll(),
-  });
-
-  const { data: casesData } = useQuery({
-    queryKey: ['cases', { limit: 100 }],
-    queryFn: () => caseApi.getAll({ limit: 100 }),
-  });
-
-  const { data: clientsData } = useQuery({
-    queryKey: ['clients', { limit: 100 }],
-    queryFn: () => clientApi.getAll({ limit: 100 }),
-  });
+  // ✅ HOOK'lar
+  const { data: usersData } = useUsers();
+  const { data: casesData } = useCases({ limit: 100 });
+  const { data: clientsData } = useClients({ limit: 100 });
+  const createMutation = useCreateTask();
 
   const users = usersData?.data?.data || [];
   const cases = casesData?.data?.data || [];
   const clients = clientsData?.data?.data || [];
 
-  const assignableUsers = user?.role === 'admin'
-    ? users
-    : users.filter(u => u.id === user.id);
+  // 👤 Admin değilse kendine ata
+  useEffect(() => {
+    if (user?.role !== 'admin' && user?.id) {
+      setFormData((prev) => ({
+        ...prev,
+        assigned_to: user.id,
+      }));
+    }
+  }, [user]);
 
-  const createMutation = useCreateTask();
+  // ✅ useMemo ile optimize et
+  const assignableUsers = useMemo(() => {
+    if (user?.role === 'admin') return users;
+    return users.filter((u) => u.id === user?.id);
+  }, [users, user]);
+
+  // ======================================================
+  // HANDLERS
+  // ======================================================
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -77,15 +77,14 @@ const TaskCreate = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const newErrors = {};
-    if (!formData.title) newErrors.title = 'Görev adı gereklidir';
-    
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+
+    if (!formData.title.trim()) {
+      setErrors({ title: 'Görev adı gereklidir' });
       return;
     }
 
-    const assignedTo = user?.role !== 'admin' ? user?.id : formData.assigned_to;
+    const assignedTo =
+      user?.role !== 'admin' ? user?.id : formData.assigned_to;
 
     const submitData = {
       ...formData,
@@ -93,24 +92,19 @@ const TaskCreate = () => {
       case_id: formData.case_id || null,
       client_id: formData.client_id || null,
       due_date: formData.due_date || null,
-      estimated_hours: formData.estimated_hours ? parseFloat(formData.estimated_hours) : null,
+      estimated_hours: formData.estimated_hours
+        ? parseFloat(formData.estimated_hours)
+        : null,
     };
 
-    // ✅ Mutation'ı manuel çalıştır ve success/error yönet
     createMutation.mutate(submitData, {
-      onSuccess: () => {
-        // ✅ Tüm task listelerini güncelle
-        queryClient.invalidateQueries({ queryKey: ['tasks'] });
-        queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
-        
-        toast.success('Görev başarıyla oluşturuldu');
-        navigate('/tasks');
-      },
-      onError: (error) => {
-        toast.error(error.response?.data?.message || 'Görev oluşturulamadı');
-      }
+      onSuccess: () => navigate('/tasks'),
     });
   };
+
+  // ======================================================
+  // RENDER
+  // ======================================================
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -150,10 +144,9 @@ const TaskCreate = () => {
             />
           </div>
 
-          {/* Not Alanı */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              📝 Başlangıç Notu (isteğe bağlı)
+              📝 Başlangıç Notu
             </label>
             <textarea
               name="note"
@@ -217,7 +210,6 @@ const TaskCreate = () => {
             </div>
           </div>
 
-          {/* Tahmini Süre */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               ⏱️ Tahmini Süre (Saat)
@@ -234,12 +226,11 @@ const TaskCreate = () => {
             />
           </div>
 
-          {/* Atanan Kişi */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               👤 Atanan Kişi
             </label>
-            
+
             {user?.role === 'admin' ? (
               <select
                 name="assigned_to"
@@ -310,7 +301,11 @@ const TaskCreate = () => {
             <Button type="submit" loading={createMutation.isPending}>
               ✅ Görev Oluştur
             </Button>
-            <Button type="button" variant="secondary" onClick={() => navigate('/tasks')}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => navigate('/tasks')}
+            >
               İptal
             </Button>
           </div>

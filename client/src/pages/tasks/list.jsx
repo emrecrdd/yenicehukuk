@@ -1,11 +1,58 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import taskApi from '../../features/tasks/task.api.js';
+import { useTasks } from '../../features/tasks/task.query.js';
 import Button from '../../components/ui/Button.jsx';
 import Input from '../../components/ui/Input.jsx';
 import Table from '../../components/ui/Table.jsx';
 import Badge from '../../components/ui/Badge.jsx';
+
+// ======================================================
+// SABİTLER
+// ======================================================
+
+const STATUS_OPTIONS = [
+  { value: '', label: 'Tümü' },
+  { value: 'pending', label: 'Bekliyor' },
+  { value: 'in_progress', label: 'Devam Ediyor' },
+  { value: 'completed', label: 'Tamamlandı' },
+  { value: 'cancelled', label: 'İptal' },
+];
+
+const PRIORITY_OPTIONS = [
+  { value: '', label: 'Tümü' },
+  { value: 'low', label: 'Düşük' },
+  { value: 'normal', label: 'Normal' },
+  { value: 'high', label: 'Yüksek' },
+  { value: 'critical', label: 'Kritik' },
+];
+
+const getStatusVariant = (status) => {
+  switch (status) {
+    case 'pending': return 'warning';
+    case 'in_progress': return 'info';
+    case 'completed': return 'success';
+    case 'cancelled': return 'danger';
+    default: return 'default';
+  }
+};
+
+const getPriorityVariant = (priority) => {
+  switch (priority) {
+    case 'critical': return 'danger';
+    case 'high': return 'warning';
+    case 'normal': return 'default';
+    case 'low': return 'default';
+    default: return 'default';
+  }
+};
+
+const getPriorityLabel = (priority) => {
+  return PRIORITY_OPTIONS.find((p) => p.value === priority)?.label || priority;
+};
+
+// ======================================================
+// COMPONENT
+// ======================================================
 
 const TasksList = () => {
   const [search, setSearch] = useState('');
@@ -14,15 +61,20 @@ const TasksList = () => {
   const [priorityFilter, setPriorityFilter] = useState('');
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['tasks', { page, search: searchQuery, status: statusFilter, priority: priorityFilter }],
-    queryFn: () => taskApi.getAll({ page, search: searchQuery, status: statusFilter, priority: priorityFilter }),
-    staleTime: 1000,
-    keepPreviousData: true,
+  // ✅ useTasks hook'u - tüm parametreleri gönder
+  const { data, isLoading, error } = useTasks({
+    page,
+    search: searchQuery,
+    status: statusFilter,
+    priority: priorityFilter,
   });
 
   const tasks = data?.data?.data || [];
   const pagination = data?.data?.pagination;
+
+  // ======================================================
+  // HANDLERS
+  // ======================================================
 
   const handleSearch = () => {
     setSearchQuery(search);
@@ -45,50 +97,14 @@ const TasksList = () => {
     setPage(1);
   };
 
-  const statuses = [
-    { value: '', label: 'Tümü' },
-    { value: 'pending', label: 'Bekliyor' },
-    { value: 'in_progress', label: 'Devam Ediyor' },
-    { value: 'completed', label: 'Tamamlandı' },
-    { value: 'cancelled', label: 'İptal' },
-  ];
-
-  const priorities = [
-    { value: '', label: 'Tümü' },
-    { value: 'low', label: 'Düşük' },
-    { value: 'normal', label: 'Normal' },
-    { value: 'high', label: 'Yüksek' },
-    { value: 'critical', label: 'Kritik' },
-  ];
-
-  const getStatusVariant = (status) => {
-    switch (status) {
-      case 'pending': return 'warning';
-      case 'in_progress': return 'info';
-      case 'completed': return 'success';
-      case 'cancelled': return 'danger';
-      default: return 'default';
-    }
-  };
-
-  const getPriorityVariant = (priority) => {
-    switch (priority) {
-      case 'critical': return 'danger';
-      case 'high': return 'warning';
-      case 'normal': return 'default';
-      case 'low': return 'default';
-      default: return 'default';
-    }
-  };
-
-  const getPriorityLabel = (priority) => {
-    return priorities.find(p => p.value === priority)?.label || priority;
-  };
+  // ======================================================
+  // LOADING / ERROR
+  // ======================================================
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
       </div>
     );
   }
@@ -97,7 +113,9 @@ const TasksList = () => {
     return (
       <div className="text-center py-12">
         <div className="text-4xl mb-4">⚠️</div>
-        <h2 className="text-xl font-bold text-red-600">Görevler yüklenirken hata oluştu</h2>
+        <h2 className="text-xl font-bold text-red-600">
+          Görevler yüklenirken hata oluştu
+        </h2>
         <p className="text-gray-500">{error.message}</p>
         <Button className="mt-4" onClick={() => window.location.reload()}>
           Yeniden Dene
@@ -106,8 +124,13 @@ const TasksList = () => {
     );
   }
 
+  // ======================================================
+  // RENDER
+  // ======================================================
+
   return (
     <div className="space-y-6">
+      {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           ✅ Görevler
@@ -117,6 +140,7 @@ const TasksList = () => {
         </Link>
       </div>
 
+      {/* FILTERS */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -128,8 +152,8 @@ const TasksList = () => {
                 onKeyDown={handleKeyDown}
                 icon="🔍"
               />
-              <Button 
-                variant="primary" 
+              <Button
+                variant="primary"
                 onClick={handleSearch}
                 className="shrink-0"
               >
@@ -142,7 +166,7 @@ const TasksList = () => {
                 onChange={handleStatusChange}
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {statuses.map((status) => (
+                {STATUS_OPTIONS.map((status) => (
                   <option key={status.value} value={status.value}>
                     {status.label}
                   </option>
@@ -155,7 +179,7 @@ const TasksList = () => {
                 onChange={handlePriorityChange}
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {priorities.map((priority) => (
+                {PRIORITY_OPTIONS.map((priority) => (
                   <option key={priority.value} value={priority.value}>
                     {priority.label}
                   </option>
@@ -165,6 +189,7 @@ const TasksList = () => {
           </div>
         </div>
 
+        {/* TABLE */}
         <div className="overflow-x-auto">
           <Table>
             <Table.Head>
@@ -182,7 +207,9 @@ const TasksList = () => {
               {tasks.length === 0 ? (
                 <Table.Row>
                   <Table.Cell colSpan="7" className="text-center py-8 text-gray-500">
-                    {searchQuery ? 'Aramanıza uygun görev bulunamadı' : 'Henüz görev bulunmuyor'}
+                    {searchQuery
+                      ? 'Aramanıza uygun görev bulunamadı'
+                      : 'Henüz görev bulunmuyor'}
                   </Table.Cell>
                 </Table.Row>
               ) : (
@@ -197,11 +224,10 @@ const TasksList = () => {
                       )}
                     </Table.Cell>
                     <Table.Cell>
-                      {task.assignee?.first_name} {task.assignee?.last_name || 'Atanmadı'}
+                      {task.assignee?.first_name}{' '}
+                      {task.assignee?.last_name || 'Atanmadı'}
                     </Table.Cell>
-                    <Table.Cell>
-                      {task.case?.title || '-'}
-                    </Table.Cell>
+                    <Table.Cell>{task.case?.title || '-'}</Table.Cell>
                     <Table.Cell>
                       <Badge variant={getPriorityVariant(task.priority)}>
                         {getPriorityLabel(task.priority)}
@@ -209,11 +235,14 @@ const TasksList = () => {
                     </Table.Cell>
                     <Table.Cell>
                       <Badge variant={getStatusVariant(task.status)}>
-                        {statuses.find(s => s.value === task.status)?.label || task.status}
+                        {STATUS_OPTIONS.find((s) => s.value === task.status)
+                          ?.label || task.status}
                       </Badge>
                     </Table.Cell>
                     <Table.Cell>
-                      {task.due_date ? new Date(task.due_date).toLocaleDateString('tr-TR') : '-'}
+                      {task.due_date
+                        ? new Date(task.due_date).toLocaleDateString('tr-TR')
+                        : '-'}
                     </Table.Cell>
                     <Table.Cell>
                       <Link
@@ -230,6 +259,7 @@ const TasksList = () => {
           </Table>
         </div>
 
+        {/* PAGINATION */}
         {pagination && pagination.totalPages > 1 && (
           <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <p className="text-sm text-gray-600 dark:text-gray-400">
