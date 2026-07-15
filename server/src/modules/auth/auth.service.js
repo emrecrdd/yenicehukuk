@@ -24,6 +24,11 @@ export const authService = {
       throw new Error('Invalid email or password');
     }
 
+    // ✅ FIX: password kontrolü
+    if (!user.password) {
+      throw new Error('Account is corrupted. Please contact support.');
+    }
+
     const isPasswordValid = await user.comparePassword(password);
 
     if (!isPasswordValid) {
@@ -47,7 +52,6 @@ export const authService = {
     };
   },
 
-  // 🔥 FIXED LOGOUT (en kritik düzeltme)
   async logout(refreshToken, req) {
     const token = refreshToken || req?.cookies?.refreshToken;
 
@@ -100,11 +104,17 @@ export const authService = {
     return user;
   },
 
+  // ✅ FIX: changePassword - daha sağlam hale getirildi
   async changePassword(userId, currentPassword, newPassword) {
     const user = await authRepository.findById(userId);
 
     if (!user) {
       throw new Error('User not found');
+    }
+
+    // ✅ Kullanıcının şifresi var mı kontrol et
+    if (!user.password) {
+      throw new Error('User password not set. Please reset your password.');
     }
 
     const isPasswordValid = await user.comparePassword(currentPassword);
@@ -113,6 +123,7 @@ export const authService = {
       throw new Error('Current password is incorrect');
     }
 
+    // Yeni şifre hashlenmesi için model hook'u çalışacak
     user.password = newPassword;
     await user.save();
 

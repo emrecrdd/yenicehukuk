@@ -1,4 +1,4 @@
-import { Sequelize, DataTypes } from 'sequelize';  // ✅ Sequelize eklendi
+import { Sequelize, DataTypes } from 'sequelize';
 import { ROLES } from '../constants/roles.js';
 import bcrypt from 'bcryptjs';
 
@@ -41,7 +41,7 @@ class User extends Sequelize.Model {
         },
         role: {
           type: DataTypes.ENUM(...Object.values(ROLES)),
-          defaultValue: ROLES.INTERN,  // ROLES.STAJYER yerine ROLES.INTERN
+          defaultValue: ROLES.INTERN,
         },
         is_active: {
           type: DataTypes.BOOLEAN,
@@ -105,7 +105,11 @@ class User extends Sequelize.Model {
     );
   }
 
+  // ✅ FIX: comparePassword - null/undefined kontrolü eklendi
   async comparePassword(password) {
+    if (!this.password) {
+      throw new Error('User password not set. Please reset your password.');
+    }
     return bcrypt.compare(password, this.password);
   }
 
