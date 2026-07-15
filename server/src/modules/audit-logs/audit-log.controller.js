@@ -23,4 +23,44 @@ export const auditLogController = {
       return errorResponse(res, error.message, 404);
     }
   },
+
+  // ✅ YENİ: Tek log sil
+  async remove(req, res) {
+    try {
+      await auditLogService.remove(req.params.id);
+      return successResponse(res, null, 'Log başarıyla silindi');
+    } catch (error) {
+      logger.error('Delete audit log error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  // ✅ YENİ: Toplu log sil
+  async removeMany(req, res) {
+    try {
+      const { ids } = req.body;
+      
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return errorResponse(res, 'Lütfen silinecek logları seçin', 400);
+      }
+
+      const result = await auditLogService.removeMany(ids);
+      return successResponse(res, result, `${result.deletedCount} log başarıyla silindi`);
+    } catch (error) {
+      logger.error('Bulk delete audit logs error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  // ✅ YENİ: Eski logları temizle
+  async cleanOldLogs(req, res) {
+    try {
+      const { days = 30 } = req.query;
+      const result = await auditLogService.cleanOldLogs(parseInt(days));
+      return successResponse(res, result, `${result.deletedCount} eski log silindi`);
+    } catch (error) {
+      logger.error('Clean old logs error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
 };

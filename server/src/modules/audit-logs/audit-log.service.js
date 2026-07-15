@@ -1,5 +1,5 @@
 import { AuditLog } from '../../models/AuditLog.js';
-import { User } from '../../models/User.js';  // ✅ BUNU EKLE!
+import { User } from '../../models/User.js';
 import { Op } from 'sequelize';
 import { paginate, getPaginationData } from '../../utils/paginate.js';
 
@@ -66,5 +66,54 @@ export const auditLogService = {
     }
 
     return log;
+  },
+
+  // ✅ YENİ: Log sil (tekil)
+  async remove(id) {
+    const log = await AuditLog.findByPk(id);
+
+    if (!log) {
+      throw new Error('Log bulunamadı');
+    }
+
+    await log.destroy();
+    return log;
+  },
+
+  // ✅ YENİ: Toplu log sil
+  async removeMany(ids) {
+    if (!ids || ids.length === 0) {
+      throw new Error('Silinecek log seçilmedi');
+    }
+
+    const result = await AuditLog.destroy({
+      where: {
+        id: {
+          [Op.in]: ids,
+        },
+      },
+    });
+
+    if (result === 0) {
+      throw new Error('Loglar bulunamadı');
+    }
+
+    return { deletedCount: result };
+  },
+
+  // ✅ YENİ: Eski logları temizle (belirli günden öncekileri sil)
+  async cleanOldLogs(days = 30) {
+    const date = new Date();
+    date.setDate(date.getDate() - days);
+
+    const result = await AuditLog.destroy({
+      where: {
+        created_at: {
+          [Op.lt]: date,
+        },
+      },
+    });
+
+    return { deletedCount: result };
   },
 };

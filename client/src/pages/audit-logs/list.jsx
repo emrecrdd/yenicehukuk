@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react';
 import auditLogApi from '../../features/audit-log/auditLog.api.js';
+import { useAuth } from '../../app/providers/auth.provider.jsx';
 import Card from '../../components/ui/Card.jsx';
 import Badge from '../../components/ui/Badge.jsx';
 import Button from '../../components/ui/Button.jsx';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale/tr';
-import { Eye, Search, X } from 'lucide-react';
+import { Eye, Search, X, Trash2, CheckSquare, Square } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const AuditLogList = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
   const [filters, setFilters] = useState({
     action: '',
     entity_type: '',
@@ -17,19 +22,17 @@ const AuditLogList = () => {
   });
   const [page, setPage] = useState(1);
   const [selectedLog, setSelectedLog] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState(null);
 
-  // ✅ Veriyi doğrudan axios ile çek
   const fetchLogs = async () => {
     setLoading(true);
     setError(null);
     try {
-      console.log('🔍 AuditLog API çağrılıyor...');
       const response = await auditLogApi.getAll({ ...filters, page, limit: 20 });
-      console.log('✅ API başarılı:', response);
       setLogs(response?.data?.data || []);
       setPagination(response?.data?.pagination || null);
     } catch (err) {
@@ -40,12 +43,64 @@ const AuditLogList = () => {
     }
   };
 
-  // ✅ Sayfa yüklenince ve filtre değişince çağır
   useEffect(() => {
     fetchLogs();
   }, [filters, page]);
 
-  // ✅ Action renkleri
+  // ✅ Tekil sil
+  const handleDelete = async (id) => {
+    if (!isAdmin) {
+      toast.error('Bu işlem için yetkiniz yok');
+      return;
+    }
+    if (window.confirm('Bu log kaydını silmek istediğinize emin misiniz?')) {
+      try {
+        await auditLogApi.delete(id);
+        toast.success('Log silindi');
+        fetchLogs();
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Log silinemedi');
+      }
+    }
+  };
+
+  // ✅ Toplu sil
+  const handleBulkDelete = async () => {
+    if (!isAdmin) {
+      toast.error('Bu işlem için yetkiniz yok');
+      return;
+    }
+    if (selectedIds.length === 0) {
+      toast.error('Lütfen silinecek logları seçin');
+      return;
+    }
+    if (window.confirm(`${selectedIds.length} log kaydını silmek istediğinize emin misiniz?`)) {
+      try {
+        await Promise.all(selectedIds.map(id => auditLogApi.delete(id)));
+        toast.success(`${selectedIds.length} log silindi`);
+        setSelectedIds([]);
+        fetchLogs();
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Loglar silinemedi');
+      }
+    }
+  };
+
+  // ✅ Seçim işlemleri
+  const toggleSelect = (id) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === logs.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(logs.map(l => l.id));
+    }
+  };
+
   const getActionVariant = (action) => {
     const variants = {
       create: 'success',
@@ -61,7 +116,6 @@ const AuditLogList = () => {
     return variants[action] || 'default';
   };
 
-  // ✅ Action etiketleri
   const getActionLabel = (action) => {
     const labels = {
       create: 'Oluşturdu',
@@ -77,7 +131,6 @@ const AuditLogList = () => {
     return labels[action] || action;
   };
 
-  // ✅ Entity Type etiketleri
   const getEntityLabel = (type) => {
     const labels = {
       case: 'Dava',
@@ -94,7 +147,6 @@ const AuditLogList = () => {
     return labels[type] || type;
   };
 
-  // ✅ Filtre sıfırla
   const resetFilters = () => {
     setFilters({
       action: '',
@@ -106,7 +158,6 @@ const AuditLogList = () => {
     setPage(1);
   };
 
-  // ✅ Tarih formatı
   const formatDate = (date) => {
     if (!date) return '-';
     return format(new Date(date), 'dd.MM.yyyy HH:mm', { locale: tr });
@@ -137,7 +188,7 @@ const AuditLogList = () => {
   return (
     <div className="space-y-6">
       {/* Başlık */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             📋 Denetim Logları
@@ -146,9 +197,17 @@ const AuditLogList = () => {
             Sistemde yapılan tüm işlemlerin kayıtları
           </p>
         </div>
-        <Button variant="outline" onClick={fetchLogs}>
-          🔄 Yenile
-        </Button>
+        <div className="flex gap-2">
+          {isAdmin && selectedIds.length > 0 && (
+            <Button variant="danger" onClick={handleBulkDelete}>
+              <Trash2 className="w-4 h-4 mr-1" />
+              Seçilenleri Sil ({selectedIds.length})
+            </Button>
+          )}
+          <Button variant="outline" onClick={fetchLogs}>
+            🔄 Yenile
+          </Button>
+        </div>
       </div>
 
       {/* Filtreler */}
@@ -221,6 +280,17 @@ const AuditLogList = () => {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
+                    {isAdmin && (
+                      <th className="px-2 py-2 text-center">
+                        <button onClick={toggleSelectAll}>
+                          {selectedIds.length === logs.length ? (
+                            <CheckSquare className="w-4 h-4 text-blue-600" />
+                          ) : (
+                            <Square className="w-4 h-4 text-gray-400" />
+                          )}
+                        </button>
+                      </th>
+                    )}
                     <th className="px-4 py-2 text-left">İşlem</th>
                     <th className="px-4 py-2 text-left">Modül</th>
                     <th className="px-4 py-2 text-left">Açıklama</th>
@@ -228,11 +298,25 @@ const AuditLogList = () => {
                     <th className="px-4 py-2 text-left">Tarih</th>
                     <th className="px-4 py-2 text-left">IP</th>
                     <th className="px-4 py-2 text-center">Detay</th>
+                    {isAdmin && (
+                      <th className="px-4 py-2 text-center">Sil</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
                   {logs.map((log) => (
                     <tr key={log.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                      {isAdmin && (
+                        <td className="px-2 py-2 text-center">
+                          <button onClick={() => toggleSelect(log.id)}>
+                            {selectedIds.includes(log.id) ? (
+                              <CheckSquare className="w-4 h-4 text-blue-600" />
+                            ) : (
+                              <Square className="w-4 h-4 text-gray-400" />
+                            )}
+                          </button>
+                        </td>
+                      )}
                       <td className="px-4 py-2">
                         <Badge variant={getActionVariant(log.action)}>
                           {getActionLabel(log.action)}
@@ -263,6 +347,16 @@ const AuditLogList = () => {
                           <Eye className="w-4 h-4" />
                         </button>
                       </td>
+                      {isAdmin && (
+                        <td className="px-4 py-2 text-center">
+                          <button
+                            onClick={() => handleDelete(log.id)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -302,7 +396,7 @@ const AuditLogList = () => {
         </Card.Body>
       </Card>
 
-      {/* Detay Modal */}
+      {/* ✅ Detay Modalı */}
       {selectedLog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6">
@@ -312,12 +406,12 @@ const AuditLogList = () => {
                 onClick={() => setSelectedLog(null)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">İşlem</p>
                   <Badge variant={getActionVariant(selectedLog.action)}>
@@ -326,30 +420,57 @@ const AuditLogList = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Modül</p>
-                  <p>{getEntityLabel(selectedLog.entity_type)}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {getEntityLabel(selectedLog.entity_type)}
+                  </p>
                 </div>
               </div>
 
               <div>
                 <p className="text-sm text-gray-500">Açıklama</p>
-                <p className="text-gray-900 dark:text-white">{selectedLog.description || '-'}</p>
+                <p className="text-gray-900 dark:text-white">
+                  {selectedLog.description || '-'}
+                </p>
               </div>
 
-              <div>
-                <p className="text-sm text-gray-500">Kullanıcı</p>
-                <p>{selectedLog.user?.first_name} {selectedLog.user?.last_name}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Kullanıcı</p>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {selectedLog.user?.first_name} {selectedLog.user?.last_name}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Email</p>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    {selectedLog.user?.email || '-'}
+                  </p>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Tarih</p>
-                  <p>{formatDate(selectedLog.created_at)}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {formatDate(selectedLog.created_at)}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">IP Adresi</p>
-                  <p>{selectedLog.ip_address || '-'}</p>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    {selectedLog.ip_address || '-'}
+                  </p>
                 </div>
               </div>
+
+              {selectedLog.metadata && Object.keys(selectedLog.metadata).length > 0 && (
+                <div>
+                  <p className="text-sm text-gray-500">Metadata</p>
+                  <pre className="bg-gray-100 dark:bg-gray-700 p-3 rounded-md text-xs overflow-auto max-h-40">
+                    {JSON.stringify(selectedLog.metadata, null, 2)}
+                  </pre>
+                </div>
+              )}
 
               {selectedLog.old_values && (
                 <div>
@@ -368,19 +489,12 @@ const AuditLogList = () => {
                   </pre>
                 </div>
               )}
-
-              {selectedLog.metadata && Object.keys(selectedLog.metadata).length > 0 && (
-                <div>
-                  <p className="text-sm text-gray-500">Metadata</p>
-                  <pre className="bg-gray-100 dark:bg-gray-700 p-3 rounded-md text-xs overflow-auto max-h-40">
-                    {JSON.stringify(selectedLog.metadata, null, 2)}
-                  </pre>
-                </div>
-              )}
             </div>
 
-            <div className="mt-4 flex justify-end">
-              <Button onClick={() => setSelectedLog(null)}>Kapat</Button>
+            <div className="mt-6 flex justify-end">
+              <Button variant="secondary" onClick={() => setSelectedLog(null)}>
+                Kapat
+              </Button>
             </div>
           </div>
         </div>
