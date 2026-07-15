@@ -4,28 +4,53 @@ import { logger } from '../config/logger.js';
 
 class EmailService {
   constructor() {
-    this.transporter = null;
-    this.isConfigured = false;
+  this.transporter = null;
+  this.isConfigured = false;
 
-    if (config.SMTP_HOST && config.SMTP_USER && config.SMTP_PASS) {
-      this.transporter = nodemailer.createTransport({
-  host: 'smtp-relay.brevo.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: config.SMTP_USER,
-    pass: config.SMTP_PASS,
-  },
-  connectionTimeout: 30000,
-  greetingTimeout: 30000,
-  socketTimeout: 30000,
-});
-      this.isConfigured = true;
-      logger.info('✅ Email service configured');
-    } else {
-      logger.warn('⚠️ Email service not configured');
-    }
+  if (config.SMTP_HOST && config.SMTP_USER && config.SMTP_PASS) {
+    console.log("========== SMTP DEBUG ==========");
+    console.log("HOST:", config.SMTP_HOST);
+    console.log("PORT:", config.SMTP_PORT);
+    console.log("USER:", config.SMTP_USER);
+    console.log("PASS LENGTH:", config.SMTP_PASS?.length);
+    console.log("================================");
+
+    this.transporter = nodemailer.createTransport({
+      host: config.SMTP_HOST,
+      port: Number(config.SMTP_PORT),
+      secure: false,
+      requireTLS: true,
+      auth: {
+        user: config.SMTP_USER,
+        pass: config.SMTP_PASS,
+      },
+      connectionTimeout: 30000,
+      greetingTimeout: 30000,
+      socketTimeout: 30000,
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
+
+    this.transporter.verify((err, success) => {
+      if (err) {
+        console.error("❌ SMTP VERIFY ERROR:", err);
+      } else {
+        console.log("✅ SMTP VERIFIED");
+      }
+    });
+
+    this.isConfigured = true;
+    logger.info("✅ Email service configured");
+  } else {
+    console.log("SMTP_HOST:", config.SMTP_HOST);
+    console.log("SMTP_PORT:", config.SMTP_PORT);
+    console.log("SMTP_USER:", config.SMTP_USER);
+    console.log("SMTP_PASS:", config.SMTP_PASS);
+
+    logger.warn("⚠️ Email service not configured");
   }
+}
 
   async sendEmail({ to, subject, html, text }) {
     if (!this.isConfigured) {
