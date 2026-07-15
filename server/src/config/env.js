@@ -25,4 +25,5 @@ export const config = {
   SMTP_PORT: parseInt(process.env.SMTP_PORT, 10) || 587,
   SMTP_USER: process.env.SMTP_USER || '',
   SMTP_PASS: process.env.SMTP_PASS || '',
+  BREVO_API_KEY: process.env.BREVO_API_KEY || '',
 };

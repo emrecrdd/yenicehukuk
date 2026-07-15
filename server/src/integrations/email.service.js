@@ -1,84 +1,62 @@
-import nodemailer from 'nodemailer';
+import axios from 'axios';
 import { config } from '../config/env.js';
 import { logger } from '../config/logger.js';
 
 class EmailService {
   constructor() {
-  this.transporter = null;
-  this.isConfigured = false;
+    this.isConfigured = !!config.BREVO_API_KEY;
 
-  if (config.SMTP_HOST && config.SMTP_USER && config.SMTP_PASS) {
-    console.log("========== SMTP DEBUG ==========");
-    console.log("HOST:", config.SMTP_HOST);
-    console.log("PORT:", config.SMTP_PORT);
-    console.log("USER:", config.SMTP_USER);
-    console.log("PASS LENGTH:", config.SMTP_PASS?.length);
-    console.log("================================");
-
-    this.transporter = nodemailer.createTransport({
-      host: config.SMTP_HOST,
-      port: Number(config.SMTP_PORT),
-      secure: true,
-      requireTLS: true,
-      auth: {
-        user: config.SMTP_USER,
-        pass: config.SMTP_PASS,
-      },
-      connectionTimeout: 30000,
-      greetingTimeout: 30000,
-      socketTimeout: 30000,
-      tls: {
-        rejectUnauthorized: false,
-      },
-    });
-
-    this.transporter.verify((err, success) => {
-      if (err) {
-        console.error("❌ SMTP VERIFY ERROR:", err);
-      } else {
-        console.log("✅ SMTP VERIFIED");
-      }
-    });
-
-    this.isConfigured = true;
-    logger.info("✅ Email service configured");
-  } else {
-    console.log("SMTP_HOST:", config.SMTP_HOST);
-    console.log("SMTP_PORT:", config.SMTP_PORT);
-    console.log("SMTP_USER:", config.SMTP_USER);
-    console.log("SMTP_PASS:", config.SMTP_PASS);
-
-    logger.warn("⚠️ Email service not configured");
+    if (this.isConfigured) {
+      logger.info('✅ Brevo Email API configured');
+    } else {
+      logger.warn('⚠️ BREVO_API_KEY not found');
+    }
   }
-}
 
   async sendEmail({ to, subject, html, text }) {
     if (!this.isConfigured) {
-      logger.warn('Email not sent - service not configured');
+      logger.warn('Email service not configured');
       return null;
     }
 
     try {
-      const info = await this.transporter.sendMail({
-        from: `"Derkenar Hukuk Bürosu Yönetim Sistemi" <${config.SMTP_USER}>`,
-        to,
-        subject,
-        html,
-        text,
-      });
+      const response = await axios.post(
+        'https://api.brevo.com/v3/smtp/email',
+        {
+          sender: {
+            name: 'Derkenar Hukuk Bürosu Yönetim Sistemi',
+            email: 'emrecirdi0@gmail.com', // Brevo'da doğruladığın sender
+          },
+          to: [
+            {
+              email: to,
+            },
+          ],
+          subject,
+          htmlContent: html,
+          textContent: text || '',
+        },
+        {
+          headers: {
+            accept: 'application/json',
+            'content-type': 'application/json',
+            'api-key': config.BREVO_API_KEY,
+          },
+        }
+      );
 
       logger.info(`✅ Email sent to ${to}`);
-      return info;
+      return response.data;
     } catch (error) {
-      logger.error('❌ Email send error:', error);
-      
-      // ✅ Mock modu - email gönderilemezse log'la
-      if (process.env.NODE_ENV === 'production') {
-        logger.warn('📧 Email could not be sent, but continuing...');
-        return { success: false, error: error.message };
-      }
-      
-      throw error;
+      logger.error(
+        '❌ Brevo API Error:',
+        error.response?.data || error.message
+      );
+
+      return {
+        success: false,
+        error: error.response?.data || error.message,
+      };
     }
   }
 
@@ -101,19 +79,25 @@ class EmailService {
 
   async sendPasswordResetEmail(user, token) {
     const resetLink = `${config.CLIENT_URL}/reset-password?token=${token}`;
-    
+
     const html = `
       <h1>🔑 Şifre Sıfırlama</h1>
       <p>Merhaba ${user.first_name},</p>
       <p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın:</p>
+
       <p>
-        <a href="${resetLink}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;text-decoration:none;border-radius:8px;">
+        <a href="${resetLink}"
+           style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;text-decoration:none;border-radius:8px;">
           Şifreyi Sıfırla
         </a>
       </p>
+
       <p>Bu link <strong>1 saat</strong> boyunca geçerlidir.</p>
-      <p>Eğer şifre sıfırlama talebinde bulunmadıysanız, bu e-postayı dikkate almayın.</p>
+
+      <p>Eğer bu talebi siz oluşturmadıysanız bu e-postayı yok sayabilirsiniz.</p>
+
       <hr>
+
       <p style="font-size:12px;color:#6b7280;">
         Derkenar Hukuk Bürosu Yönetim Sistemi
       </p>
@@ -129,9 +113,15 @@ class EmailService {
   async sendTaskReminder(task, user) {
     const html = `
       <h1>⏰ Görev Hatırlatması</h1>
+
       <p>Merhaba ${user.first_name},</p>
-      <p>"${task.title}" görevinizin son tarihi yaklaşıyor:</p>
-      <p><strong>Son Tarih:</strong> ${new Date(task.due_date).toLocaleString('tr-TR')}</p>
+
+      <p>"${task.title}" görevinizin son tarihi yaklaşıyor.</p>
+
+      <p><strong>Son Tarih:</strong> ${new Date(task.due_date).toLocaleString(
+        'tr-TR'
+      )}</p>
+
       <a href="${config.CLIENT_URL}/tasks/${task.id}">
         Görevi Görüntüle
       </a>
@@ -139,7 +129,7 @@ class EmailService {
 
     return this.sendEmail({
       to: user.email,
-      subject: '⏰ Görev Hatırlatması - Derkenar Hukuk Bürosu Yönetim Sistemi',
+      subject: '⏰ Görev Hatırlatması',
       html,
     });
   }
@@ -147,10 +137,21 @@ class EmailService {
   async sendEventReminder(event, user) {
     const html = `
       <h1>📅 Etkinlik Hatırlatması</h1>
+
       <p>Merhaba ${user.first_name},</p>
-      <p>"${event.title}" etkinliği yaklaşıyor:</p>
-      <p><strong>Tarih:</strong> ${new Date(event.start_date).toLocaleString('tr-TR')}</p>
-      ${event.location ? `<p><strong>Yer:</strong> ${event.location}</p>` : ''}
+
+      <p>"${event.title}" etkinliği yaklaşıyor.</p>
+
+      <p><strong>Tarih:</strong> ${new Date(event.start_date).toLocaleString(
+        'tr-TR'
+      )}</p>
+
+      ${
+        event.location
+          ? `<p><strong>Yer:</strong> ${event.location}</p>`
+          : ''
+      }
+
       <a href="${config.CLIENT_URL}/calendar">
         Takvimi Görüntüle
       </a>
@@ -158,7 +159,7 @@ class EmailService {
 
     return this.sendEmail({
       to: user.email,
-      subject: '📅 Etkinlik Hatırlatması - Derkenar Hukuk Bürosu Yönetim Sistemi',
+      subject: '📅 Etkinlik Hatırlatması',
       html,
     });
   }
@@ -166,9 +167,16 @@ class EmailService {
   async sendNotification(user, title, message, link) {
     const html = `
       <h1>${title}</h1>
+
       <p>Merhaba ${user.first_name},</p>
+
       <p>${message}</p>
-      ${link ? `<a href="${link}">Detayları Görüntüle</a>` : ''}
+
+      ${
+        link
+          ? `<a href="${link}">Detayları Görüntüle</a>`
+          : ''
+      }
     `;
 
     return this.sendEmail({
