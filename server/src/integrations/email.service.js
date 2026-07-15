@@ -9,20 +9,17 @@ class EmailService {
 
     if (config.SMTP_HOST && config.SMTP_USER && config.SMTP_PASS) {
       this.transporter = nodemailer.createTransport({
-        host: config.SMTP_HOST,
-        port: config.SMTP_PORT || 587,
-        secure: config.SMTP_PORT === 465,
-        // ✅ IPv4 zorla (Render IPv6 sorununu çözer)
-        family: 4,
-        auth: {
-          user: config.SMTP_USER,
-          pass: config.SMTP_PASS,
-        },
-        // ✅ Timeout ayarları
-        connectionTimeout: 10000,
-        greetingTimeout: 10000,
-        socketTimeout: 15000,
-      });
+  host: 'smtp-relay.brevo.com',
+  port: 587,
+  secure: false,
+  auth: {
+    user: config.SMTP_USER,
+    pass: config.SMTP_PASS,
+  },
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 30000,
+});
       this.isConfigured = true;
       logger.info('✅ Email service configured');
     } else {
