@@ -4,11 +4,10 @@ import { config } from '../../config/env.js';
 import { logger } from '../../config/logger.js';
 import crypto from 'crypto';
 import { emailService } from '../../integrations/email.service.js';
-import bcrypt from 'bcryptjs'; // ✅ EKLENDI
+import bcrypt from 'bcryptjs';
 
 export const authService = {
   async register(userData) {
-    // ✅ Şifre kontrolü
     if (!userData.password) {
       throw new Error('Password is required');
     }
@@ -18,7 +17,6 @@ export const authService = {
       throw new Error('User with this email already exists');
     }
 
-    // ✅ Şifreyi manuel hashle (model hook'u çalışmazsa diye)
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(userData.password, salt);
 
@@ -116,13 +114,15 @@ export const authService = {
     return user;
   },
 
+  // ✅ FIX: findByIdWithPassword kullan
   async changePassword(userId, currentPassword, newPassword) {
-    const user = await authRepository.findById(userId);
+    const user = await authRepository.findByIdWithPassword(userId);
 
     if (!user) {
       throw new Error('User not found');
     }
 
+    // ✅ Artık password geliyor, kontrol edebiliriz
     if (!user.password) {
       throw new Error('User password not set. Please reset your password.');
     }

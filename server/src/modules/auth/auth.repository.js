@@ -5,10 +5,24 @@ export const authRepository = {
     return User.findOne({ where: { email } });
   },
 
+  // ✅ Profil için (şifresiz)
   findById: (id) => {
     return User.findByPk(id, {
-      attributes: { exclude: ['password', 'refresh_token', 'email_verification_token', 'password_reset_token', 'password_reset_expires'] },
+      attributes: { 
+        exclude: [
+          'password', 
+          'refresh_token', 
+          'email_verification_token', 
+          'password_reset_token', 
+          'password_reset_expires'
+        ] 
+      },
     });
+  },
+
+  // ✅ YENİ: Şifre ile birlikte getir (changePassword için)
+  findByIdWithPassword: (id) => {
+    return User.findByPk(id);
   },
 
   create: (userData) => {
