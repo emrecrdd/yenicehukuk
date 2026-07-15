@@ -8,6 +8,7 @@ import bcrypt from 'bcryptjs';
 
 export const authService = {
   async register(userData) {
+    // ✅ Şifre kontrolü
     if (!userData.password) {
       throw new Error('Password is required');
     }
@@ -17,18 +18,16 @@ export const authService = {
       throw new Error('User with this email already exists');
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(userData.password, salt);
+    // ❌ Şunları SİL (hash'i model yapıyor)
+    // const salt = await bcrypt.genSalt(10);
+    // const hashedPassword = await bcrypt.hash(userData.password, salt);
 
-    const user = await authRepository.create({
-      ...userData,
-      password: hashedPassword,
-    });
+    // ✅ Sadece kullanıcıyı oluştur (model hook'u hash'leyecek)
+    const user = await authRepository.create(userData);
 
     return user;
   },
 
-  // ✅ FIX: Doğrudan bcrypt.compare kullan
   async login(email, password) {
     const user = await authRepository.findByEmail(email);
 
@@ -116,7 +115,6 @@ export const authService = {
     return user;
   },
 
-  // ✅ FIX: Doğrudan bcrypt.compare kullan
   async changePassword(userId, currentPassword, newPassword) {
     const user = await authRepository.findByIdWithPassword(userId);
 
@@ -135,9 +133,8 @@ export const authService = {
       throw new Error('Current password is incorrect');
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-    user.password = hashedPassword;
+    // ✅ Model hook'u hash'leyecek, manuel hash'e gerek yok
+    user.password = newPassword;
     await user.save();
 
     await authRepository.invalidateAllRefreshTokens(userId);
@@ -179,9 +176,8 @@ export const authService = {
       throw new Error('Reset token has expired');
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-    user.password = hashedPassword;
+    // ✅ Model hook'u hash'leyecek
+    user.password = newPassword;
     user.password_reset_token = null;
     user.password_reset_expires = null;
 
