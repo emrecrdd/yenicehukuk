@@ -17,6 +17,7 @@ router.post('/reset-password', validate(authValidation.resetPassword), authContr
 router.use(authenticate);
 router.post('/logout', authController.logout);
 router.get('/profile', authController.getProfile);
+router.put('/profile', authController.updateProfile); // ✅ EKLENDI
 router.put('/change-password', validate(authValidation.changePassword), authController.changePassword);
 
 export { router as authRoutes };

@@ -9,20 +9,23 @@ const authApi = {
     return axios.post('/auth/register', userData);
   },
 
-  // ✔ refreshToken body zorunlu
   refreshToken: (refreshToken) => {
     return axios.post('/auth/refresh-token', { refreshToken });
   },
 
-  // ✔ logout her zaman refreshToken gönderir
   logout: (refreshToken) => {
-  return axios.post('/auth/logout', {
-    refreshToken: refreshToken || null,
-  });
-},
+    return axios.post('/auth/logout', {
+      refreshToken: refreshToken || null,
+    });
+  },
 
   getProfile: () => {
     return axios.get('/auth/profile');
+  },
+
+  // ✅ YENİ: Profil güncelleme
+  updateProfile: (data) => {
+    return axios.put('/auth/profile', data);
   },
 
   changePassword: (data) => {

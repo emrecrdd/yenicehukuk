@@ -8,6 +8,7 @@ import bcrypt from 'bcryptjs';
 
 export const authService = {
   async register(userData) {
+    // ✅ Şifre kontrolü
     if (!userData.password) {
       throw new Error('Password is required');
     }
@@ -17,6 +18,7 @@ export const authService = {
       throw new Error('User with this email already exists');
     }
 
+    // ✅ Şifreyi hashle
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(userData.password, salt);
 
@@ -35,6 +37,7 @@ export const authService = {
       throw new Error('Invalid email or password');
     }
 
+    // ✅ Password kontrolü
     if (!user.password) {
       throw new Error('Account is corrupted. Please contact support.');
     }
@@ -133,7 +136,10 @@ export const authService = {
       throw new Error('Current password is incorrect');
     }
 
-    user.password = newPassword;
+    // ✅ Şifreyi hashle
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    user.password = hashedPassword;
     await user.save();
 
     await authRepository.invalidateAllRefreshTokens(userId);
@@ -175,7 +181,10 @@ export const authService = {
       throw new Error('Reset token has expired');
     }
 
-    user.password = newPassword;
+    // ✅ Şifreyi hashle
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    user.password = hashedPassword;
     user.password_reset_token = null;
     user.password_reset_expires = null;
 

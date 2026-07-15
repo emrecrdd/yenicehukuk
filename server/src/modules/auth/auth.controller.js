@@ -1,4 +1,5 @@
 import { authService } from './auth.service.js';
+import { authRepository } from './auth.repository.js';
 import { successResponse, errorResponse } from '../../utils/response.js';
 import { logger } from '../../config/logger.js';
 
@@ -19,12 +20,11 @@ export const authController = {
       const { email, password } = req.body;
       const result = await authService.login(email, password);
       
-      // Set refresh token as HTTP-only cookie
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        maxAge: 30 * 24 * 60 * 60 * 1000,
       });
 
       return successResponse(res, result, 'Login successful');
@@ -52,7 +52,6 @@ export const authController = {
       const refreshToken = req.cookies?.refreshToken || req.body.refreshToken;
       const result = await authService.refreshToken(refreshToken);
       
-      // Update refresh token cookie
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -73,6 +72,33 @@ export const authController = {
       return successResponse(res, user, 'Profile fetched successfully');
     } catch (error) {
       logger.error('Get profile error:', error);
+      return errorResponse(res, error.message, 400);
+    }
+  },
+
+  // ✅ YENİ: Profil güncelleme
+  async updateProfile(req, res) {
+    try {
+      const userId = req.user.id;
+      const { first_name, last_name, phone, title, bio } = req.body;
+
+      const user = await authRepository.findById(userId);
+      if (!user) {
+        return errorResponse(res, 'User not found', 404);
+      }
+
+      await user.update({
+        first_name,
+        last_name,
+        phone,
+        title,
+        bio,
+      });
+
+      const updatedUser = await authRepository.findById(userId);
+      return successResponse(res, updatedUser, 'Profile updated successfully');
+    } catch (error) {
+      logger.error('Update profile error:', error);
       return errorResponse(res, error.message, 400);
     }
   },
