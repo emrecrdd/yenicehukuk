@@ -20,30 +20,36 @@ class EmailService {
     }
 
     try {
-      const response = await axios.post(
-        'https://api.brevo.com/v3/smtp/email',
-        {
-          sender: {
-            name: 'Derkenar Hukuk Bürosu Yönetim Sistemi',
-            email: 'emrecirdi0@gmail.com', // Brevo'da doğruladığın sender
-          },
-          to: [
-            {
-              email: to,
-            },
-          ],
-          subject,
-          htmlContent: html,
-          textContent: text || '',
-        },
-        {
-          headers: {
-            accept: 'application/json',
-            'content-type': 'application/json',
-            'api-key': config.BREVO_API_KEY,
-          },
-        }
-      );
+     const response = await axios.post(
+  'https://api.brevo.com/v3/smtp/email',
+  {
+    sender: {
+      name: 'Derkenar Hukuk Bürosu Yönetim Sistemi',
+      email: 'emrecirdi0@gmail.com',
+    },
+
+    to: [
+      {
+        email: to,
+      },
+    ],
+
+    subject,
+
+    htmlContent: html,
+
+    textContent:
+      text ||
+      html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(),
+  },
+  {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      'api-key': config.BREVO_API_KEY,
+    },
+  }
+);
 
       logger.info(`✅ Email sent to ${to}`);
       return response.data;
