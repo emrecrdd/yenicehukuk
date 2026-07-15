@@ -8,7 +8,6 @@ import bcrypt from 'bcryptjs';
 
 export const authService = {
   async register(userData) {
-    // ✅ Şifre kontrolü
     if (!userData.password) {
       throw new Error('Password is required');
     }
@@ -18,7 +17,6 @@ export const authService = {
       throw new Error('User with this email already exists');
     }
 
-    // ✅ Şifreyi hashle
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(userData.password, salt);
 
@@ -30,6 +28,7 @@ export const authService = {
     return user;
   },
 
+  // ✅ FIX: Doğrudan bcrypt.compare kullan
   async login(email, password) {
     const user = await authRepository.findByEmail(email);
 
@@ -37,12 +36,12 @@ export const authService = {
       throw new Error('Invalid email or password');
     }
 
-    // ✅ Password kontrolü
     if (!user.password) {
       throw new Error('Account is corrupted. Please contact support.');
     }
 
-    const isPasswordValid = await user.comparePassword(password);
+    // ✅ Doğrudan bcrypt.compare kullan
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
       throw new Error('Invalid email or password');
@@ -117,7 +116,7 @@ export const authService = {
     return user;
   },
 
-  // ✅ FIX: findByIdWithPassword kullan
+  // ✅ FIX: Doğrudan bcrypt.compare kullan
   async changePassword(userId, currentPassword, newPassword) {
     const user = await authRepository.findByIdWithPassword(userId);
 
@@ -125,18 +124,17 @@ export const authService = {
       throw new Error('User not found');
     }
 
-    // ✅ Artık password geliyor, kontrol edebiliriz
     if (!user.password) {
       throw new Error('User password not set. Please reset your password.');
     }
 
-    const isPasswordValid = await user.comparePassword(currentPassword);
+    // ✅ Doğrudan bcrypt.compare kullan
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
 
     if (!isPasswordValid) {
       throw new Error('Current password is incorrect');
     }
 
-    // ✅ Şifreyi hashle
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
     user.password = hashedPassword;
@@ -181,7 +179,6 @@ export const authService = {
       throw new Error('Reset token has expired');
     }
 
-    // ✅ Şifreyi hashle
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
     user.password = hashedPassword;
