@@ -4,16 +4,29 @@ import { config } from '../../config/env.js';
 import { logger } from '../../config/logger.js';
 import crypto from 'crypto';
 import { emailService } from '../../integrations/email.service.js';
+import bcrypt from 'bcryptjs'; // ✅ EKLENDI
 
 export const authService = {
   async register(userData) {
-    const existingUser = await authRepository.findByEmail(userData.email);
+    // ✅ Şifre kontrolü
+    if (!userData.password) {
+      throw new Error('Password is required');
+    }
 
+    const existingUser = await authRepository.findByEmail(userData.email);
     if (existingUser) {
       throw new Error('User with this email already exists');
     }
 
-    const user = await authRepository.create(userData);
+    // ✅ Şifreyi manuel hashle (model hook'u çalışmazsa diye)
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(userData.password, salt);
+
+    const user = await authRepository.create({
+      ...userData,
+      password: hashedPassword,
+    });
+
     return user;
   },
 
@@ -24,7 +37,6 @@ export const authService = {
       throw new Error('Invalid email or password');
     }
 
-    // ✅ FIX: password kontrolü
     if (!user.password) {
       throw new Error('Account is corrupted. Please contact support.');
     }
@@ -104,7 +116,6 @@ export const authService = {
     return user;
   },
 
-  // ✅ FIX: changePassword - daha sağlam hale getirildi
   async changePassword(userId, currentPassword, newPassword) {
     const user = await authRepository.findById(userId);
 
@@ -112,7 +123,6 @@ export const authService = {
       throw new Error('User not found');
     }
 
-    // ✅ Kullanıcının şifresi var mı kontrol et
     if (!user.password) {
       throw new Error('User password not set. Please reset your password.');
     }
@@ -123,7 +133,6 @@ export const authService = {
       throw new Error('Current password is incorrect');
     }
 
-    // Yeni şifre hashlenmesi için model hook'u çalışacak
     user.password = newPassword;
     await user.save();
 
