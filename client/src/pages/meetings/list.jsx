@@ -46,18 +46,16 @@ const MeetingsList = () => {
     return labels[status] || status;
   };
 
-  // ✅ DÜZELTİLDİ - timeZone eklendi
+  // ✅ UTC direkt gösterim (zaman dilimi çevirme YOK)
   const formatDate = (date) => {
     if (!date) return '-';
     try {
-      return new Date(date).toLocaleString('tr-TR', {
-        timeZone: 'Europe/Istanbul',
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
+      const d = new Date(date);
+      return `${String(d.getUTCDate()).padStart(2, '0')}.${String(
+        d.getUTCMonth() + 1
+      ).padStart(2, '0')}.${d.getUTCFullYear()} ${String(
+        d.getUTCHours()
+      ).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
     } catch {
       return '-';
     }
