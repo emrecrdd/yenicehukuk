@@ -8,19 +8,25 @@ import { notificationService } from '../notifications/notification.service.js';
 
 export const meetingService = {
   async create(data) {
-    const meeting = await Meeting.create(data);
+  console.log('📥 Frontendden gelen start_date:', data.start_date);
+  console.log('📥 Frontendden gelen end_date:', data.end_date);
 
-    if (meeting.assigned_to) {
-      await notificationService.notifyMeetingReminder(
-        meeting.assigned_to,
-        meeting.id,
-        meeting.title,
-        meeting.start_date
-      );
-    }
+  const meeting = await Meeting.create(data);
 
-    return meeting;
-  },
+  console.log('💾 Veritabanına kaydedilen start_date:', meeting.start_date);
+  console.log('💾 Veritabanına kaydedilen end_date:', meeting.end_date);
+
+  if (meeting.assigned_to) {
+    await notificationService.notifyMeetingReminder(
+      meeting.assigned_to,
+      meeting.id,
+      meeting.title,
+      meeting.start_date
+    );
+  }
+
+  return meeting;
+},
 
   async findAll({ page, limit, search, status, meeting_type, case_id, client_id }) {
     const where = {};
