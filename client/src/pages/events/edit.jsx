@@ -154,7 +154,6 @@ const EventEdit = () => {
     }
   };
 
-  // ✅ DÜZELTİLDİ - Tarihler UTC'ye çevriliyor
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = {};
@@ -169,17 +168,11 @@ const EventEdit = () => {
     // ✅ Admin değilse user.id'yi kullan
     const assignedTo = user?.role !== 'admin' ? user?.id : formData.assigned_to;
 
-    // ✅ Tarihleri UTC'ye çevir
-    const startDate = formData.start_date ? new Date(formData.start_date) : null;
-    const endDate = formData.end_date ? new Date(formData.end_date) : null;
-
     mutation.mutate({
       ...formData,
       event_type: 'hearing',
       assigned_to: assignedTo || null,
       case_id: formData.case_id || null,
-      start_date: startDate ? startDate.toISOString() : null,
-      end_date: endDate ? endDate.toISOString() : null,
       attendees: attendees.map(a => ({ name: a.name, role: a.role || 'diger' })),
     });
   };
@@ -213,6 +206,7 @@ const EventEdit = () => {
 
       <Card>
         <form onSubmit={handleSubmit} className="space-y-6 p-6">
+          {/* Başlık */}
           <Input
             label="Başlık *"
             name="title"
@@ -222,6 +216,7 @@ const EventEdit = () => {
             placeholder="Duruşma başlığı..."
           />
 
+          {/* Açıklama */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Açıklama
@@ -236,6 +231,7 @@ const EventEdit = () => {
             />
           </div>
 
+          {/* Duruşma Türü */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Duruşma Türü
@@ -255,6 +251,7 @@ const EventEdit = () => {
             </select>
           </div>
 
+          {/* Durum */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Durum
@@ -272,6 +269,7 @@ const EventEdit = () => {
             </select>
           </div>
 
+          {/* Tarih */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               label="Başlangıç Tarihi *"
@@ -290,6 +288,7 @@ const EventEdit = () => {
             />
           </div>
 
+          {/* Yer Bilgileri */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Input
               label="Mahkeme"
@@ -314,6 +313,7 @@ const EventEdit = () => {
             />
           </div>
 
+          {/* Son Duruşma Sonucu */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Son Duruşma Sonucu
@@ -328,6 +328,7 @@ const EventEdit = () => {
             />
           </div>
 
+          {/* Avukat Bilgileri */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -368,6 +369,7 @@ const EventEdit = () => {
             />
           </div>
 
+          {/* Masraf / Harç Durumu */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Masraf / Harç Durumu
@@ -384,6 +386,7 @@ const EventEdit = () => {
             </select>
           </div>
 
+          {/* Katılımcılar */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               👥 Katılımcılar
@@ -437,6 +440,7 @@ const EventEdit = () => {
             )}
           </div>
 
+          {/* Hatırlatma */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -473,6 +477,7 @@ const EventEdit = () => {
             </div>
           </div>
 
+          {/* Butonlar */}
           <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <Button type="submit" loading={mutation.isPending}>
               💾 Güncelle

@@ -75,7 +75,6 @@ const TaskCreate = () => {
     }
   };
 
-  // ✅ DÜZELTİLDİ - Tarihler UTC'ye çevriliyor
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -84,17 +83,15 @@ const TaskCreate = () => {
       return;
     }
 
-    const assignedTo = user?.role !== 'admin' ? user?.id : formData.assigned_to;
-
-    // ✅ Tarihleri UTC'ye çevir
-    const dueDate = formData.due_date ? new Date(formData.due_date) : null;
+    const assignedTo =
+      user?.role !== 'admin' ? user?.id : formData.assigned_to;
 
     const submitData = {
       ...formData,
       assigned_to: assignedTo || null,
       case_id: formData.case_id || null,
       client_id: formData.client_id || null,
-      due_date: dueDate ? dueDate.toISOString() : null,
+      due_date: formData.due_date || null,
       estimated_hours: formData.estimated_hours
         ? parseFloat(formData.estimated_hours)
         : null,

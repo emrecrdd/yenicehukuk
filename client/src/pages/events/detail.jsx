@@ -7,9 +7,9 @@ import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import { 
   ArrowLeft, Calendar, Clock, MapPin, Building2, User, 
-  Users, Edit2, Trash2, CalendarDays, AlarmClock,
-  Briefcase, Phone, Mail, FileText, StickyNote, CheckSquare,
-  Scale, Gavel, DollarSign, AlertCircle, UserCog, UserPlus
+  Users, Edit2, AlarmClock,
+   Phone, Mail, FileText,  CheckSquare,
+   Gavel, DollarSign
 } from 'lucide-react';
 
 // ✅ Rol seçenekleri
