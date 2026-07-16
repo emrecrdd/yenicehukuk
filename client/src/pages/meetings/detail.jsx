@@ -30,7 +30,12 @@ const MeetingDetail = () => {
   });
 
   const meeting = data?.data?.data;
-
+console.log({
+  raw: meeting?.start_date,
+  date: new Date(meeting?.start_date),
+  dayjs: dayjs(meeting?.start_date).format('DD MMMM YYYY HH:mm'),
+  tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+});
   const statuses = [
     { value: 'scheduled', label: 'Planlandı' },
     { value: 'ongoing', label: 'Devam Ediyor' },
