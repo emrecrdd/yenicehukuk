@@ -20,6 +20,13 @@ class MemoryQueue {
       }, 100);
     }
     
+    // ✅ Email queue için de hemen işle
+    if (this.name === 'email-queue') {
+      setTimeout(() => {
+        this.process(data);
+      }, 100);
+    }
+    
     return job;
   }
 
@@ -27,7 +34,6 @@ class MemoryQueue {
     // ✅ Notification queue için GERÇEK işlem
     if (this.name === 'notification-queue') {
       try {
-        // ✅ notificationService'i import et
         const { notificationService } = await import('../modules/notifications/notification.service.js');
         
         const notification = await notificationService.create(
@@ -47,10 +53,24 @@ class MemoryQueue {
       }
     }
     
-    // Email queue için
+    // ✅ Email queue için GERÇEK işlem
     if (this.name === 'email-queue') {
-      logger.info(`📧 Email would be sent to: ${data.to}, Subject: ${data.subject}`);
-      return { sent: true };
+      try {
+        const { emailService } = await import('../integrations/email.service.js');
+        
+        const result = await emailService.sendEmail({
+          to: data.to,
+          subject: data.subject,
+          html: data.html,
+          text: data.text,
+        });
+        
+        logger.info(`📧 Email sent to: ${data.to}, Subject: ${data.subject}`);
+        return result;
+      } catch (error) {
+        logger.error(`❌ Email send failed:`, error);
+        return { success: false, error: error.message };
+      }
     }
     
     // AI queue için
