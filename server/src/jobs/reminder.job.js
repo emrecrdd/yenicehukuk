@@ -64,6 +64,7 @@ class ReminderJob {
       const meetings = await sequelize.query(
         `SELECT * FROM meetings 
          WHERE start_date > :now 
+         AND status = 'scheduled'
          AND deleted_at IS NULL`,
         {
           replacements: { now },
@@ -101,10 +102,12 @@ class ReminderJob {
         const creator = creatorResult[0] || null;
 
         const startDate = new Date(meeting.start_date);
-        const oneDayBefore = new Date(startDate.getTime() - 24 * 60 * 60 * 1000);
-        const oneHourBefore = new Date(startDate.getTime() - 60 * 60 * 1000);
+        
+        // ✅ SAAT FARKI (Saat cinsinden)
+        const diffHours = (startDate - now) / (1000 * 60 * 60);
 
         console.log(`📅 Toplantı: ${meeting.title}, Başlangıç: ${startDate}`);
+        console.log(`⏰ Fark: ${diffHours.toFixed(2)} saat`);
 
         const recipients = [];
         if (assignee) recipients.push(assignee);
@@ -112,8 +115,12 @@ class ReminderJob {
           recipients.push(creator);
         }
 
-        // ✅ 1. HATIRLATMA: 1 GÜN ÖNCE
-        if (now >= oneDayBefore && !meeting.reminder_sent_1) {
+        // ✅ 1. HATIRLATMA: 1 GÜN ÖNCE (23.5 - 24 saat arası)
+        if (
+          diffHours <= 24 &&
+          diffHours > 23.5 &&
+          !meeting.reminder_sent_1
+        ) {
           console.log(`✅ 1. hatırlatma gönderiliyor: ${meeting.title}`);
           for (const user of recipients) {
             if (!user) continue;
@@ -128,8 +135,12 @@ class ReminderJob {
           logger.info(`✅ Meeting 1-day reminder sent: ${meeting.id} (${meeting.title})`);
         }
 
-        // ✅ 2. HATIRLATMA: 1 SAAT ÖNCE
-        if (now >= oneHourBefore && !meeting.reminder_sent_2) {
+        // ✅ 2. HATIRLATMA: 1 SAAT ÖNCE (0 - 1 saat arası)
+        if (
+          diffHours <= 1 &&
+          diffHours > 0 &&
+          !meeting.reminder_sent_2
+        ) {
           console.log(`✅ 2. hatırlatma gönderiliyor: ${meeting.title}`);
           for (const user of recipients) {
             if (!user) continue;
@@ -154,8 +165,15 @@ class ReminderJob {
   async sendMeetingReminder(user, meeting, reminderType) {
     try {
       const startDate = new Date(meeting.start_date);
-      const dateStr = startDate.toLocaleDateString('tr-TR');
-      const timeStr = startDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+      
+      // ✅ UTC direkt gösterim (zaman dilimi çevirme YOK)
+      const dateStr = `${String(startDate.getUTCDate()).padStart(2, '0')}.${String(
+        startDate.getUTCMonth() + 1
+      ).padStart(2, '0')}.${startDate.getUTCFullYear()}`;
+      
+      const timeStr = `${String(startDate.getUTCHours()).padStart(2, '0')}:${String(
+        startDate.getUTCMinutes()
+      ).padStart(2, '0')}`;
 
       let title, message;
       if (reminderType === '1 Gün Önce') {
@@ -232,13 +250,12 @@ class ReminderJob {
   }
 
   // ============================================
-  // ✅ TASK REMINDER - ÇİFT HATIRLATMA (1 GÜN + 1 SAAT) - GÜNCELLENDI
+  // ✅ TASK REMINDER - ÇİFT HATIRLATMA (1 GÜN + 1 SAAT)
   // ============================================
   async checkUpcomingTasks() {
     try {
       const now = new Date();
       
-      // ✅ TÜM GÖREVLERİ GETİR (sadece yakın olanları değil)
       const tasks = await Task.findAll({
         where: {
           status: {
@@ -261,16 +278,20 @@ class ReminderJob {
 
       for (const task of tasks) {
         const dueDate = new Date(task.due_date);
-        const oneDayBefore = new Date(dueDate.getTime() - 24 * 60 * 60 * 1000);
-        const oneHourBefore = new Date(dueDate.getTime() - 60 * 60 * 1000);
+        const diffHours = (dueDate - now) / (1000 * 60 * 60);
 
         console.log(`📅 Görev: ${task.title}, Son Tarih: ${dueDate}`);
+        console.log(`⏰ Fark: ${diffHours.toFixed(2)} saat`);
 
         const user = task.assignee;
         if (!user) continue;
 
-        // ✅ 1. HATIRLATMA: 1 GÜN ÖNCE
-        if (now >= oneDayBefore && !task.reminder_sent_1) {
+        // ✅ 1. HATIRLATMA: 1 GÜN ÖNCE (23.5 - 24 saat arası)
+        if (
+          diffHours <= 24 &&
+          diffHours > 23.5 &&
+          !task.reminder_sent_1
+        ) {
           console.log(`✅ 1. hatırlatma gönderiliyor: ${task.title}`);
           await this.sendTaskReminder(user, task, '1 Gün Önce');
           await task.update({ 
@@ -280,8 +301,12 @@ class ReminderJob {
           logger.info(`✅ Task 1-day reminder sent: ${task.id} (${task.title})`);
         }
 
-        // ✅ 2. HATIRLATMA: 1 SAAT ÖNCE
-        if (now >= oneHourBefore && !task.reminder_sent_2) {
+        // ✅ 2. HATIRLATMA: 1 SAAT ÖNCE (0 - 1 saat arası)
+        if (
+          diffHours <= 1 &&
+          diffHours > 0 &&
+          !task.reminder_sent_2
+        ) {
           console.log(`✅ 2. hatırlatma gönderiliyor: ${task.title}`);
           await this.sendTaskReminder(user, task, '1 Saat Önce');
           await task.update({ 
@@ -300,8 +325,14 @@ class ReminderJob {
   async sendTaskReminder(user, task, reminderType) {
     try {
       const dueDate = new Date(task.due_date);
-      const dateStr = dueDate.toLocaleDateString('tr-TR');
-      const timeStr = dueDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+      
+      const dateStr = `${String(dueDate.getUTCDate()).padStart(2, '0')}.${String(
+        dueDate.getUTCMonth() + 1
+      ).padStart(2, '0')}.${dueDate.getUTCFullYear()}`;
+      
+      const timeStr = `${String(dueDate.getUTCHours()).padStart(2, '0')}:${String(
+        dueDate.getUTCMinutes()
+      ).padStart(2, '0')}`;
 
       let title, message;
       if (reminderType === '1 Gün Önce') {
@@ -347,13 +378,12 @@ class ReminderJob {
   }
 
   // ============================================
-  // ✅ EVENT REMINDER - ÇİFT HATIRLATMA (1 GÜN + 1 SAAT) - GÜNCELLENDI
+  // ✅ EVENT REMINDER - ÇİFT HATIRLATMA (1 GÜN + 1 SAAT)
   // ============================================
   async checkUpcomingEvents() {
     try {
       const now = new Date();
       
-      // ✅ TÜM ETKİNLİKLERİ GETİR
       const events = await Event.findAll({
         where: {
           status: 'scheduled',
@@ -374,16 +404,20 @@ class ReminderJob {
 
       for (const event of events) {
         const startDate = new Date(event.start_date);
-        const oneDayBefore = new Date(startDate.getTime() - 24 * 60 * 60 * 1000);
-        const oneHourBefore = new Date(startDate.getTime() - 60 * 60 * 1000);
+        const diffHours = (startDate - now) / (1000 * 60 * 60);
 
         console.log(`📅 Etkinlik: ${event.title}, Başlangıç: ${startDate}`);
+        console.log(`⏰ Fark: ${diffHours.toFixed(2)} saat`);
 
         const user = event.assignedTo;
         if (!user) continue;
 
-        // ✅ 1. HATIRLATMA: 1 GÜN ÖNCE
-        if (now >= oneDayBefore && !event.reminder_sent_1) {
+        // ✅ 1. HATIRLATMA: 1 GÜN ÖNCE (23.5 - 24 saat arası)
+        if (
+          diffHours <= 24 &&
+          diffHours > 23.5 &&
+          !event.reminder_sent_1
+        ) {
           console.log(`✅ 1. hatırlatma gönderiliyor: ${event.title}`);
           await this.sendEventReminder(user, event, '1 Gün Önce');
           await event.update({ 
@@ -393,8 +427,12 @@ class ReminderJob {
           logger.info(`✅ Event 1-day reminder sent: ${event.id} (${event.title})`);
         }
 
-        // ✅ 2. HATIRLATMA: 1 SAAT ÖNCE
-        if (now >= oneHourBefore && !event.reminder_sent_2) {
+        // ✅ 2. HATIRLATMA: 1 SAAT ÖNCE (0 - 1 saat arası)
+        if (
+          diffHours <= 1 &&
+          diffHours > 0 &&
+          !event.reminder_sent_2
+        ) {
           console.log(`✅ 2. hatırlatma gönderiliyor: ${event.title}`);
           await this.sendEventReminder(user, event, '1 Saat Önce');
           await event.update({ 
@@ -413,8 +451,14 @@ class ReminderJob {
   async sendEventReminder(user, event, reminderType) {
     try {
       const startDate = new Date(event.start_date);
-      const dateStr = startDate.toLocaleDateString('tr-TR');
-      const timeStr = startDate.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+      
+      const dateStr = `${String(startDate.getUTCDate()).padStart(2, '0')}.${String(
+        startDate.getUTCMonth() + 1
+      ).padStart(2, '0')}.${startDate.getUTCFullYear()}`;
+      
+      const timeStr = `${String(startDate.getUTCHours()).padStart(2, '0')}:${String(
+        startDate.getUTCMinutes()
+      ).padStart(2, '0')}`;
 
       let title, message;
       if (reminderType === '1 Gün Önce') {
