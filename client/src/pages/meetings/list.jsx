@@ -46,10 +46,12 @@ const MeetingsList = () => {
     return labels[status] || status;
   };
 
+  // ✅ DÜZELTİLDİ - timeZone eklendi
   const formatDate = (date) => {
     if (!date) return '-';
     try {
       return new Date(date).toLocaleString('tr-TR', {
+        timeZone: 'Europe/Istanbul',
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -127,7 +129,7 @@ const MeetingsList = () => {
                       )}
                     </Table.Cell>
                     <Table.Cell>
-                      {meeting.client?.name || '-'} {/* ✅ DEĞİŞTİ */}
+                      {meeting.client?.name || '-'}
                     </Table.Cell>
                     <Table.Cell>
                       {meeting.case?.title || '-'}
