@@ -5,7 +5,23 @@ import eventApi from '../../features/events/event.api.js';
 import meetingApi from '../../features/meetings/meeting.api.js';
 import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
-import Badge from '../../components/ui/Badge.jsx';  // ✅ EKLENDI
+import Badge from '../../components/ui/Badge.jsx';
+
+// ======================================================
+// UTC format fonksiyonları (zaman dilimi çevirme YOK)
+// ======================================================
+
+const formatDateUTC = (date) => {
+  if (!date) return '-';
+  try {
+    const d = new Date(date);
+    return `${String(d.getUTCDate()).padStart(2, '0')}.${String(
+      d.getUTCMonth() + 1
+    ).padStart(2, '0')}.${d.getUTCFullYear()}`;
+  } catch {
+    return '-';
+  }
+};
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -181,7 +197,7 @@ const Dashboard = () => {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           Hoş Geldin, {user?.first_name || user?.name || 'Kullanıcı'}! 👋
         </h1>
-        <span className="text-sm text-gray-500">{new Date().toLocaleDateString('tr-TR')}</span>
+        <span className="text-sm text-gray-500">{formatDateUTC(new Date())}</span>
       </div>
 
       {/* Stats */}
@@ -246,7 +262,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* ✅ İSTATİSTİK WIDGET'I */}
+      {/* İstatistik Widget */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           📊 Bu Ayın İstatistikleri ({dayjs().format('MMMM YYYY')})
@@ -282,7 +298,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* ✅ BOŞ GÜN WIDGET'I */}
+      {/* Boş Gün Widget */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">🗓️ Bu Hafta Boş Günler</h2>
@@ -297,7 +313,6 @@ const Dashboard = () => {
               </p>
             </div>
           </div>
-         
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">

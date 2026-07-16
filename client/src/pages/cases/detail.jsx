@@ -8,6 +8,36 @@ import Button from '../../components/ui/Button.jsx';
 import { Edit2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+// ======================================================
+// UTC format fonksiyonları (zaman dilimi çevirme YOK)
+// ======================================================
+
+const formatDateUTC = (date) => {
+  if (!date) return '-';
+  try {
+    const d = new Date(date);
+    return `${String(d.getUTCDate()).padStart(2, '0')}.${String(
+      d.getUTCMonth() + 1
+    ).padStart(2, '0')}.${d.getUTCFullYear()}`;
+  } catch {
+    return '-';
+  }
+};
+
+const formatDateTimeUTC = (date) => {
+  if (!date) return '-';
+  try {
+    const d = new Date(date);
+    return `${String(d.getUTCDate()).padStart(2, '0')}.${String(
+      d.getUTCMonth() + 1
+    ).padStart(2, '0')}.${d.getUTCFullYear()} ${String(
+      d.getUTCHours()
+    ).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+  } catch {
+    return '-';
+  }
+};
+
 const CaseDetail = () => {
   const { id } = useParams();
 
@@ -57,24 +87,6 @@ const CaseDetail = () => {
     );
   }
 
-  const formatDate = (date) => {
-    if (!date) return '-';
-    try {
-      return new Date(date).toLocaleDateString('tr-TR');
-    } catch {
-      return '-';
-    }
-  };
-
-  const formatDateTime = (date) => {
-    if (!date) return '-';
-    try {
-      return new Date(date).toLocaleString('tr-TR');
-    } catch {
-      return '-';
-    }
-  };
-
   const statuses = [
     { value: 'preparation', label: 'Hazırlık' },
     { value: 'active', label: 'Devam Ediyor' },
@@ -113,7 +125,6 @@ const CaseDetail = () => {
             <Badge variant={getStatusVariant(caseItem.status)}>
               {statuses.find(s => s.value === caseItem.status)?.label || caseItem.status}
             </Badge>
-            {/* ✅ YARGI TÜRÜ VE BİRİMİ */}
             {caseItem.judiciary_type && (
               <Badge variant="default">{caseItem.judiciary_type}</Badge>
             )}
@@ -133,42 +144,36 @@ const CaseDetail = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* ✅ BİLGİLER KARTI - GÜNCELLENDİ */}
+        {/* Bilgiler Kartı */}
         <Card>
           <Card.Header>
             <h2 className="font-semibold text-gray-900 dark:text-white">📋 Bilgiler</h2>
           </Card.Header>
           <Card.Body className="space-y-3">
-            {/* ✅ YARGI TÜRÜ */}
             {caseItem.judiciary_type && (
               <div>
                 <p className="text-sm text-gray-500">Yargı Türü</p>
                 <p className="text-gray-900 dark:text-white">{caseItem.judiciary_type}</p>
               </div>
             )}
-            {/* ✅ YARGI BİRİMİ */}
             {caseItem.judiciary_unit && (
               <div>
                 <p className="text-sm text-gray-500">Yargı Birimi</p>
                 <p className="text-gray-900 dark:text-white">{caseItem.judiciary_unit}</p>
               </div>
             )}
-            {/* ✅ MAHKEME */}
             <div>
               <p className="text-sm text-gray-500">Mahkeme</p>
               <p className="text-gray-900 dark:text-white">{caseItem.court_name || '-'}</p>
             </div>
-            {/* ✅ DOSYA NO */}
             <div>
               <p className="text-sm text-gray-500">Dosya No</p>
               <p className="text-gray-900 dark:text-white">{caseItem.case_number || '-'}</p>
             </div>
-            {/* ✅ AÇILIŞ TARİHİ */}
             <div>
               <p className="text-sm text-gray-500">Açılış Tarihi</p>
-              <p className="text-gray-900 dark:text-white">{formatDate(caseItem.opening_date) || '-'}</p>
+              <p className="text-gray-900 dark:text-white">{formatDateUTC(caseItem.opening_date) || '-'}</p>
             </div>
-            {/* ✅ MÜVEKKİLLER - ÇOKLU */}
             <div>
               <p className="text-sm text-gray-500">Müvekkiller</p>
               {caseItem.clients && caseItem.clients.length > 0 ? (
@@ -187,14 +192,12 @@ const CaseDetail = () => {
                 <p className="text-gray-900 dark:text-white">-</p>
               )}
             </div>
-            {/* ✅ ATANAN AVUKAT */}
             <div>
               <p className="text-sm text-gray-500">Atanan Avukat</p>
               <p className="text-gray-900 dark:text-white">
                 {caseItem.assignee?.first_name} {caseItem.assignee?.last_name || 'Atanmadı'}
               </p>
             </div>
-            {/* ✅ ÖNCELİK */}
             <div>
               <p className="text-sm text-gray-500">Öncelik</p>
               <Badge
@@ -211,7 +214,6 @@ const CaseDetail = () => {
                 {caseItem.priority || 'Normal'}
               </Badge>
             </div>
-            {/* ✅ KONU */}
             {caseItem.subject && (
               <div>
                 <p className="text-sm text-gray-500">Konu</p>
@@ -221,7 +223,7 @@ const CaseDetail = () => {
           </Card.Body>
         </Card>
 
-        {/* 👥 TARAFLAR */}
+        {/* Taraflar */}
         <Card>
           <Card.Header className="flex items-center justify-between">
             <h2 className="font-semibold text-gray-900 dark:text-white">👥 Taraflar</h2>
@@ -262,7 +264,6 @@ const CaseDetail = () => {
         </Card>
       </div>
 
-      {/* ✅ AÇIKLAMA */}
       {caseItem.description && (
         <Card>
           <Card.Header>
@@ -274,7 +275,7 @@ const CaseDetail = () => {
         </Card>
       )}
 
-      {/* ✅ Documents */}
+      {/* Belgeler */}
       <Card>
         <Card.Header className="flex items-center justify-between">
           <h2 className="font-semibold text-gray-900 dark:text-white">📄 Belgeler</h2>
@@ -300,7 +301,7 @@ const CaseDetail = () => {
                       {doc.name}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {formatDate(doc.created_at)} - {(doc.file_size / 1024).toFixed(1)} KB
+                      {formatDateUTC(doc.created_at)} - {(doc.file_size / 1024).toFixed(1)} KB
                     </p>
                   </Link>
                   <button
@@ -316,7 +317,7 @@ const CaseDetail = () => {
         </Card.Body>
       </Card>
 
-      {/* ✅ Görevler */}
+      {/* Görevler */}
       <Card>
         <Card.Header className="flex items-center justify-between">
           <h2 className="font-semibold text-gray-900 dark:text-white">✅ Görevler</h2>
@@ -341,7 +342,7 @@ const CaseDetail = () => {
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Atanan: {task.assignee?.first_name} {task.assignee?.last_name || 'Atanmadı'} - 
-                      Son tarih: {formatDate(task.due_date)}
+                      Son tarih: {formatDateUTC(task.due_date)}
                     </p>
                   </div>
                   <Badge
@@ -366,7 +367,7 @@ const CaseDetail = () => {
         </Card.Body>
       </Card>
 
-      {/* Events */}
+      {/* Duruşmalar */}
       <Card>
         <Card.Header className="flex items-center justify-between">
           <h2 className="font-semibold text-gray-900 dark:text-white">📅 Duruşmalar</h2>
@@ -390,7 +391,7 @@ const CaseDetail = () => {
                       {event.title}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {formatDateTime(event.start_date)} - {event.location || 'Yer belirtilmemiş'}
+                      {formatDateTimeUTC(event.start_date)} - {event.location || 'Yer belirtilmemiş'}
                     </p>
                   </div>
                   <Badge

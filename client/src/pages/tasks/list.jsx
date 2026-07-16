@@ -51,6 +51,22 @@ const getPriorityLabel = (priority) => {
 };
 
 // ======================================================
+// UTC format fonksiyonu (zaman dilimi çevirme YOK)
+// ======================================================
+
+const formatDateUTC = (date) => {
+  if (!date) return '-';
+  try {
+    const d = new Date(date);
+    return `${String(d.getUTCDate()).padStart(2, '0')}.${String(
+      d.getUTCMonth() + 1
+    ).padStart(2, '0')}.${d.getUTCFullYear()}`;
+  } catch {
+    return '-';
+  }
+};
+
+// ======================================================
 // COMPONENT
 // ======================================================
 
@@ -240,9 +256,7 @@ const TasksList = () => {
                       </Badge>
                     </Table.Cell>
                     <Table.Cell>
-                      {task.due_date
-                        ? new Date(task.due_date).toLocaleDateString('tr-TR')
-                        : '-'}
+                      {task.due_date ? formatDateUTC(task.due_date) : '-'}
                     </Table.Cell>
                     <Table.Cell>
                       <Link

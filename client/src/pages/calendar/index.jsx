@@ -10,6 +10,22 @@ import 'dayjs/locale/tr';
 
 dayjs.locale('tr');
 
+// ======================================================
+// UTC format fonksiyonu (zaman dilimi çevirme YOK)
+// ======================================================
+
+const formatDateUTC = (date) => {
+  if (!date) return '-';
+  try {
+    const d = new Date(date);
+    return `${String(d.getUTCDate()).padStart(2, '0')}.${String(
+      d.getUTCMonth() + 1
+    ).padStart(2, '0')}.${d.getUTCFullYear()}`;
+  } catch {
+    return '-';
+  }
+};
+
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(dayjs());
   const [view, setView] = useState('month');
@@ -45,7 +61,7 @@ const Calendar = () => {
       case_id: m.case_id,
       case_title: m.case?.title,
       client_id: m.client_id,
-      client_name: m.client ? m.client.name : null,  // ✅ DÜZELTİLDİ
+      client_name: m.client ? m.client.name : null,
       color: '#10b981',
     }))
   ];
@@ -242,7 +258,7 @@ const Calendar = () => {
       <Card>
         <Card.Header>
           <h2 className="font-semibold text-gray-900 dark:text-white">
-            📋 Bugünün Etkinlikleri ({dayjs().format('DD MMMM YYYY')})
+            📋 Bugünün Etkinlikleri ({formatDateUTC(new Date())})
           </h2>
         </Card.Header>
         <Card.Body>

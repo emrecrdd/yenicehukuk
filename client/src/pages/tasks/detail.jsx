@@ -57,6 +57,24 @@ const getPriorityVariant = (priority) => {
 const getPriorityLabel = (priority) => PRIORITY_LABELS[priority] || 'Normal';
 
 // ======================================================
+// UTC format fonksiyonu (zaman dilimi çevirme YOK)
+// ======================================================
+
+const formatDateUTC = (date) => {
+  if (!date) return '-';
+  try {
+    const d = new Date(date);
+    return `${String(d.getUTCDate()).padStart(2, '0')}.${String(
+      d.getUTCMonth() + 1
+    ).padStart(2, '0')}.${d.getUTCFullYear()} ${String(
+      d.getUTCHours()
+    ).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+  } catch {
+    return '-';
+  }
+};
+
+// ======================================================
 // COMPONENT
 // ======================================================
 
@@ -303,7 +321,7 @@ const TaskDetail = () => {
               <div>
                 <p className="text-sm text-gray-500">📅 Son Tarih</p>
                 <p className={`text-gray-900 dark:text-white ${isOverdue ? 'text-red-600' : ''}`}>
-                  {task.due_date ? new Date(task.due_date).toLocaleString('tr-TR') : 'Belirtilmemiş'}
+                  {task.due_date ? formatDateUTC(task.due_date) : 'Belirtilmemiş'}
                   {isOverdue && ' ⚠️ Gecikti'}
                 </p>
               </div>
@@ -325,7 +343,7 @@ const TaskDetail = () => {
                     <div>
                       <p className="text-sm text-gray-500">Başlangıç</p>
                       <p className="text-sm text-gray-900 dark:text-white">
-                        {new Date(task.started_at).toLocaleString('tr-TR')}
+                        {formatDateUTC(task.started_at)}
                       </p>
                     </div>
                   )}
@@ -333,7 +351,7 @@ const TaskDetail = () => {
                     <div>
                       <p className="text-sm text-gray-500">Bitiş</p>
                       <p className="text-sm text-gray-900 dark:text-white">
-                        {new Date(task.completed_at).toLocaleString('tr-TR')}
+                        {formatDateUTC(task.completed_at)}
                       </p>
                     </div>
                   )}
@@ -468,7 +486,7 @@ const TaskDetail = () => {
                       </span>
                       <span>•</span>
                       <span>
-                        {new Date(note.created_at).toLocaleString('tr-TR')}
+                        {formatDateUTC(note.created_at)}
                       </span>
                     </div>
                   </div>

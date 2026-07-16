@@ -5,10 +5,6 @@ import Badge from '../../components/ui/Badge.jsx';
 import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import toast from 'react-hot-toast';
-import dayjs from 'dayjs';
-import 'dayjs/locale/tr';
-
-dayjs.locale('tr');
 
 const MeetingDetail = () => {
   const { id } = useParams();
@@ -30,12 +26,7 @@ const MeetingDetail = () => {
   });
 
   const meeting = data?.data?.data;
-console.log({
-  raw: meeting?.start_date,
-  date: new Date(meeting?.start_date),
-  dayjs: dayjs(meeting?.start_date).format('DD MMMM YYYY HH:mm'),
-  tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
-});
+
   const statuses = [
     { value: 'scheduled', label: 'Planlandı' },
     { value: 'ongoing', label: 'Devam Ediyor' },
@@ -63,9 +54,19 @@ console.log({
     return labels[status] || status;
   };
 
+  // ✅ UTC direkt gösterim (zaman dilimi çevirme YOK)
   const formatDate = (date) => {
     if (!date) return '-';
-    return dayjs(date).format('DD MMMM YYYY HH:mm');
+    try {
+      const d = new Date(date);
+      return `${String(d.getUTCDate()).padStart(2, '0')}.${String(
+        d.getUTCMonth() + 1
+      ).padStart(2, '0')}.${d.getUTCFullYear()} ${String(
+        d.getUTCHours()
+      ).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+    } catch {
+      return '-';
+    }
   };
 
   if (isLoading) {
@@ -209,7 +210,7 @@ console.log({
                   to={`/clients/${meeting.client.id}`}
                   className="text-blue-600 hover:underline"
                 >
-                  {meeting.client.name}  {/* ✅ SADECE BURASI DEĞİŞTİ */}
+                  {meeting.client.name}
                   {meeting.client.company_name && ` (${meeting.client.company_name})`}
                 </Link>
               </div>

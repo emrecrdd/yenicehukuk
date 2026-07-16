@@ -41,7 +41,6 @@ const getCaseStatusLabel = (status) => {
   return labels[status] || status;
 };
 
-// ✅ Dava durumu renkleri
 const getCaseStatusVariant = (status) => {
   const variants = {
     active: 'success',
@@ -53,6 +52,46 @@ const getCaseStatusVariant = (status) => {
     archived: 'danger',
   };
   return variants[status] || 'default';
+};
+
+// ======================================================
+// UTC format fonksiyonları (zaman dilimi çevirme YOK)
+// ======================================================
+
+const formatDateUTC = (date) => {
+  if (!date) return '-';
+  try {
+    const d = new Date(date);
+    return `${String(d.getUTCDate()).padStart(2, '0')}.${String(
+      d.getUTCMonth() + 1
+    ).padStart(2, '0')}.${d.getUTCFullYear()}`;
+  } catch {
+    return '-';
+  }
+};
+
+const formatTimeUTC = (date) => {
+  if (!date) return '-';
+  try {
+    const d = new Date(date);
+    return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+  } catch {
+    return '-';
+  }
+};
+
+const formatDateTimeUTC = (date) => {
+  if (!date) return '-';
+  try {
+    const d = new Date(date);
+    return `${String(d.getUTCDate()).padStart(2, '0')}.${String(
+      d.getUTCMonth() + 1
+    ).padStart(2, '0')}.${d.getUTCFullYear()} ${String(
+      d.getUTCHours()
+    ).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+  } catch {
+    return '-';
+  }
 };
 
 const EventDetail = () => {
@@ -94,41 +133,6 @@ const EventDetail = () => {
       </div>
     );
   }
-
-  const formatDate = (date) => {
-    if (!date) return '-';
-    try {
-      return new Date(date).toLocaleDateString('tr-TR', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    } catch {
-      return '-';
-    }
-  };
-
-  const formatTime = (date) => {
-    if (!date) return '-';
-    try {
-      return new Date(date).toLocaleTimeString('tr-TR', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch {
-      return '-';
-    }
-  };
-
-  const formatDateTime = (date) => {
-    if (!date) return '-';
-    try {
-      return new Date(date).toLocaleString('tr-TR');
-    } catch {
-      return '-';
-    }
-  };
 
   const getStatusLabel = (status) => {
     const labels = {
@@ -202,7 +206,6 @@ const EventDetail = () => {
     return variants[status] || 'default';
   };
 
-  // ✅ Rol ikonu ve rengi
   const getRoleIcon = (role) => {
     const icons = {
       'avukat': '⚖️',
@@ -245,44 +248,44 @@ const EventDetail = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-     {/* Header */}
-<div className="flex items-center justify-between">
-  <div>
-    <Link 
-      to={event.case_id ? `/cases/${event.case_id}` : '/calendar'} 
-      className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-    >
-      <ArrowLeft className="w-4 h-4" />
-      {event.case_id ? 'Davaya Dön' : 'Takvime Dön'}
-    </Link>
-    <div className="mt-2">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-        {event.title}
-      </h1>
-      <div className="flex flex-wrap items-center gap-2 mt-1">
-        <Badge variant={getStatusVariant(event.status)}>
-          {getStatusLabel(event.status)}
-        </Badge>
-        <Badge variant="default" className="bg-gray-100 dark:bg-gray-700">
-          {getEventTypeLabel(event.event_type)}
-        </Badge>
-        {event.hearing_type && (
-          <Badge variant="default" className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-            {getHearingTypeLabel(event.hearing_type)}
-          </Badge>
-        )}
+      <div className="flex items-center justify-between">
+        <div>
+          <Link 
+            to={event.case_id ? `/cases/${event.case_id}` : '/calendar'} 
+            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {event.case_id ? 'Davaya Dön' : 'Takvime Dön'}
+          </Link>
+          <div className="mt-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {event.title}
+            </h1>
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              <Badge variant={getStatusVariant(event.status)}>
+                {getStatusLabel(event.status)}
+              </Badge>
+              <Badge variant="default" className="bg-gray-100 dark:bg-gray-700">
+                {getEventTypeLabel(event.event_type)}
+              </Badge>
+              {event.hearing_type && (
+                <Badge variant="default" className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                  {getHearingTypeLabel(event.hearing_type)}
+                </Badge>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Link to={`/events/${event.id}/edit`}>
+            <Button variant="outline" size="sm">
+              <Edit2 className="w-4 h-4 mr-2" />
+              Düzenle
+            </Button>
+          </Link>
+        </div>
       </div>
-    </div>
-  </div>
-  <div className="flex gap-2">
-    <Link to={`/events/${event.id}/edit`}>
-      <Button variant="outline" size="sm">
-        <Edit2 className="w-4 h-4 mr-2" />
-        Düzenle
-      </Button>
-    </Link>
-  </div>
-</div>
+
       {/* Ana Kart */}
       <Card className="border border-gray-200 dark:border-gray-700 shadow-sm">
         <Card.Body className="space-y-6">
@@ -310,17 +313,17 @@ const EventDetail = () => {
             </div>
           )}
 
-          {/* Tarih ve Saat */}
+          {/* Tarih ve Saat - UTC ile düzeltildi */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
               <Calendar className="w-5 h-5 text-blue-500 mt-0.5" />
               <div>
                 <p className="text-xs uppercase tracking-wider text-gray-400 font-medium">Başlangıç</p>
                 <p className="font-medium text-gray-900 dark:text-white">
-                  {formatDate(event.start_date)}
+                  {formatDateUTC(event.start_date)}
                 </p>
                 <p className="text-sm text-gray-500">
-                  {formatTime(event.start_date)}
+                  {formatTimeUTC(event.start_date)}
                 </p>
               </div>
             </div>
@@ -330,10 +333,10 @@ const EventDetail = () => {
                 <div>
                   <p className="text-xs uppercase tracking-wider text-gray-400 font-medium">Bitiş</p>
                   <p className="font-medium text-gray-900 dark:text-white">
-                    {formatDate(event.end_date)}
+                    {formatDateUTC(event.end_date)}
                   </p>
                   <p className="text-sm text-gray-500">
-                    {formatTime(event.end_date)}
+                    {formatTimeUTC(event.end_date)}
                   </p>
                 </div>
               </div>
@@ -376,7 +379,7 @@ const EventDetail = () => {
             </div>
           )}
 
-          {/* ✅ KATILIMCILAR */}
+          {/* Katılımcılar */}
           <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
@@ -389,7 +392,6 @@ const EventDetail = () => {
             </div>
 
             <div className="space-y-2">
-              {/* Atanan Avukat */}
               {event.assignedTo && (
                 <div className="flex items-center gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
                   <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-800 flex items-center justify-center text-purple-600 dark:text-purple-300 text-lg">
@@ -404,7 +406,6 @@ const EventDetail = () => {
                 </div>
               )}
 
-              {/* Karşı Taraf Avukatı */}
               {event.opposing_counsel && (
                 <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
                   <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-800 flex items-center justify-center text-red-600 dark:text-red-300 text-lg">
@@ -419,7 +420,6 @@ const EventDetail = () => {
                 </div>
               )}
 
-              {/* Diğer Katılımcılar */}
               {event.attendees && event.attendees.length > 0 && (
                 <>
                   {event.attendees.map((attendee, index) => {
@@ -468,7 +468,7 @@ const EventDetail = () => {
             </div>
           )}
 
-          {/* ✅ Yapılacak İşler (Checklist) */}
+          {/* Yapılacak İşler */}
           {event.todo_items && event.todo_items.length > 0 && (
             <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
@@ -508,7 +508,7 @@ const EventDetail = () => {
             </div>
           )}
 
-          {/* ✅ İlişkili Dava - TÜRKÇE */}
+          {/* İlişkili Dava */}
           {caseItem && (
             <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">📋 İlişkili Dava</h3>
@@ -533,7 +533,6 @@ const EventDetail = () => {
                     <p className="text-xs text-gray-400 font-medium">🏛️ Mahkeme</p>
                     <p className="font-medium text-gray-900 dark:text-white">{caseItem.court_name || '-'}</p>
                   </div>
-                  
                   <div>
                     <p className="text-xs text-gray-400 font-medium">👤 Müvekkil</p>
                     <Link 
@@ -591,7 +590,7 @@ const EventDetail = () => {
           {/* Oluşturulma Bilgisi */}
           <div className="border-t border-gray-100 dark:border-gray-700 pt-4 text-xs text-gray-400">
             <p>👤 Oluşturan: {event.creator?.first_name} {event.creator?.last_name}</p>
-            <p>📅 Oluşturulma: {formatDateTime(event.created_at)}</p>
+            <p>📅 Oluşturulma: {formatDateTimeUTC(event.created_at)}</p>
           </div>
         </Card.Body>
       </Card>

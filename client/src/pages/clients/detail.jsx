@@ -7,6 +7,22 @@ import Card from '../../components/ui/Card.jsx';
 import Button from '../../components/ui/Button.jsx';
 import { Phone, Mail, MessageCircle, Edit2, Briefcase, DollarSign, Calendar, MapPin, User, ArrowLeft, Building2, Scale, UserCog, FileText } from 'lucide-react';
 
+// ======================================================
+// UTC format fonksiyonu (zaman dilimi çevirme YOK)
+// ======================================================
+
+const formatDateUTC = (date) => {
+  if (!date) return '-';
+  try {
+    const d = new Date(date);
+    return `${String(d.getUTCDate()).padStart(2, '0')}.${String(
+      d.getUTCMonth() + 1
+    ).padStart(2, '0')}.${d.getUTCFullYear()}`;
+  } catch {
+    return '-';
+  }
+};
+
 const getCaseStatusLabel = (status) => {
   const labels = {
     active: 'Devam Ediyor',
@@ -68,13 +84,6 @@ const ClientDetail = () => {
 
   const client = data?.data?.data;
   const powerOfAttorneys = poaData?.data?.data || [];
-
-  // ✅ DEBUG - Console'a yazdır
-  console.log('📜 poaData:', poaData);
-  console.log('📜 poaData?.data:', poaData?.data);
-  console.log('📜 poaData?.data?.data:', poaData?.data?.data);
-  console.log('📜 powerOfAttorneys:', powerOfAttorneys);
-  console.log('📜 İlk elemanın ID:', powerOfAttorneys[0]?.id);
 
   if (isLoading) {
     return (
@@ -339,8 +348,8 @@ const ClientDetail = () => {
                   </div>
                   {poa.start_date && (
                     <div className="mt-2 text-xs text-gray-400">
-                      Başlangıç: {new Date(poa.start_date).toLocaleDateString('tr-TR')}
-                      {poa.end_date && ` - Bitiş: ${new Date(poa.end_date).toLocaleDateString('tr-TR')}`}
+                      Başlangıç: {formatDateUTC(poa.start_date)}
+                      {poa.end_date && ` - Bitiş: ${formatDateUTC(poa.end_date)}`}
                     </div>
                   )}
                 </Link>
@@ -399,14 +408,13 @@ const ClientDetail = () => {
                         {caseItem.court_name || '-'}
                       </p>
                     </div>
-                   
                     <div>
                       <p className="text-gray-400 text-xs flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         Açılış Tarihi
                       </p>
                       <p className="font-medium text-gray-700 dark:text-gray-300">
-                        {caseItem.opening_date ? new Date(caseItem.opening_date).toLocaleDateString('tr-TR') : '-'}
+                        {caseItem.opening_date ? formatDateUTC(caseItem.opening_date) : '-'}
                       </p>
                     </div>
                     <div>
