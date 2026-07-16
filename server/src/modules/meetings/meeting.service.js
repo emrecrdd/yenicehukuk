@@ -11,6 +11,12 @@ export const meetingService = {
   console.log('📥 Frontendden gelen start_date:', data.start_date);
   console.log('📥 Frontendden gelen end_date:', data.end_date);
 
+  console.log('🔍 new Date(start_date):', new Date(data.start_date));
+  console.log('🔍 start_date ISO:', new Date(data.start_date).toISOString());
+
+  console.log('🔍 new Date(end_date):', new Date(data.end_date));
+  console.log('🔍 end_date ISO:', new Date(data.end_date).toISOString());
+
   const meeting = await Meeting.create(data);
 
   console.log('💾 Veritabanına kaydedilen start_date:', meeting.start_date);
