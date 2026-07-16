@@ -66,9 +66,9 @@ const CaseCreate = () => {
     }
   };
 
-  // ✅ Seçilen müvekkilleri göster
   const selectedClients = clients.filter(client => formData.client_ids.includes(client.id));
 
+  // ✅ DÜZELTİLDİ - Tarihler UTC'ye çevriliyor
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = {};
@@ -85,11 +85,14 @@ const CaseCreate = () => {
 
     const title = `${formData.judiciary_type} - ${formData.judiciary_unit}`;
 
+    // ✅ Tarihleri UTC'ye çevir
+    const openingDate = formData.opening_date ? new Date(formData.opening_date) : null;
+
     const submitData = {
       ...formData,
       title: title,
       assigned_to: formData.assigned_to || null,
-      opening_date: formData.opening_date || null,
+      opening_date: openingDate ? openingDate.toISOString() : null,
     };
     
     console.log('📤 Gönderilen veri:', submitData);
@@ -178,13 +181,12 @@ const CaseCreate = () => {
             placeholder="Esas no"
           />
 
-          {/* 6. MÜVEKKİLLER (ÇOKLU SEÇİM) - GELİŞTİRİLDİ */}
+          {/* 6. MÜVEKKİLLER (ÇOKLU SEÇİM) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Müvekkil Seçin *
             </label>
             
-            {/* ✅ Seçili müvekkiller */}
             {selectedClients.length > 0 && (
               <div className="mb-2 flex flex-wrap gap-1">
                 {selectedClients.map((client) => (
@@ -210,7 +212,6 @@ const CaseCreate = () => {
               </div>
             )}
 
-            {/* ✅ Müvekkil seçme dropdown */}
             <select
               name="client_ids"
               multiple
@@ -330,7 +331,6 @@ const CaseCreate = () => {
             />
           </div>
 
-          {/* BUTONLAR */}
           <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <Button type="submit" loading={mutation.isPending}>
               Dava Oluştur

@@ -102,13 +102,20 @@ const MeetingCreate = () => {
     }));
   };
 
+  // ✅ DÜZELTİLDİ - Tarihler UTC'ye çevriliyor
   const handleSubmit = (e) => {
     e.preventDefault();
 
     const assignedTo = user?.role !== 'admin' ? user?.id : formData.assigned_to;
 
+    // ✅ Tarihleri UTC'ye çevir
+    const startDate = formData.start_date ? new Date(formData.start_date) : null;
+    const endDate = formData.end_date ? new Date(formData.end_date) : null;
+
     const submitData = {
       ...formData,
+      start_date: startDate ? startDate.toISOString() : null,
+      end_date: endDate ? endDate.toISOString() : null,
       case_id: formData.case_id || null,
       client_id: formData.client_id || null,
       assigned_to: assignedTo || null,
@@ -239,7 +246,7 @@ const MeetingCreate = () => {
                 <option value="">Müvekkil seçin (isteğe bağlı)</option>
                 {clients.map((client) => (
                   <option key={client.id} value={client.id}>
-                    {client.name}  {/* ✅ SADECE BURASI DEĞİŞTİ */}
+                    {client.name}
                     {client.company_name && ` (${client.company_name})`}
                   </option>
                 ))}

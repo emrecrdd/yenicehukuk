@@ -106,6 +106,7 @@ const CaseEdit = () => {
     }
   };
 
+  // ✅ DÜZELTİLDİ - Tarihler UTC'ye çevriliyor
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = {};
@@ -120,10 +121,13 @@ const CaseEdit = () => {
       return;
     }
 
+    // ✅ Tarihleri UTC'ye çevir
+    const openingDate = formData.opening_date ? new Date(formData.opening_date) : null;
+
     const submitData = {
       ...formData,
       assigned_to: formData.assigned_to || null,
-      opening_date: formData.opening_date || null,
+      opening_date: openingDate ? openingDate.toISOString() : null,
     };
     mutation.mutate(submitData);
   };
@@ -335,7 +339,6 @@ const CaseEdit = () => {
             />
           </div>
 
-          {/* BUTONLAR */}
           <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <Button type="submit" loading={mutation.isPending}>
               Güncelle
