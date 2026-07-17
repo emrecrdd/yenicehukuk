@@ -61,19 +61,29 @@ class ReminderJob {
     try {
       const now = new Date();
       console.log("================================");
-console.log("NOW ISO:", now.toISOString());
-console.log("NOW LOCAL:", now.toString());
-console.log("TZ:", Intl.DateTimeFormat().resolvedOptions().timeZone);
-console.log("Offset:", now.getTimezoneOffset());
-console.log("================================");
+      console.log("NOW ISO:", now.toISOString());
+      console.log("NOW LOCAL:", now.toString());
+      console.log("TZ:", Intl.DateTimeFormat().resolvedOptions().timeZone);
+      console.log("Offset:", now.getTimezoneOffset());
+      console.log("================================");
       
+      const limit = new Date(
+        now.getTime() + 24 * 60 * 60 * 1000
+      );
+
       const meetings = await sequelize.query(
-        `SELECT * FROM meetings 
-         WHERE start_date > :now 
-         AND status = 'scheduled'
-         AND deleted_at IS NULL`,
+        `
+        SELECT *
+        FROM meetings
+        WHERE start_date BETWEEN :now AND :limit
+        AND status='scheduled'
+        AND deleted_at IS NULL
+        `,
         {
-          replacements: { now },
+          replacements: {
+            now,
+            limit
+          },
           type: sequelize.QueryTypes.SELECT,
         }
       );
@@ -109,22 +119,19 @@ console.log("================================");
 
         const startDate = new Date(meeting.start_date);
 
-// Önce hesapla
-const diffHours = (startDate - now) / (1000 * 60 * 60);
+        // Önce hesapla
+        const diffHours = (startDate - now) / (1000 * 60 * 60);
 
-// Sonra yazdır
-console.log("Meeting ISO:", startDate.toISOString());
-console.log("Meeting LOCAL:", startDate.toString());
-console.log("Meeting UTC Hour:", startDate.getUTCHours());
-console.log("Meeting Local Hour:", startDate.getHours());
-console.log("Diff Hours:", diffHours);
+        // Sonra yazdır
+        console.log("Meeting ISO:", startDate.toISOString());
+        console.log("Meeting LOCAL:", startDate.toString());
+        console.log("Meeting UTC Hour:", startDate.getUTCHours());
+        console.log("Meeting Local Hour:", startDate.getHours());
+        console.log("Diff Hours:", diffHours);
 
-console.log(`📅 Toplantı: ${meeting.title}, Başlangıç: ${startDate}`);
-console.log(`⏰ Fark: ${diffHours.toFixed(2)} saat`);
-       
-
+        console.log(`📅 Toplantı: ${meeting.title}, Başlangıç: ${startDate}`);
+        console.log(`⏰ Fark: ${diffHours.toFixed(2)} saat`);
         
-
         const recipients = [];
         if (assignee) recipients.push(assignee);
         if (creator && creator.id !== assignee?.id) {
@@ -182,11 +189,12 @@ console.log(`⏰ Fark: ${diffHours.toFixed(2)} saat`);
     try {
       const startDate = new Date(meeting.start_date);
       
-      // ✅ UTC direkt gösterim (zaman dilimi çevirme YOK)
+      // ✅ TAMAMEN UTC KULLANIMI
       const dateStr = `${String(startDate.getUTCDate()).padStart(2, '0')}.${String(
         startDate.getUTCMonth() + 1
       ).padStart(2, '0')}.${startDate.getUTCFullYear()}`;
       
+      // ✅ HATA 1 DÜZELTİLDİ: Tamamen UTC kullanılıyor
       const timeStr = `${String(startDate.getUTCHours()).padStart(2, '0')}:${String(
         startDate.getUTCMinutes()
       ).padStart(2, '0')}`;
@@ -200,9 +208,10 @@ console.log(`⏰ Fark: ${diffHours.toFixed(2)} saat`);
         message = `"${meeting.title}" toplantınız 1 saat sonra ${dateStr} tarihinde saat ${timeStr}'da başlıyor.`;
       }
 
+      // ✅ HATA 2 DÜZELTİLDİ: type 'event' yerine 'meeting'
       await addNotificationJob({
         userId: user.id,
-        type: 'event',
+        type: 'meeting',
         title: title,
         message: message,
         link: `/meetings/${meeting.id}`,
