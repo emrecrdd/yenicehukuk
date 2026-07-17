@@ -60,6 +60,12 @@ class ReminderJob {
   async checkUpcomingMeetings() {
     try {
       const now = new Date();
+      console.log("================================");
+console.log("NOW ISO:", now.toISOString());
+console.log("NOW LOCAL:", now.toString());
+console.log("TZ:", Intl.DateTimeFormat().resolvedOptions().timeZone);
+console.log("Offset:", now.getTimezoneOffset());
+console.log("================================");
       
       const meetings = await sequelize.query(
         `SELECT * FROM meetings 
@@ -102,6 +108,11 @@ class ReminderJob {
         const creator = creatorResult[0] || null;
 
         const startDate = new Date(meeting.start_date);
+        console.log("Meeting ISO:", startDate.toISOString());
+console.log("Meeting LOCAL:", startDate.toString());
+console.log("Meeting UTC Hour:", startDate.getUTCHours());
+console.log("Meeting Local Hour:", startDate.getHours());
+console.log("Diff Hours:", diffHours);
         
         // ✅ SAAT FARKI (Saat cinsinden)
         const diffHours = (startDate - now) / (1000 * 60 * 60);
