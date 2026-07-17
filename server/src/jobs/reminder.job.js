@@ -7,6 +7,12 @@ import { Meeting } from '../models/Meeting.js';
 import { User } from '../models/User.js';
 import { addNotificationJob, addEmailJob } from './queue.js';
 import { sequelize } from '../config/database.js';
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 class ReminderJob {
   constructor() {
@@ -187,17 +193,14 @@ class ReminderJob {
   // ✅ MEETING REMINDER GÖNDERME YARDIMCI METODU
   async sendMeetingReminder(user, meeting, reminderType) {
     try {
-      const startDate = new Date(meeting.start_date);
-      
-      // ✅ TAMAMEN UTC KULLANIMI
-      const dateStr = `${String(startDate.getUTCDate()).padStart(2, '0')}.${String(
-        startDate.getUTCMonth() + 1
-      ).padStart(2, '0')}.${startDate.getUTCFullYear()}`;
-      
-      // ✅ HATA 1 DÜZELTİLDİ: Tamamen UTC kullanılıyor
-      const timeStr = `${String(startDate.getUTCHours()).padStart(2, '0')}:${String(
-        startDate.getUTCMinutes()
-      ).padStart(2, '0')}`;
+      // ✅ dayjs ile Istanbul saat diliminde formatlama
+      const dateStr = dayjs(meeting.start_date)
+        .tz("Europe/Istanbul")
+        .format("DD.MM.YYYY");
+
+      const timeStr = dayjs(meeting.start_date)
+        .tz("Europe/Istanbul")
+        .format("HH:mm");
 
       let title, message;
       if (reminderType === '1 Gün Önce') {
@@ -208,7 +211,6 @@ class ReminderJob {
         message = `"${meeting.title}" toplantınız 1 saat sonra ${dateStr} tarihinde saat ${timeStr}'da başlıyor.`;
       }
 
-      // ✅ HATA 2 DÜZELTİLDİ: type 'event' yerine 'meeting'
       await addNotificationJob({
         userId: user.id,
         type: 'meeting',
@@ -349,15 +351,14 @@ class ReminderJob {
   // ✅ TASK REMINDER GÖNDERME YARDIMCI METODU
   async sendTaskReminder(user, task, reminderType) {
     try {
-      const dueDate = new Date(task.due_date);
-      
-      const dateStr = `${String(dueDate.getUTCDate()).padStart(2, '0')}.${String(
-        dueDate.getUTCMonth() + 1
-      ).padStart(2, '0')}.${dueDate.getUTCFullYear()}`;
-      
-      const timeStr = `${String(dueDate.getUTCHours()).padStart(2, '0')}:${String(
-        dueDate.getUTCMinutes()
-      ).padStart(2, '0')}`;
+      // ✅ dayjs ile Istanbul saat diliminde formatlama
+      const dateStr = dayjs(task.due_date)
+        .tz("Europe/Istanbul")
+        .format("DD.MM.YYYY");
+
+      const timeStr = dayjs(task.due_date)
+        .tz("Europe/Istanbul")
+        .format("HH:mm");
 
       let title, message;
       if (reminderType === '1 Gün Önce') {
@@ -475,15 +476,14 @@ class ReminderJob {
   // ✅ EVENT REMINDER GÖNDERME YARDIMCI METODU
   async sendEventReminder(user, event, reminderType) {
     try {
-      const startDate = new Date(event.start_date);
-      
-      const dateStr = `${String(startDate.getUTCDate()).padStart(2, '0')}.${String(
-        startDate.getUTCMonth() + 1
-      ).padStart(2, '0')}.${startDate.getUTCFullYear()}`;
-      
-      const timeStr = `${String(startDate.getUTCHours()).padStart(2, '0')}:${String(
-        startDate.getUTCMinutes()
-      ).padStart(2, '0')}`;
+      // ✅ dayjs ile Istanbul saat diliminde formatlama
+      const dateStr = dayjs(event.start_date)
+        .tz("Europe/Istanbul")
+        .format("DD.MM.YYYY");
+
+      const timeStr = dayjs(event.start_date)
+        .tz("Europe/Istanbul")
+        .format("HH:mm");
 
       let title, message;
       if (reminderType === '1 Gün Önce') {
