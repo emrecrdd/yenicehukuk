@@ -107,13 +107,30 @@ const MeetingCreate = () => {
 
     const assignedTo = user?.role !== 'admin' ? user?.id : formData.assigned_to;
 
-    const submitData = {
-      ...formData,
-      case_id: formData.case_id || null,
-      client_id: formData.client_id || null,
-      assigned_to: assignedTo || null,
-      attendees: formData.attendees,
-    };
+    const localToUTC = (dateTime) => {
+  if (!dateTime) return null;
+
+  const [date, time] = dateTime.split('T');
+
+  const utcDate = new Date(
+    `${date}T${time}:00+03:00`
+  );
+
+  return utcDate.toISOString();
+};
+
+
+const submitData = {
+  ...formData,
+
+  start_date: localToUTC(formData.start_date),
+  end_date: localToUTC(formData.end_date),
+
+  case_id: formData.case_id || null,
+  client_id: formData.client_id || null,
+  assigned_to: assignedTo || null,
+  attendees: formData.attendees,
+};
 
     console.log('📤 Gönderilen veri:', submitData);
     mutation.mutate(submitData);
