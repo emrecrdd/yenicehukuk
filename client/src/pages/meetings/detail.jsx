@@ -56,19 +56,21 @@ const MeetingDetail = () => {
 
   // ✅ UTC direkt gösterim (zaman dilimi çevirme YOK)
   const formatDate = (date) => {
-    if (!date) return '-';
-    try {
-      const d = new Date(date);
-      return `${String(d.getUTCDate()).padStart(2, '0')}.${String(
-        d.getUTCMonth() + 1
-      ).padStart(2, '0')}.${d.getUTCFullYear()} ${String(
-        d.getUTCHours()
-      ).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
-    } catch {
-      return '-';
-    }
-  };
+  if (!date) return '-';
 
+  try {
+    return new Date(date).toLocaleString('tr-TR', {
+      timeZone: 'Europe/Istanbul',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return '-';
+  }
+};
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
