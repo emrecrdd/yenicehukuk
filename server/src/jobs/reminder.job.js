@@ -202,13 +202,15 @@ class ReminderJob {
         .tz("Europe/Istanbul")
         .format("HH:mm");
 
-      let title, message;
+      let title, message, description;
       if (reminderType === '1 Gün Önce') {
         title = '📅 Toplantı Hatırlatması (1 Gün Kaldı)';
         message = `"${meeting.title}" toplantınız yarın ${dateStr} tarihinde saat ${timeStr}'da.`;
+        description = "yarın gerçekleşecek";
       } else {
         title = '📅 Toplantı Hatırlatması (1 Saat Kaldı)';
         message = `"${meeting.title}" toplantınız 1 saat sonra ${dateStr} tarihinde saat ${timeStr}'da başlıyor.`;
+        description = "1 saat sonra başlayacak";
       }
 
       await addNotificationJob({
@@ -234,7 +236,7 @@ class ReminderJob {
         html: `
           <h1>${title}</h1>
           <p>Merhaba ${user.first_name},</p>
-          <p><strong>${meeting.title}</strong> toplantınız ${reminderType.toLowerCase()}:</p>
+          <p><strong>${meeting.title}</strong> toplantınız ${description}.</p>
           <table style="border-collapse: collapse; width: 100%;">
             <tr>
               <td style="padding: 8px; border: 1px solid #ddd;"><strong>Tarih:</strong></td>
@@ -360,13 +362,15 @@ class ReminderJob {
         .tz("Europe/Istanbul")
         .format("HH:mm");
 
-      let title, message;
+      let title, message, description;
       if (reminderType === '1 Gün Önce') {
         title = '📋 Görev Hatırlatması (1 Gün Kaldı)';
         message = `"${task.title}" görevinin son tarihi yarın ${dateStr} tarihinde saat ${timeStr}'da.`;
+        description = "yarın sona erecek";
       } else {
         title = '📋 Görev Hatırlatması (1 Saat Kaldı)';
         message = `"${task.title}" görevinin son tarihi 1 saat sonra ${dateStr} tarihinde saat ${timeStr}'da.`;
+        description = "1 saat sonra sona erecek";
       }
 
       await addNotificationJob({
@@ -390,7 +394,7 @@ class ReminderJob {
         html: `
           <h1>${title}</h1>
           <p>Merhaba ${user.first_name},</p>
-          <p><strong>${task.title}</strong> görevinin son tarihi ${reminderType.toLowerCase()}:</p>
+          <p><strong>${task.title}</strong> görevinin son tarihi ${description}.</p>
           <p><strong>Son Tarih:</strong> ${dateStr} ${timeStr}</p>
           <p><strong>Öncelik:</strong> ${task.priority}</p>
           <a href="${process.env.CLIENT_URL}/tasks/${task.id}">Görevi Görüntüle</a>
@@ -485,13 +489,15 @@ class ReminderJob {
         .tz("Europe/Istanbul")
         .format("HH:mm");
 
-      let title, message;
+      let title, message, description;
       if (reminderType === '1 Gün Önce') {
         title = '📅 Etkinlik Hatırlatması (1 Gün Kaldı)';
         message = `"${event.title}" etkinliği yarın ${dateStr} tarihinde saat ${timeStr}'da.`;
+        description = "yarın gerçekleşecek";
       } else {
         title = '📅 Etkinlik Hatırlatması (1 Saat Kaldı)';
         message = `"${event.title}" etkinliği 1 saat sonra ${dateStr} tarihinde saat ${timeStr}'da başlıyor.`;
+        description = "1 saat sonra başlayacak";
       }
 
       await addNotificationJob({
@@ -515,7 +521,7 @@ class ReminderJob {
         html: `
           <h1>${title}</h1>
           <p>Merhaba ${user.first_name},</p>
-          <p><strong>${event.title}</strong> etkinliği ${reminderType.toLowerCase()}:</p>
+          <p><strong>${event.title}</strong> etkinliği ${description}.</p>
           <p><strong>Tarih:</strong> ${dateStr} ${timeStr}</p>
           ${event.location ? `<p><strong>Yer:</strong> ${event.location}</p>` : ''}
           <a href="${process.env.CLIENT_URL}/events/${event.id}">Etkinliği Görüntüle</a>
