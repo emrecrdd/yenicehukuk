@@ -108,17 +108,22 @@ console.log("================================");
         const creator = creatorResult[0] || null;
 
         const startDate = new Date(meeting.start_date);
-        console.log("Meeting ISO:", startDate.toISOString());
+
+// Önce hesapla
+const diffHours = (startDate - now) / (1000 * 60 * 60);
+
+// Sonra yazdır
+console.log("Meeting ISO:", startDate.toISOString());
 console.log("Meeting LOCAL:", startDate.toString());
 console.log("Meeting UTC Hour:", startDate.getUTCHours());
 console.log("Meeting Local Hour:", startDate.getHours());
 console.log("Diff Hours:", diffHours);
-        
-        // ✅ SAAT FARKI (Saat cinsinden)
-        const diffHours = (startDate - now) / (1000 * 60 * 60);
 
-        console.log(`📅 Toplantı: ${meeting.title}, Başlangıç: ${startDate}`);
-        console.log(`⏰ Fark: ${diffHours.toFixed(2)} saat`);
+console.log(`📅 Toplantı: ${meeting.title}, Başlangıç: ${startDate}`);
+console.log(`⏰ Fark: ${diffHours.toFixed(2)} saat`);
+       
+
+        
 
         const recipients = [];
         if (assignee) recipients.push(assignee);
