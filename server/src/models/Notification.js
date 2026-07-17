@@ -26,7 +26,7 @@ class Notification extends Sequelize.Model {
           allowNull: false,
         },
         type: {
-          type: DataTypes.ENUM('task', 'case', 'event', 'system'),
+          type: DataTypes.ENUM('task', 'case', 'event','meeting', 'system'),
           defaultValue: 'system',
         },
         read: {
